@@ -17,9 +17,17 @@ answer "go", "perfect", or "1. yes 2. yes".
 
 So the dashboard flips it around:
 
-- **Summary first, detail within reach.** Each session fills a **Tracker** panel (through an MCP tool it is given):
-  progress, chosen approach and rejected alternatives, key points, tradeoffs it made without you, mockups, a UML-style
-  architecture view, a database diagram. Nothing is hidden, but you read the summary first.
+- **Summary first, detail within reach.** Each session fills a **Tracker** panel (through an MCP tool it is given)
+  with what matters to you. Nothing is hidden, but you read the summary first.
+- **A tracker made to be customized.** What the panel shows, the steps in the header and the method Claude follows
+  come from a **tracker profile** (a small JSON file). Two ship with the app:
+  - **Simple tracker** (default): progress, key points, files and links. Fits any kind of work, not only code.
+  - **Dev tracker**: steps framing → mockup → design → execution → push, chosen approach and rejected alternatives,
+    key points, tradeoffs it made without you, mockups, a UML-style architecture view, a database diagram.
+
+  Type `/tracker` in a session to compose your own with Claude (live preview, building blocks such as lists, tables,
+  checklists, images, timelines, Mermaid diagrams…) and save it for one repo, for your whole installation, or in the
+  repo itself (`.claude/tracker.json`) to share it with your team.
 - **Decisions as cards.** Questions come grouped, each with a recommendation and a concrete example (a scenario,
   before/after code, a side-by-side comparison, a mini mockup). Click, add an optional note, send.
 - **Mockup before technical design.** Validating the visual already validates most choices.
@@ -33,8 +41,6 @@ So the dashboard flips it around:
   subagent and background-shell tabs, a message queue, `!command`, `/` commands with autocompletion, `/mcp`, `/usage`.
 - **Tracker** on the right, plus **Modified files** (git status, commits, diffs in Monaco) and an **Explorer** (file
   tree, full-text search with ripgrep, Ctrl+P), with "send this selection to Claude" from the editor.
-- **Tracker profiles**: what the panel shows is a JSON profile you can compose with the `/tracker` skill, per repo or
-  per installation. Two are built in: a simple one and a "Dev tracker".
 - **Sessions that launch sessions** (`launch_session`, `message_session`…), for a coordinator session that hands work to
   workers.
 - **Desktop app** (Electron): tray icon that turns red or blue when a session needs you, Windows notifications, start
