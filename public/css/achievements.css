@@ -80,4 +80,7 @@
 @media (max-width: 900px) {
   .ach-header { flex-wrap: wrap; }
   .ach-summary { text-align: left; padding-right: 0; }
+  /* Toasts at the top: at the bottom they cover the conversation input */
+  .ach-toasts { top: calc(8px + env(safe-area-inset-top)); bottom: auto; left: 8px; right: 8px; align-items: center; }
+  .ach-toast { max-width: 100%; transform: translateY(-24px); }
 }
