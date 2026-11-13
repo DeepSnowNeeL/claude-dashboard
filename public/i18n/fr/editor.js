@@ -2,6 +2,7 @@
 export default {
   monacoUnreachable: 'Monaco injoignable (réseau ?)',
   remark: {
+    open: '💬 Commenter',
     placeholder: 'Ta remarque sur ce code… (Entrée envoie, Maj+Entrée va à la ligne, Échap ferme)',
     // Message envoyé à Claude : fichier, lignes, version éventuelle, bloc de code, remarque
     message: p => `Remarque sur \`${p.file}:${p.lines}\`${p.version ? ` (${p.version})` : ''} :\n${p.block}\n${p.remark}`,

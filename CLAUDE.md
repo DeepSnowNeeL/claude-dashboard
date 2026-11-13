@@ -119,7 +119,8 @@ and the design of what is about to be built in visual form, with all the availab
   files (ripgrep: `DASH_RG`, PATH, or Orca's / VS Code's; otherwise git grep; case and regex options; a result opens
   Monaco on the line) and **Ctrl+P**: fuzzy search on names (word starts, name before folder), Enter opens the file
   and selects it in the tree.
-  A selection in the editor opens a remark bubble: Enter sends to the displayed session the file, the lines
+  A selection in the editor shows a 💬 Comment button (no focus taken, the selection can still be copied); a click
+  opens the remark bubble: Enter sends to the displayed session the file, the lines
   (`path:L12-L20`, with the version if it is a commit diff), the selected code and the remark.
 - **Architecture**: UML style, no file tree or RPC links. Badges `+` added / `~` modified / `−` deleted (not just
   colors). Angular components created and where they are used, impacted `Service.method` with the reason in a few

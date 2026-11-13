@@ -7,6 +7,8 @@
 .vis-body > .m { padding: 16px; }
 
 /* Remark on a selection in the editor */
+.remark-open { position: fixed; z-index: 80; background: var(--card); color: var(--link); border: 1px solid var(--link); border-radius: 6px; box-shadow: 0 4px 12px #0006; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.remark-open:hover { background: var(--link); color: var(--bg); }
 .remark-bubble { position: fixed; z-index: 80; width: 380px; background: var(--card); border: 1px solid var(--link); border-radius: 8px; box-shadow: 0 8px 24px #000a; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
 .remark-bubble .m { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .remark-bubble textarea { font: inherit; font-size: 13px; min-height: 54px; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }

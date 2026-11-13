@@ -2,6 +2,7 @@
 export default {
   monacoUnreachable: 'Monaco could not be loaded (network?)',
   remark: {
+    open: '💬 Comment',
     placeholder: 'Your remark on this code… (Enter sends, Shift+Enter new line, Esc closes)',
     // Message sent to Claude: file, lines, optional version, code block, remark
     message: p => `Remark on \`${p.file}:${p.lines}\`${p.version ? ` (${p.version})` : ''}:\n${p.block}\n${p.remark}`,
