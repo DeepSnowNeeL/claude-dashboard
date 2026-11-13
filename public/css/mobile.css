@@ -21,7 +21,11 @@
 @media (max-width: 900px) {
   .header .stats, .steps, .head-row .commands > .m { display: none !important; }
   .head .title { font-size: 15px; }
-  .commands { margin-top: 4px; }
+  .commands { margin-top: 4px; gap: 8px; width: 100%; }
+  /* Mode, End, Archive: big enough for a finger, on one line (16 px on the select: no automatic iOS zoom) */
+  .commands .btn, .commands select { min-height: 40px; padding: 8px 12px; font-size: 15px; border-radius: 8px; }
+  .commands .btn { flex: none; white-space: nowrap; }
+  .commands select { flex: 1 1 0; min-width: 0; font-size: 16px; }
   /* Adding a project (folder path) or a group: done on desktop, hidden in the mobile PWA */
   .insertions { display: none; }
   /* If an input dialog opens anyway: 16 px to avoid the automatic iOS zoom */

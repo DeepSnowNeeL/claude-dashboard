@@ -72,8 +72,8 @@ export async function remoteGate(req, res, p) {
     // Interface language: the login page needs it before login (it reveals nothing)
     if (p === '/api/language' && req.method === 'GET') return false;
     if (p.startsWith('/api/') || p.startsWith('/f/')) sendJson(res, 401, { error: t('access.errors.loginRequired') });
-    // Icons, PWA and dictionaries of the login page: loaded without a cookie (manifest) or before login, they reveal nothing
-    else if (/^\/(favicon\.(ico|png)|icon-512\.png|manifest\.webmanifest|sw\.js|i18n\/(index|(fr|en)\/\w+)\.js)$/.test(p)) serveFile(res, path.join(PUBLIC, p));
+    // Icons, PWA (offline page included) and dictionaries of the login page: loaded without a cookie (manifest) or before login, they reveal nothing
+    else if (/^\/(favicon\.(ico|png)|icon-512\.png|manifest\.webmanifest|sw\.js|offline\.html|i18n\/(index|(fr|en)\/\w+)\.js)$/.test(p)) serveFile(res, path.join(PUBLIC, p));
     else serveFile(res, path.join(PUBLIC, 'login.html'));
     return true;
   }

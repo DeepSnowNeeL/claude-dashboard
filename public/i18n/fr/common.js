@@ -39,4 +39,11 @@ export default {
     conversation: 'Conversation',
     tracker: 'Suivi',
   },
+  offline: {
+    title: 'Ordinateur injoignable',
+    text: 'Il est sans doute éteint ou en veille, ou le tableau de bord n\'y tourne pas.',
+    retry: 'Réessayer',
+    trying: 'Connexion…',
+    still: 'Toujours injoignable ({time}), nouvel essai automatique dans 15 s.',
+  },
 };

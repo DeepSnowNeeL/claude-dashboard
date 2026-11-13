@@ -39,4 +39,11 @@ export default {
     conversation: 'Conversation',
     tracker: 'Tracker',
   },
+  offline: {
+    title: 'The computer cannot be reached',
+    text: 'It is probably turned off or asleep, or the dashboard is not running on it.',
+    retry: 'Try again',
+    trying: 'Connecting…',
+    still: 'Still unreachable ({time}), next automatic try in 15 s.',
+  },
 };
