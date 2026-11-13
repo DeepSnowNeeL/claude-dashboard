@@ -2,7 +2,8 @@
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sendJson, readBody, serveFile, SERVER_MODE } from '../common.mjs';
+import { sendJson, readBody, serveFile, isActiveFile, SERVER_MODE } from '../common.mjs';
+import { untoken, tokenedPath, requestedFile } from './file-tokens.mjs';
 import * as access from '../access.mjs';
 import { rawIp, lanAddresses } from './network.mjs';
 import { REMOTE_PORT } from './caddy.mjs';
@@ -39,9 +40,20 @@ export async function remoteGate(req, res, p) {
   // Request forged from another site: the browser sends its Origin, which must be the page itself
   // (server mode: plain http accepted too, for a proxy that does not terminate TLS or a test on the local network)
   const sameOrigin = req.headers.origin === `https://${req.headers.host}` || (SERVER_MODE && req.headers.origin === `http://${req.headers.host}`);
-  if (req.method !== 'GET' && req.method !== 'HEAD' && !sameOrigin) {
+  const read = req.method === 'GET' || req.method === 'HEAD';
+  const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  if (!read && !sameOrigin) {
     sendJson(res, 403, { error: t('server.errors.originRefused') });
     return true;
+  }
+  // File link carrying a read token (resources of a sandboxed page, which leaves the cookie out): the request goes on
+  // without the token; an invalid or expired one counts as absent (the cookie decides, and a page reloaded with it
+  // gets a fresh token below)
+  const tokened = read && (await untoken(p));
+  if (tokened) {
+    req.url = tokened.path + query;
+    if (tokened.valid) return false;
+    p = tokened.path;
   }
   // Lax, not Strict: a link opened from the installed app (PWA) into the browser counts as cross-site, so a Strict
   // cookie would not leave and the page would ask to log in. Safe: cross-site API GETs are refused (request-guard),
@@ -84,6 +96,16 @@ export async function remoteGate(req, res, p) {
   if (p === '/') res.setHeader('Set-Cookie', cookie(access.cookieOf(req), access.DURATION_DAYS));
   // What acts on the PC or on access itself is never done from the internet (server mode: desktop actions only)
   if (FORBIDDEN.test(p)) { sendJson(res, 403, { error: t(SERVER_MODE ? 'server.errors.desktopOnly' : 'server.errors.pcOnly') }); return true; }
+  // HTML page or SVG of a project: reopened under a read token, so that its images, CSS and scripts load too
+  const file = read && requestedFile(p);
+  if (file && isActiveFile(file)) {
+    const target = await tokenedPath(p, file, device);
+    if (target) {
+      res.writeHead(302, { Location: target + query, 'Cache-Control': 'no-store' });
+      res.end();
+      return true;
+    }
+  }
   if (p === '/api/events' || p === '/api/browse/watch') trackStream(device.id, res);
   return false;
 }

@@ -39,9 +39,10 @@ async function handle(req, res, external = false) {
   const hostOk = external ? (!EXTRA_HOSTS.length || EXTRA_HOSTS.includes(splitHost(req.headers.host)?.name))
     : hostAllowed(req.headers.host, { port: PAGE_PORT, ipLiterals: LAN, anyPort: EXTRA_HOSTS });
   if (!hostOk) return sendJson(res, 403, { error: t('server.errors.hostRefused') });
+  if (external && (await remoteGate(req, res, new URL(req.url, 'http://localhost').pathname))) return;
+  // After the gate, which strips the read token of a file link from req.url (server/file-tokens.mjs)
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
-  if (external && (await remoteGate(req, res, p))) return;
   // Request forged by another website (the gate checks the Origin itself, and requires a login)
   const forged = !external && requestError({ method: req.method, path: p, headers: req.headers, loopback: isLocal(req.socket.remoteAddress) });
   if (forged) return sendJson(res, 403, { error: t(`server.errors.${forged === 'origin' ? 'originRefused' : forged === 'crossSite' ? 'crossSiteRefused' : 'contentTypeRefused'}`) });

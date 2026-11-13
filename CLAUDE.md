@@ -197,6 +197,9 @@ and the design of what is about to be built in visual form, with all the availab
   The engine only accepts the page: Host `127.0.0.1:<port>` and the header `x-dash-engine-token` =
   `DASH_DIR/engine-token` (created by the first process that needs it). Files from elsewhere (`/f/`, `/api/file/`,
   attachments) are served with `Content-Security-Policy: sandbox` when HTML or SVG, mockup iframes have `sandbox`.
+  Such a page has an opaque origin, so through the internet gate its images, CSS and scripts would leave without the
+  login cookie: the gate redirects it to `/api/file/~<token>/…` or `/f/~<token>/…` (`server/file-tokens.mjs`: read
+  token signed with the device key, valid for the page's project root, 12 h), its relative links keep the prefix.
   update_board ignores the engine's keys (`engine/board-fields.mjs`); a session never launches one more permissive than
   itself (`childMode` of `driver/modes.mjs`: all > auto > edits > ask, a session in plan launches in ask), and outside
   "all" its `launch_session`, `message_session`, `end_session` and `set_tracker` calls go through `canUseTool` (only `update_board`, `list_sessions` and `list_trackers` are in `allowedTools`). Sensitive files: `server/sensitive.mjs` (alternate streams and 8.3 names refused on Windows).

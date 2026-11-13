@@ -132,15 +132,23 @@ export const norm = p => (WIN ? path.resolve(p).toLowerCase() : path.resolve(p))
  */
 export const SANDBOX_CSP = 'sandbox allow-scripts allow-popups allow-forms';
 const ACTIVE_TYPES = /^(text\/html|image\/svg\+xml|application\/(xhtml\+)?xml|text\/xml)(;|$)/;
+const typeOf = file => MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
+
+/** File that a sandboxed serving puts in the sandbox (HTML, SVG, XML). */
+export const isActiveFile = file => ACTIVE_TYPES.test(typeOf(file));
 
 /** Headers of a file served to the page; `sandboxed`: a file from elsewhere (see SANDBOX_CSP). */
 export function fileHeaders(file, sandboxed = false) {
-  const type = MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
+  const type = typeOf(file);
   // no-store: the page never keeps a stale app.js after a server update
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-store' };
   if (sandboxed) {
     headers['X-Content-Type-Options'] = 'nosniff';
-    if (ACTIVE_TYPES.test(type)) headers['Content-Security-Policy'] = SANDBOX_CSP;
+    if (ACTIVE_TYPES.test(type)) {
+      headers['Content-Security-Policy'] = SANDBOX_CSP;
+      // Its URL can carry a read token (server/file-tokens.mjs): never sent to the sites it links to
+      headers['Referrer-Policy'] = 'no-referrer';
+    }
   }
   return headers;
 }

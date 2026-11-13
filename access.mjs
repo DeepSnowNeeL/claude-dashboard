@@ -175,6 +175,11 @@ export function deviceOf(req) {
   if (Date.now() - Date.parse(a.seen) > 60_000) { a.seen = new Date().toISOString(); write(e); }
   return a;
 }
+/** Approved device `id` still logged in (file links signed with its key, server/file-tokens.mjs), or null. */
+export function approvedDevice(id) {
+  const a = (read().devices || []).find(x => x.id === id);
+  return a?.approved && Date.now() - Date.parse(a.seen) <= DURATION_DAYS * 86400_000 ? a : null;
+}
 export function logout(id) {
   const e = read();
   e.devices = (e.devices || []).filter(a => a.id !== id);

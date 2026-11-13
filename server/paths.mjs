@@ -19,10 +19,18 @@ export async function knownProjects() {
  * only the dashboard projects and ~/.claude-dashboard, without the sensitive files either.
  */
 export async function isPathAllowed(file, req) {
-  const c = norm(file);
   if (isSensitive(file, req)) return false;
   if (req?.fromPc) return true;
-  // Server mode: the workspace too (the cloned repositories, before any session runs in them)
+  return !!(await rootOf(file));
+}
+
+/**
+ * Deepest allowed root (worktree of a project, ~/.claude-dashboard, workspace in server mode) holding `file`, or null.
+ * Server mode: the workspace too (the cloned repositories, before any session runs in them).
+ */
+export async function rootOf(file) {
+  const c = norm(file);
   const roots = [...(await knownProjects()).flatMap(p => p.worktrees.map(w => w.path)), DASH_DIR, ...(WORKSPACE_DIR ? [WORKSPACE_DIR] : [])];
-  return roots.some(r => c === norm(r) || c.startsWith(norm(r) + path.sep));
+  const inside = roots.filter(r => c === norm(r) || c.startsWith(norm(r) + path.sep));
+  return inside.sort((a, b) => b.length - a.length)[0] || null;
 }
