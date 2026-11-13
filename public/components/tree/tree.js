@@ -66,7 +66,7 @@ function sessionRow(s, worktree) {
   return `<a class="sess ${s.slug === current() ? 'sel' : ''} ${s.blocked ? 'blocked' : ''} ${unread ? 'unread' : ''}" href="#${s.slug}" ${drag}${unread ? ` data-n="${unread > 99 ? '99+' : unread}" title="${t('tree.unreadTitle', { n: unread })}"` : ''}>
     <div class="t">${s.driven ? `<span class="dot ${s.busy ? 'busy' : ''}" title="${t('tree.driven')}"></span>` : ''}${displayName(s)}</div>
     ${s.description ? `<div class="d">${esc(s.description)}</div>` : ''}
-    ${s.blocked ? `<span class="pill p-blocked" title="${t('tree.blockedTitle')}">${s.blocked === 'permission' ? t('tree.blockedPermission') : t('tree.blockedQuestion')}</span>` : ''}
+    ${s.blocked ? `<span class="pill p-blocked" title="${t('tree.blockedTitle')}">${s.blocked === 'permission' ? t('tree.blockedPermission') : s.blocked === 'plan' ? t('tree.blockedPlan') : t('tree.blockedQuestion')}</span>` : ''}
     <span class="pill p-${esc(g)}">${g === 'waiting' ? '⏳ ' : g === 'done' ? '✓ ' : '⚙ '}${esc(s.statusSummary || s.step)}</span>
     ${s.runningAgents ? `<span class="pill p-agents" title="${t('tree.runningAgents')}">🤖 ${s.runningAgents}</span>` : ''}
     ${s.runningShells ? `<span class="pill p-agents" title="${t('tree.runningShells')}">🐚 ${s.runningShells}</span>` : ''}

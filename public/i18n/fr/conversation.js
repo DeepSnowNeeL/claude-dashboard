@@ -82,8 +82,6 @@ export default {
     pinnedTitle: 'Nom fixé : Claude ne le change plus',
     ticket: 'ticket {ticket} ↗',
     modeTitle: 'Permissions des outils',
-    modeAll: 'tout autoriser',
-    modeAsk: 'demander avant chaque outil',
     doneTitle: 'Le processus Claude est arrêté ; un message la reprend avec tout son historique.',
     done: '✓ terminée, un message la reprend',
     pausedTitle: 'Le serveur a redémarré : la session Claude reprend avec tout son historique au prochain message.',

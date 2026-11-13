@@ -12,13 +12,14 @@ import { attachEvents } from './events.mjs';
 import { attachPermissions } from './permissions.mjs';
 import { attachAgents } from './agents.mjs';
 import { attachMcpTools, DASHBOARD_TOOLS } from './mcp-tools.mjs';
+import { MODES, modeKey } from './modes.mjs';
 
 export { FILES_DIR, attachmentUrl, extractAttachments } from './attachments.mjs';
 export { feedFromHistory, agentFeedFromHistory, historyAgents, recentFolders } from './history.mjs';
 export { subscriptionUsage } from './usage.mjs';
 
 const HERE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'); // repository root (instructions.*.md, plugin/)
-export const MODES = { all: 'bypassPermissions', ask: 'default' };
+export { MODES, childMode } from './modes.mjs';
 const INERT_ACHIEVEMENTS = { record() {}, add() {}, xp() {}, stat: () => 0, set() {}, get() {}, plan() {}, parallel() {} };
 
 /** Common instructions in the interface language (instructions.fr.md / instructions.en.md), read at each query start. */
@@ -47,6 +48,7 @@ function autoCompactEnv() {
  * @param {string} o.slug
  * @param {string} o.cwd project folder
  * @param {string} o.mode key of MODES
+ * @param {string} [o.prePlan] key of MODES to go back to when the plan is approved (session started in plan)
  * @param {(data: object) => void} o.updateBoard merge into the panel state (called by the tool and by the page)
  * @param {(ev: object) => void} o.emit add or replace a feed event
  * @param {() => void} [o.clearBoard] /clear: empties the Tracker panel and the session header
@@ -60,12 +62,12 @@ function autoCompactEnv() {
  * @param {object[]} [o.initialFeed] feed rebuilt from the history of the resumed session
  * @param {object} [o.achievements] levels and achievements (engine/progress.mjs, sessionAchievements): record, add, xp, stat, set, get, plan
  */
-export function createSession({ slug, cwd, mode = 'all', updateBoard, emit, count = () => {}, clearBoard = () => {}, notifyChange = () => {}, onStopped = () => {}, launch, list, write, end, resume, initialFeed = [], achievements = INERT_ACHIEVEMENTS }) {
+export function createSession({ slug, cwd, mode = 'all', prePlan, updateBoard, emit, count = () => {}, clearBoard = () => {}, notifyChange = () => {}, onStopped = () => {}, launch, list, write, end, resume, initialFeed = [], achievements = INERT_ACHIEVEMENTS }) {
   const input = inputQueue();
   const pending = new Map(); // id → resolve
   let counter = 0;
   const newId = () => `${slug}-${Date.now().toString(36)}-${++counter}`;
-  const s = { slug, cwd, mode, busy: false, sessionId: resume || null, feed: [...initialFeed], q: null };
+  const s = { slug, cwd, mode, prePlan, busy: false, sessionId: resume || null, feed: [...initialFeed], q: null };
 
   const pushEvent = ev => {
     const i = s.feed.findIndex(x => x.id === ev.id);
@@ -160,7 +162,18 @@ export function createSession({ slug, cwd, mode = 'all', updateBoard, emit, coun
   };
 
   s.interrupt = async () => { if (s.busy) s.interrupted = true; await s.q.interrupt(); }; // interrupted: not an API error (achievements)
-  s.setMode = async m => { if (!MODES[m]) return; s.mode = m; await s.q.setPermissionMode(MODES[m]); updateBoard({ mode: m }); };
+  /**
+   * Records a mode change, asked by the page or made by Claude Code itself (EnterPlanMode, plan approved: `status`
+   * messages). Entering plan remembers the mode to go back to when the plan is approved.
+   */
+  s.syncMode = m => {
+    if (!MODES[m] || m === s.mode) return;
+    if (m === 'plan') s.prePlan = s.mode;
+    s.mode = m;
+    updateBoard({ mode: m, prePlanMode: s.prePlan ?? null });
+  };
+  s.setMode = async m => { if (!MODES[m]) return; await s.q.setPermissionMode(MODES[m]); s.syncMode(m); };
+  ctx.syncSdkMode = sdk => s.syncMode(modeKey(sdk));
   /** Stops the Claude process of the session (running turn interrupted). Resuming stays possible through its id. */
   s.close = async () => {
     s.closed = true;

@@ -46,4 +46,17 @@ export default {
     trying: 'Connexion…',
     still: 'Toujours injoignable ({time}), nouvel essai automatique dans 15 s.',
   },
+  modes: {
+    all: '⚡ tout autoriser',
+    allTitle: "Aucune question : chaque outil s'exécute (comme claude --dangerously-skip-permissions)",
+    auto: '🤖 auto',
+    autoTitle: 'Un classifieur valide chaque outil et demande quand il hésite',
+    edits: '✏️ accepter les modifications',
+    editsTitle: 'Les modifications de fichiers passent sans demander, le reste demande',
+    ask: '✋ demander avant chaque outil',
+    askTitle: 'Une carte de permission avant chaque outil sensible',
+    plan: '📋 plan',
+    planTitle: 'Lecture seule : Claude explore et propose un plan à valider avant de modifier quoi que ce soit',
+    unavailable: '(indisponible pour ce modèle)',
+  },
 };

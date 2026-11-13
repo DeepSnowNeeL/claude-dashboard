@@ -195,11 +195,16 @@ and the design of what is about to be built in visual form, with all the availab
   The engine only accepts the page: Host `127.0.0.1:<port>` and the header `x-dash-engine-token` =
   `DASH_DIR/engine-token` (created by the first process that needs it). Files from elsewhere (`/f/`, `/api/file/`,
   attachments) are served with `Content-Security-Policy: sandbox` when HTML or SVG, mockup iframes have `sandbox`.
-  update_board ignores the engine's keys (`engine/board-fields.mjs`); a session in "ask" mode only launches "ask"
-  sessions, and its `launch_session`, `message_session`, `end_session` and `set_tracker` calls go through a permission
-  card (only `update_board`, `list_sessions` and `list_trackers` are in `allowedTools`). Sensitive files: `server/sensitive.mjs` (alternate streams and 8.3 names refused on Windows).
+  update_board ignores the engine's keys (`engine/board-fields.mjs`); a session never launches one more permissive than
+  itself (`childMode` of `driver/modes.mjs`: all > auto > edits > ask, a session in plan launches in ask), and outside
+  "all" its `launch_session`, `message_session`, `end_session` and `set_tracker` calls go through `canUseTool` (only `update_board`, `list_sessions` and `list_trackers` are in `allowedTools`). Sensitive files: `server/sensitive.mjs` (alternate streams and 8.3 names refused on Windows).
 - **Questions and permissions**: `canUseTool` of the SDK. AskUserQuestion always goes through it, even in "allow all"
-  mode; the other tools only in "ask" mode (mode values `all` / `ask`). The card waits for the page's answer.
+  mode; the other tools depending on the mode. Modes (`driver/modes.mjs`, selector `public/core/modes.js`), as Claude
+  Code's Shift+Tab: `all` (bypassPermissions), `auto` (classifier, greyed out when the model does not support it:
+  `autoMode` read from `supportedModels()`), `edits` (acceptEdits), `ask` (default), `plan`. The mode really in force
+  follows the SDK's `init` / `status` messages (Claude entering plan by itself). ExitPlanMode shows a plan card: approve
+  back to the mode before the plan (`prePlanMode`), in accept edits or in ask, or keep planning (clarification sent to
+  Claude). The card waits for the page's answer.
 - **Tracker panel**: built-in MCP tool `update_board` (MCP server `dashboard`, field merge, `null` erases, parameter
   `state`), the session's instructions in `instructions.en.md` / `instructions.fr.md` (common, chosen by the interface
   language) + those generated from its tracker profile, appended to Claude Code's system prompt when the query starts.

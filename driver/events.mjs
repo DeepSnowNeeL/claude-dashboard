@@ -113,10 +113,17 @@ export function attachEvents(ctx) {
   let text = null; // text event being written
   let lastContext = 0; // context size already counted (one message per block, same usage)
   function handleMessage(m) {
+    // Mode really in force (init, status): Claude Code changes it itself (EnterPlanMode, plan approved, auto unavailable)
+    if (m.type === 'system' && m.permissionMode) ctx.syncSdkMode(m.permissionMode);
     if (m.type === 'system' && m.subtype === 'init') {
       s.sessionId = m.session_id;
       ctx.terminalCommands = new Set(m.terminal_slash_commands || []);
       updateBoard({ sessionId: m.session_id, model: m.model });
+      // Auto mode offered if the session's model supports it (otherwise the selector greys it out)
+      s.q.supportedModels().then(models => {
+        const model = models.find(x => x.value === m.model) || models.find(x => x.value === 'default');
+        updateBoard({ autoMode: !!model?.supportsAutoMode });
+      }).catch(() => {});
     } else if (m.type === 'system' && m.subtype === 'compact_boundary') {
       // Context compacted (auto-compact or /compact): a line marks it, the 🧠 restarts at the next call
       const before = m.compact_metadata?.pre_tokens;

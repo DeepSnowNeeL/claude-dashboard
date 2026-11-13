@@ -30,6 +30,16 @@ export default {
     allow: 'Autoriser',
     deny: 'Refuser',
   },
+  plan: {
+    question: '📋 Claude propose ce plan',
+    clarification: "Précision pour Claude (facultatif) : ce qu'il faut revoir, ou une consigne pour l'exécution…",
+    approveBack: 'Valider, repasser en {mode}',
+    approveIn: 'Valider en {mode}',
+    keepPlanning: 'Continuer à planifier',
+    approved: '✓ plan validé, exécution en {mode}',
+    keptPlanning: '↻ renvoyé : continuer à planifier',
+    cancelled: 'plan annulé',
+  },
   question: {
     cancelled: 'Question annulée',
     title: 'Question',

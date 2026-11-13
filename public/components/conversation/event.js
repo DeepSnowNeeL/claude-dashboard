@@ -7,6 +7,7 @@ import { syncDraft } from '../../services/draft.js';
 import { decisionCards, attachDecisions, highlight } from '../cards/decisions.js';
 import { questionCard, attachQuestion } from '../cards/question.js';
 import { permissionCard, attachPermission } from '../cards/permission.js';
+import { planCard, attachPlan } from '../cards/plan.js';
 import { agentCard, attachAgent } from '../cards/agent.js';
 import { parseSessionMessage, fillSessionMessage } from '../cards/session-message.js';
 import { t } from '../../i18n/index.js';
@@ -73,6 +74,7 @@ export function eventHtml(ev, activeDecisionsId) {
     if (active) setTimeout(() => { $('#input').value = syncDraft(current(), ev.decisions); attachDecisions(el); highlight(); document.dispatchEvent(new CustomEvent('input-changed')); });
   } else if (ev.t === 'question') { el.className = 'msg claude'; el.innerHTML = questionCard(ev); attachQuestion(el, ev); }
   else if (ev.t === 'permission') { el.className = 'msg claude'; el.innerHTML = permissionCard(ev); attachPermission(el, ev); }
+  else if (ev.t === 'plan') { el.className = 'msg claude'; el.innerHTML = planCard(ev); attachPlan(el, ev); }
   else if (ev.t === 'end') { el.className = 'end m'; el.textContent = `${ev.ok ? t('conversation.event.turnDone') : t('conversation.event.turnInterrupted')}${ev.duration ? ` · ${Math.round(ev.duration / 1000)} s` : ''}${ev.cost ? ` · ~${ev.cost.toFixed(2)} $ ${t('conversation.event.estimate')}` : ''}`; }
   else if (ev.t === 'error') {
     el.className = 'msg err';

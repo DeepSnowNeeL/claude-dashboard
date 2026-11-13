@@ -4,6 +4,7 @@ import { create, resume } from '../services/sessions.js';
 import { readHistory, readFolders } from '../services/projects.js';
 import { projects, relativeDir, serverMode } from '../core/state.js';
 import { readWorkspace } from '../services/options.js';
+import { modeOptions } from '../core/modes.js';
 import { t, locale } from '../i18n/index.js';
 
 // On the right of "New session": the folder's past sessions (terminal and page alike), searchable, to resume.
@@ -89,7 +90,7 @@ export function renderNewSession(initialCwd) {
       <label id="worktree-input" hidden>${t('newSession.branch')}<input id="new-branch" placeholder="${t('newSession.branchPlaceholder')}" autocomplete="off">
         <span class="m" id="worktree-target"></span></label>
       <label>${t('newSession.permissions')}
-        <select id="new-session-mode"><option value="all">${t('newSession.modeAll')}</option><option value="ask">${t('newSession.modeAsk')}</option></select></label>
+        <select id="new-session-mode">${modeOptions('all')}</select></label>
       <div class="bar"><span class="m">${t('newSession.readyHint')}</span><button class="btn on large" type="submit">${t('newSession.start')}</button></div>
     </form></div>`;
   if (cwd0) $('#new-session-form button[type=submit]').focus(); // Enter starts the session

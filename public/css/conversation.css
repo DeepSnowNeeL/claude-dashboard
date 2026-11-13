@@ -28,6 +28,10 @@ details.tools summary { cursor: pointer; white-space: nowrap; overflow: hidden; 
 .card { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-top: 6px; background: var(--bg); }
 .card.active { border-color: var(--accent); }
 .card.past { opacity: .6; }
+/* Plan to approve (ExitPlanMode): rendered markdown, scrolls past a screen */
+.plan-body { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin: 6px 0; max-height: 60vh; overflow: auto; }
+.card.past .plan-body { max-height: 40vh; }
+.card.plan .choices { display: flex; flex-wrap: wrap; gap: 6px; }
 .card .q { font-weight: 700; }
 .card .bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
 .question-block + .question-block { margin-top: 10px; }

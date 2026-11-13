@@ -6,6 +6,7 @@ import { current, detail, projects } from '../../core/state.js';
 import { setMode, end, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
 import { loadList, pathKey } from '../../services/projects.js';
 import { trackerProfile } from '../tracker/renderers.js';
+import { modeOptions } from '../../core/modes.js';
 import { t } from '../../i18n/index.js';
 
 const STEPS = ['framing', 'mockup', 'design', 'execution', 'push'];
@@ -34,10 +35,7 @@ export function renderHeader(d) {
     <div class="head-row">
       <div class="steps">${steps.map(([k, lbl], i) => `<span class="${i < iStep ? 'done' : i === iStep ? 'current' : ''}">${i < iStep ? '✓ ' : ''}${esc(lbl)}</span>`).join('')}</div>
       ${d.driven ? `<div class="commands">
-        <select id="mode" title="${t('conversation.header.modeTitle')}">
-          <option value="all" ${d.mode !== 'ask' ? 'selected' : ''}>${t('conversation.header.modeAll')}</option>
-          <option value="ask" ${d.mode === 'ask' ? 'selected' : ''}>${t('conversation.header.modeAsk')}</option>
-        </select>
+        <select id="mode" title="${t('conversation.header.modeTitle')}">${modeOptions(d.mode, d.autoMode)}</select>
         ${d.status === 'done' ? `<span class="m" title="${t('conversation.header.doneTitle')}">${t('conversation.header.done')}</span>`
           : d.paused ? `<span class="m" title="${t('conversation.header.pausedTitle')}">${t('conversation.header.paused')}</span>` : ''}
         ${d.busy ? `<span class="m">${t('conversation.header.busy')}</span>` : ''}

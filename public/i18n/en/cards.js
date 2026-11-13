@@ -30,6 +30,16 @@ export default {
     allow: 'Allow',
     deny: 'Deny',
   },
+  plan: {
+    question: '📋 Claude proposes this plan',
+    clarification: 'Clarification for Claude (optional): what to rework, or an instruction for the execution…',
+    approveBack: 'Approve, back to {mode}',
+    approveIn: 'Approve in {mode}',
+    keepPlanning: 'Keep planning',
+    approved: '✓ plan approved, executed in {mode}',
+    keptPlanning: '↻ sent back: keep planning',
+    cancelled: 'plan cancelled',
+  },
   question: {
     cancelled: 'Question cancelled',
     title: 'Question',

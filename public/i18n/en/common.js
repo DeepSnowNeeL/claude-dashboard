@@ -46,4 +46,17 @@ export default {
     trying: 'Connecting…',
     still: 'Still unreachable ({time}), next automatic try in 15 s.',
   },
+  modes: {
+    all: '⚡ allow everything',
+    allTitle: 'No prompt: every tool runs (like claude --dangerously-skip-permissions)',
+    auto: '🤖 auto',
+    autoTitle: 'A classifier approves each tool and asks when unsure',
+    edits: '✏️ accept edits',
+    editsTitle: 'File edits go through without asking, the rest asks',
+    ask: '✋ ask before each tool',
+    askTitle: 'A permission card before each sensitive tool',
+    plan: '📋 plan',
+    planTitle: 'Read only: Claude explores and proposes a plan to approve before changing anything',
+    unavailable: '(unavailable for this model)',
+  },
 };

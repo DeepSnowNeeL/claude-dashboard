@@ -26,7 +26,7 @@ const callbacks = slug => ({
   // Levels and achievements: records, XP and the session's own counters (data.stats.achievements)
   achievements: { ...sessionAchievements(slug), plan: onRateLimit, parallel: recordParallel },
   // Tools launch_session, list_sessions, message_session: a session acts on the others
-  launch: async ({ cwd, text, mode }) => { const created = newSession(cwd, text, mode); onLaunch(slug); return created; },
+  launch: async ({ cwd, text, mode, prePlan }) => { const created = newSession(cwd, text, mode, prePlan); onLaunch(slug); return created; },
   // Displayed title (the one set by the developer if they renamed it), project, worktree and group as in the tree
   list: async () => {
     const list = [...sessions].map(([s, v]) => summarize(s, v));
@@ -68,12 +68,12 @@ export async function endSession(slug) {
 }
 
 /** New driven session in `cwd`, with its first message. Returns its slug. */
-export function newSession(cwd, text, mode = 'all') {
+export function newSession(cwd, text, mode = 'all', prePlan) {
   const slug = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
   const empty = !String(text || '').trim(); // created with one click ("+" of a worktree): it waits for its first message
-  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
+  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, ...(prePlan ? { prePlanMode: prePlan } : {}), status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
   sessions.set(slug, { data, receivedAt: new Date().toISOString() });
-  const s = createSession({ slug, cwd, mode, ...callbacks(slug) });
+  const s = createSession({ slug, cwd, mode, prePlan, ...callbacks(slug) });
   drivers.set(slug, s);
   s.devTurn = true; // the first turn is not "autonomous"
   if (!empty) s.send(String(text));
@@ -88,7 +88,7 @@ export async function resume(slug) {
   const { data } = sessions.get(slug);
   const initialFeed = data.sessionId ? await feedFromHistory(slug, data.sessionId, data.cwd) : [];
   if (drivers.has(slug)) return drivers.get(slug); // concurrent resume while reading the history
-  const s = createSession({ slug, cwd: data.cwd, mode: data.mode || 'all', resume: data.sessionId, initialFeed, ...callbacks(slug) });
+  const s = createSession({ slug, cwd: data.cwd, mode: data.mode || 'all', prePlan: data.prePlanMode || undefined, resume: data.sessionId, initialFeed, ...callbacks(slug) });
   drivers.set(slug, s);
   // Session from before the counters: exchanges are found in the history, not Claude's time.
   if (!data.stats) count(slug, { exchanges: initialFeed.filter(ev => ev.t === 'user').length });

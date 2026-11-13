@@ -1,5 +1,6 @@
 // Questions and permissions: SDK canUseTool, cards waiting for the page's answer.
 import { summarizeTool } from './events.mjs';
+import { MODES, afterPlan } from './modes.mjs';
 
 /** Returns `{ awaitAnswer, canUseTool }`; sets `s.answer` (the page's answer to a card). */
 export function attachPermissions(ctx) {
@@ -23,16 +24,29 @@ export function attachPermissions(ctx) {
       if (!r) return { behavior: 'deny', message: 'Question cancelled.' };
       return { behavior: 'allow', updatedInput: { questions: input.questions, answers: r.answers } };
     }
+    // End of plan mode: the plan to approve, executed in the mode chosen on the card (as in the terminal)
+    if (tool === 'ExitPlanMode') {
+      const back = afterPlan(s.prePlan);
+      const r = await awaitAnswer({ id: newId(), t: 'plan', plan: String(input?.plan || ''), back, state: 'pending' }, signal);
+      setStatus('working');
+      if (!r) return { behavior: 'deny', message: 'Plan review cancelled.' };
+      if (!r.mode) return { behavior: 'deny', message: r.clarification ? `Keep planning. The developer says: ${r.clarification}` : 'The developer wants to keep planning.' };
+      const mode = MODES[r.mode] && r.mode !== 'plan' ? r.mode : back;
+      // The approved plan goes back to Claude in the tool result: the developer's clarification travels with it
+      const plan = r.clarification ? `${input.plan || ''}\n\nDeveloper's note on approval: ${r.clarification}` : input.plan;
+      s.syncMode(mode);
+      return { behavior: 'allow', updatedInput: { ...input, plan }, updatedPermissions: [{ type: 'setMode', mode: MODES[mode], destination: 'session' }] };
+    }
     const r = await awaitAnswer({ id: newId(), t: 'permission', tool, summary: summarizeTool(tool, input), state: 'pending' }, signal);
     setStatus('working');
     if (!r?.allow) return { behavior: 'deny', message: r?.clarification ? `Denied: ${r.clarification}` : 'Denied by the developer.' };
     return { behavior: 'allow', updatedInput: input };
   };
 
-  /** Card blocking the session (`permission` before `question`), otherwise null: the list shows it in red. */
+  /** Card blocking the session (`permission`, then `plan`, then `question`), otherwise null: the list shows it in red. */
   s.blocked = () => {
     const types = [...pending.keys()].map(id => s.feed.find(x => x.id === id)?.t);
-    return types.includes('permission') ? 'permission' : types.includes('question') ? 'question' : null;
+    return types.includes('permission') ? 'permission' : types.includes('plan') ? 'plan' : types.includes('question') ? 'question' : null;
   };
 
   s.answer = (id, answer) => {

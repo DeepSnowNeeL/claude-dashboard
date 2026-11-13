@@ -6,6 +6,7 @@ export default {
   blockedTitle: 'Claude est arrêté en attendant ta réponse',
   blockedPermission: '🔐 commande à valider',
   blockedQuestion: '❓ question',
+  blockedPlan: '📋 plan à valider',
   runningAgents: 'sous-agents en cours',
   runningShells: 'shells en arrière-plan en cours',
   counters: {

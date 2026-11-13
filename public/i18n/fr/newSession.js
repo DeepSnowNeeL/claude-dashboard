@@ -24,8 +24,6 @@ export default {
   branch: 'Branche',
   branchPlaceholder: '2691-export-csv',
   permissions: 'Permissions des outils',
-  modeAll: 'tout autoriser (comme ton terminal)',
-  modeAsk: 'demander avant chaque outil',
   readyHint: 'La session s\'ouvre prête : tu écris ton premier message dans sa saisie. Elle charge tes réglages, CLAUDE.md, skills et plugins comme dans le terminal.',
   start: '▶ Nouvelle session',
   createdIn: 'créé dans {path}',

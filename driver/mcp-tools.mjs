@@ -7,12 +7,14 @@ import * as trackers from '../trackers.mjs';
 import { createWorktree } from '../projects.mjs';
 import { boardFields } from '../engine/board-fields.mjs';
 import { t } from '../public/i18n/index.js';
+import { childMode } from './modes.mjs';
 
 export const BOARD_TOOL = 'mcp__dashboard__update_board';
 /**
  * Dashboard tools allowed without asking (allowedTools of the query): the panel and read-only ones. The others act on
- * other sessions or write files (launch, message, end, set_tracker): in "ask" mode they go through a permission card
- * like any tool, so a session cannot get around its mode through another session.
+ * other sessions or write files (launch, message, end, set_tracker): outside "all" mode they go through canUseTool (a
+ * permission card, or the auto mode classifier) like any tool, so a session cannot get around its mode through another
+ * session.
  */
 export const DASHBOARD_TOOLS = [BOARD_TOOL, 'mcp__dashboard__list_sessions', 'mcp__dashboard__list_trackers'];
 
@@ -49,7 +51,7 @@ export function attachMcpTools(ctx) {
           branch: z.string().describe('Name of the branch to create (e.g. 2691-export-csv)'),
           base: z.string().optional().describe('Starting branch or commit; default: HEAD of the main worktree'),
         }).optional().describe('Only if another worktree is requested'),
-        mode: z.enum(['all', 'ask']).optional().describe('Tool permissions; default: the mode of this session'),
+        mode: z.enum(['all', 'auto', 'edits', 'ask', 'plan']).optional().describe('Tool permissions (all: no prompt, auto: classifier, edits: file edits accepted, ask: prompt, plan: read only, proposes a plan); never more permissive than this session; default: the mode of this session'),
       },
       async ({ prompt, folder: requested, worktree, mode: m }) => {
         let folder = cwd;
@@ -62,8 +64,9 @@ export function attachMcpTools(ctx) {
           try { folder = await createWorktree(folder, worktree.branch, worktree.base); ctx.achievements.add('arborist'); }
           catch (e) { return { content: [{ type: 'text', text: `Worktree not created: ${e.message}` }], isError: true }; }
         }
-        // A session in "ask" mode never launches one that asks nothing: its tools would escape the developer's approval
-        const created = await launch({ cwd: folder, text: prompt, mode: s.mode === 'ask' ? 'ask' : m || s.mode });
+        // Never more permissive than this session (a session in plan launches in "ask"): its tools would escape the
+        // developer's approval
+        const created = await launch({ cwd: folder, text: prompt, ...childMode(s.mode, m) });
         return { content: [{ type: 'text', text: `Session ${created} launched in ${folder}.` }] };
       }, { alwaysLoad: true }),
     tool('list_sessions',

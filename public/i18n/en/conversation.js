@@ -82,8 +82,6 @@ export default {
     pinnedTitle: 'Pinned name: Claude no longer changes it',
     ticket: 'ticket {ticket} ↗',
     modeTitle: 'Tool permissions',
-    modeAll: 'allow everything',
-    modeAsk: 'ask before each tool',
     doneTitle: 'The Claude process is stopped; a message resumes it with its full history.',
     done: '✓ ended, a message resumes it',
     pausedTitle: 'The server has restarted: the Claude session resumes with its full history on the next message.',
