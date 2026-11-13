@@ -353,7 +353,7 @@ backward-compatibility code: its French names are recognised on purpose. Tests: 
   127.0.0.1:2019, queried with `node:http`, not `fetch` which it refuses) and relays to **127.0.0.1:4749**, where
   everything goes through the login (`remoteGate`): page `login.html`, master password (scrypt), then the device waits
   to be **approved from the PC** (⚙ Options → 🔒 Remote access, at the bottom of the list, or an app notification).
-  Cookie `HttpOnly Secure SameSite=Strict` 90 days, extended on each visit; Origin checked on POSTs; 5 failures per IP
+  Cookie `HttpOnly Secure SameSite=Lax` 90 days (Lax: a link opened from the PWA into the browser counts as cross-site), extended on each visit; Origin checked on POSTs; 5 failures per IP
   → 15 min, doubled at each new lockout of that IP (24 h max), no global cut; client IP = last `X-Forwarded-For`
   value; log `~/.claude-dashboard/access.log`. Changing the password logs out every
   device. The management routes (`/api/access/*`) and the "PC only" routes are refused from the wifi and the internet.

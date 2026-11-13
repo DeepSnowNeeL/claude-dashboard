@@ -43,7 +43,10 @@ export async function remoteGate(req, res, p) {
     sendJson(res, 403, { error: t('server.errors.originRefused') });
     return true;
   }
-  const cookie = (value, days) => `${access.COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${days * 86400}`;
+  // Lax, not Strict: a link opened from the installed app (PWA) into the browser counts as cross-site, so a Strict
+  // cookie would not leave and the page would ask to log in. Safe: cross-site API GETs are refused (request-guard),
+  // POSTs need the page's Origin (above)
+  const cookie = (value, days) => `${access.COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${days * 86400}`;
   if (p === '/access/login' && req.method === 'POST') {
     const minutes = access.blockedMinutes(ip);
     if (minutes) { sendJson(res, 429, { error: t('access.errors.tooManyAttempts', { minutes }) }); return true; }
