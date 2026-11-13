@@ -452,8 +452,8 @@ else {
     // Remote mode: nothing to start here, the dashboard runs on the server
     if (!remote() && !(await ensureServer())) tray.setToolTip(t('electron.tooltip.unreachable'));
     // Old startup registration without the argument (or, under `electron .`, without the app folder): redone
-    if (app.getLoginItemSettings().openAtLogin
-        || (process.defaultApp && app.getLoginItemSettings({ args: [STARTUP_FLAG] }).openAtLogin)) {
+    const registered = args => app.getLoginItemSettings({ args }).openAtLogin;
+    if (!registered(STARTUP_ARGS) && [[], [STARTUP_FLAG], ['--au-demarrage']].some(registered)) {
       app.setLoginItemSettings({ openAtLogin: false });
       app.setLoginItemSettings({ openAtLogin: true, args: STARTUP_ARGS });
     }
