@@ -108,9 +108,9 @@ export const tierOf = (family, i) => (family.thresholds.length === 1 && family.t
 /** Display name of a family, in the current language. */
 export const nameOf = family => t(`achievements.families.${family.id}.name`);
 
-/** Readable description: {n} replaced by the thresholds joined by « / ». */
-export const descOf = family => t(`achievements.families.${family.id}.desc`, {
-  n: family.thresholds.map(s => s.toLocaleString(locale())).join(' / '),
+/** Readable description: {n} replaced by the given threshold, otherwise by all of them joined by « / ». */
+export const descOf = (family, threshold) => t(`achievements.families.${family.id}.desc`, {
+  n: (threshold != null ? [threshold] : family.thresholds).map(s => s.toLocaleString(locale())).join(' / '),
 });
 
 /** A rank with its display name (what leaves the engine). */

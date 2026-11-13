@@ -59,7 +59,7 @@ function recompute() {
     const f = c.families.find(x => x.id === id), m = f.milestones[Number(i)];
     announce({
       type: 'milestone', family: id, tier: m.tier, number: f.thresholds.length > 1 ? Number(i) + 1 : null, name: nameOf(f), emoji: f.emoji,
-      desc: descOf(f), threshold: m.threshold, xp: BONUS[m.tier],
+      desc: descOf(f, m.threshold), threshold: m.threshold, xp: BONUS[m.tier],
       slug: m.slug, sessionTitle: m.slug ? sessions.get(m.slug)?.data.title || null : null,
     });
     state.announcements.push(key);
