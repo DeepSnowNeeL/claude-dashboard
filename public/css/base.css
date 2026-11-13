@@ -86,3 +86,13 @@ body.resizing iframe, body.resizing .viewer { pointer-events: none; }
 .f-steps { flex-direction: row; gap: 6px; padding: 6px 0; }
 .f-steps i { height: 18px; border-radius: 9px; }
 .head .title .skeleton { display: inline-flex; padding: 0; }
+
+/* Mobile: waiting screen while the dashboard restarts (components/updating.js) */
+.updating { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg); }
+.updating-card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 28px 24px 22px; text-align: center; }
+.updating-icon { font-size: 40px; line-height: 1; margin-bottom: 12px; }
+.updating h1 { font-size: 18px; margin: 0 0 6px; }
+.updating p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+.updating-spinner { width: 28px; height: 28px; margin: 0 auto; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: updating-spin 1s linear infinite; }
+@keyframes updating-spin { to { transform: rotate(360deg); } }
+.updating-status { margin-top: 12px; min-height: 1.5em; font-size: 13px; color: var(--muted); }

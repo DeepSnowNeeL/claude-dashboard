@@ -46,6 +46,11 @@ export default {
     trying: 'Connexion…',
     still: 'Toujours injoignable ({time}), nouvel essai automatique dans 15 s.',
   },
+  updating: {
+    title: 'Mise à jour en cours',
+    text: 'Le tableau de bord redémarre, il revient dans un instant.',
+    long: "C'est plus long que prévu, la page se rechargera dès qu'il répond.",
+  },
   modes: {
     all: '⚡ tout autoriser',
     allTitle: "Aucune question : chaque outil s'exécute (comme claude --dangerously-skip-permissions)",

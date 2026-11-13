@@ -32,12 +32,23 @@ export async function engine(route, options = {}) {
 }
 export const notifyChange = () => fetch(`${ENGINE}/api/signal`, { method: 'POST', headers: engineHeaders() }).catch(() => {});
 
+// Event streams relayed to the browsers (engine response → browser response), told before the page stops
+const streams = new Map();
+/** Tells the open pages that the dashboard restarts (update): on mobile they show a waiting screen, then reload. */
+export function announceRestart() {
+  for (const [from, res] of streams) { from.unpipe(res); res.write('event: restarting\ndata: page\n\n'); }
+}
+
 /** Relays the request as is to the engine (SSE included: the response is copied as it comes). */
 export function relay(req, res) {
   // x-dash-origin (pc, wifi, internet): set here, never the one a browser would send
   const to = http.request(`${ENGINE}${req.url}`, { method: req.method, headers: { ...req.headers, host: `127.0.0.1:${ENGINE_PORT}`, 'x-dash-origin': req.origin || 'pc', [ENGINE_TOKEN_HEADER]: engineToken() } }, r => {
     res.writeHead(r.statusCode, r.headers);
     r.pipe(res);
+    if (String(r.headers['content-type']).startsWith('text/event-stream')) {
+      streams.set(r, res);
+      res.on('close', () => streams.delete(r));
+    }
   });
   to.on('error', async e => {
     console.warn(`relay ${req.url}: ${e.message}`);

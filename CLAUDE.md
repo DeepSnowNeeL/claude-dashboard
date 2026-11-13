@@ -140,7 +140,9 @@ and the design of what is about to be built in visual form, with all the availab
   zoom). 📎 attaches a file (everywhere), 📷 takes a photo (mobile), like the Claude app. PC unreachable (off,
   asleep, page server stopped: no answer within 10 s, or Caddy's 502/503/504): the service worker (`public/sw.js`)
   shows `public/offline.html` instead of a white screen, with "Try again" (automatic every 15 s); it caches only that
-  page and the `i18n` dictionaries (refreshed from the network each time they load).
+  page and the `i18n` dictionaries (refreshed from the network each time they load). Update (page or engine restarted:
+  `/api/stop` and the engine announce `restarting` on the event stream): the phone shows "Updating" (`components/updating.js`),
+  then reloads the whole page when the stream reopens, so it runs the new code.
 
 ## How it works
 

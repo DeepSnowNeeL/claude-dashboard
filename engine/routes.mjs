@@ -11,7 +11,7 @@ import { sendJson, readBody, readBinary, serveFile, applyLanguage } from '../com
 import { t, LANGUAGES } from '../public/i18n/index.js';
 import * as trackers from '../trackers.mjs';
 import { sessions, drivers, resumable, newSession, resume, endSession, summarize, workInProgress } from './sessions.mjs';
-import { sseClients, broadcast } from './broadcast.mjs';
+import { sseClients, broadcast, broadcastRestarting } from './broadcast.mjs';
 import { SESSIONS_DIR, updateBoard, count, markSeen } from './board.mjs';
 import { ARCHIVE_DIR, readOptions, OPTIONS_FILE, archiveSession, archiveOf, autoArchive } from './archives.mjs';
 import { isAllowed } from './guard.mjs';
@@ -364,12 +364,13 @@ export default {
     // own turn would block an immediate stop); the page restarts it right away.
     if (url.searchParams.get('deferred') === '1') {
       clearInterval(deferredStop);
-      deferredStop = setInterval(() => { if (!workInProgress().length) process.exit(0); }, 2000);
+      deferredStop = setInterval(() => { if (!workInProgress().length) { broadcastRestarting(); setTimeout(() => process.exit(0), 100); clearInterval(deferredStop); } }, 2000);
       return sendJson(res, 200, { ok: true, deferred: true, running: workInProgress() });
     }
     const running = workInProgress();
     if (running.length && url.searchParams.get('force') !== '1') return sendJson(res, 409, { ...err('workInProgress'), running });
     sendJson(res, 200, { ok: true });
+    broadcastRestarting();
     setTimeout(() => process.exit(0), 100);
   },
   // The page reports a change that is not a session (projects, groups): the pages reload their list.

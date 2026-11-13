@@ -17,6 +17,7 @@ import { mountTree, byStatus } from './components/tree/tree.js';
 import { renderTracker } from './components/tracker/panel.js';
 import { mountOptions } from './components/options.js';
 import { mountAchievements } from './components/achievements.js';
+import { mountUpdating } from './components/updating.js';
 import { loadProgress } from './services/progress.js';
 import { mountMobile } from './components/mobile.js';
 import { show, refresh, mountConversation, markNewsRead } from './components/conversation/conversation.js';
@@ -63,9 +64,14 @@ mountTabs();
 // PWA: installable as an app on the phone (https only, or localhost)
 if (window.isSecureContext) navigator.serviceWorker?.register('/sw.js').catch(() => {});
 
+const updating = mountUpdating(); // mobile: waiting screen while the dashboard restarts, then reload
 connectSse({
   onAchievement,
-  async onReopen() { await loadList(); loadProgress(); if (current() && !/^new(\?|$)/.test(current())) await show(current()); },
+  onRestarting: updating.show,
+  async onReopen() {
+    if (updating.shown()) return location.reload(); // new code: the page reloads whole
+    await loadList(); loadProgress(); if (current() && !/^new(\?|$)/.test(current())) await show(current());
+  },
   async onUpdate(e) {
     await loadList();
     if (e.data === current()) { await refresh(); markNewsRead(false); }

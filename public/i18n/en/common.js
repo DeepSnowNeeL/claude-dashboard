@@ -46,6 +46,11 @@ export default {
     trying: 'Connecting…',
     still: 'Still unreachable ({time}), next automatic try in 15 s.',
   },
+  updating: {
+    title: 'Updating',
+    text: 'The dashboard is restarting, it will be back in a moment.',
+    long: 'This is taking longer than expected, the page will reload as soon as it answers.',
+  },
   modes: {
     all: '⚡ allow everything',
     allTitle: 'No prompt: every tool runs (like claude --dangerously-skip-permissions)',

@@ -8,7 +8,7 @@ import { sendJson, readBody, SERVER_MODE } from '../../common.mjs';
 import { isPathAllowed, isSensitive } from '../paths.mjs';
 import { git } from '../git.mjs';
 import { pathKey, forgetWorktrees } from '../../projects.mjs';
-import { engine, notifyChange } from '../engine-client.mjs';
+import { engine, notifyChange, announceRestart } from '../engine-client.mjs';
 import { t } from '../../public/i18n/index.js';
 
 /**
@@ -121,7 +121,7 @@ export default {
   'POST /api/worktree/remove': removeWorktree,
   'POST /api/vscode': openVsCode,
   // Stopping the page alone (dash.mjs restart): no session is touched
-  'POST /api/stop': async (req, res) => { sendJson(res, 200, { ok: true }); setTimeout(() => process.exit(0), 100); },
+  'POST /api/stop': async (req, res) => { sendJson(res, 200, { ok: true }); announceRestart(); setTimeout(() => process.exit(0), 100); },
   'POST /api/auth/login': auth('login'),
   'POST /api/auth/logout': auth('logout'),
   'POST /api/auth/status': auth('status'),
