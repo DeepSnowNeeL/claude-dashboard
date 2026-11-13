@@ -12,10 +12,13 @@ const { loadI18n, applyLanguage, DASH_DIR } = require('./language.cjs');
 
 const PORT = Number(process.env.DASH_PORT || 4747);
 // Launched by Windows at session login: icon only, window hidden until the first click
-const STARTUP_ARGS = ['--at-startup'];
-const AT_STARTUP = process.argv.includes(STARTUP_ARGS[0]) || process.argv.includes('--au-demarrage'); // --au-demarrage: its former French name, still in older startup entries
+const STARTUP_FLAG = '--at-startup';
+const AT_STARTUP = process.argv.includes(STARTUP_FLAG) || process.argv.includes('--au-demarrage'); // --au-demarrage: its former French name, still in older startup entries
 const LOCAL_BASE = `http://localhost:${PORT}`;
 const ROOT = path.join(__dirname, '..');
+// Started by `electron .` (npm run app), the bare electron.exe needs the app folder, otherwise Windows opens
+// Electron's default window at login; the launcher loads the repo by itself
+const STARTUP_ARGS = process.defaultApp ? [ROOT, STARTUP_FLAG] : [STARTUP_FLAG];
 const fs = require('node:fs');
 
 // Texts: t() of public/i18n, loaded at startup (whenReady) before anything is shown
@@ -448,8 +451,9 @@ else {
     tray.on('click', show);
     // Remote mode: nothing to start here, the dashboard runs on the server
     if (!remote() && !(await ensureServer())) tray.setToolTip(t('electron.tooltip.unreachable'));
-    // Old startup registration without the argument: redone with it, to start with the window hidden
-    if (app.getLoginItemSettings().openAtLogin) {
+    // Old startup registration without the argument (or, under `electron .`, without the app folder): redone
+    if (app.getLoginItemSettings().openAtLogin
+        || (process.defaultApp && app.getLoginItemSettings({ args: [STARTUP_FLAG] }).openAtLogin)) {
       app.setLoginItemSettings({ openAtLogin: false });
       app.setLoginItemSettings({ openAtLogin: true, args: STARTUP_ARGS });
     }
