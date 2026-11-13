@@ -1,0 +1,28 @@
+// mcp texts (fr).
+export default {
+  title: 'Serveurs MCP',
+  searchPlaceholder: 'Rechercher un serveur ou un outil…',
+  states: {
+    connected: 'connecté',
+    failed: 'en échec',
+    needsAuth: 'authentification requise',
+    pending: 'connexion…',
+    disabled: 'désactivé',
+  },
+  noServer: 'Aucun serveur MCP dans cette session.',
+  noMatch: 'Aucun serveur ni outil ne contient « {q} ».',
+  authHelpServer: "L'authentification (OAuth) ne se fait que dans Claude Code interactif, dans le conteneur : <code>docker exec -it dash claude</code> dans le dossier de la session, puis <code>/mcp</code>, choisis <b>{name}</b> ; puis ↻ Reconnecter ici.",
+  authHelp: 'L\'authentification (OAuth) ne se fait que dans Claude Code interactif : 🔑 ouvre un terminal sur <code>/mcp</code> dans le dossier de la session ; choisis <b>{name}</b>, valide dans le navigateur, puis ↻ Reconnecter ici.',
+  tools: { one: '{n} outil', other: '{n} outils' },
+  toolsOf: { one: '{k} sur {n} outil', other: '{k} sur {n} outils' },
+  authenticate: '🔑 S\'authentifier',
+  authenticateTitle: 'Ouvre Claude Code dans un terminal sur /mcp (l\'authentification passe par le navigateur), puis reviens cliquer Reconnecter',
+  reconnect: '↻ Reconnecter',
+  reconnecting: '↻ Reconnexion…',
+  enable: 'Activer',
+  disable: 'Désactiver',
+  terminalOpened: 'Terminal ouvert sur /mcp : choisis {name}, valide dans le navigateur, puis Reconnecter',
+  reconnected: '✓ reconnecté',
+  stillNotAuthenticated: 'Toujours pas authentifié : passe d\'abord par 🔑 S\'authentifier.',
+  reconnection: 'Reconnexion : {state}',
+};

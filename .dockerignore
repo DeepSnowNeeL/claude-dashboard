@@ -1,0 +1,17 @@
+# Only the code goes into the image: no dependencies of the host (installed for Linux by npm ci), no data, no secrets
+node_modules
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env
+*.local
+.reload.json
+.traduction
+launcher
+electron/icons/proposals
+workspace
+data
+NOTES-autre-pc.md
+CLAUDE.local.md

@@ -1,0 +1,15 @@
+node_modules/
+electron/icons/proposals/
+launcher/
+.reload.json
+NOTES-autre-pc.md
+*.local
+CLAUDE.local.md
+
+# Docker compose run from the repo
+workspace/
+.env
+
+# Older local folders (French build)
+lanceur/
+electron/icones/

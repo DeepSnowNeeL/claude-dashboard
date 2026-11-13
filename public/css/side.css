@@ -1,0 +1,55 @@
+/* Right panel: Tracker / Modified files tabs */
+/* Right panel tabs: stuck to the top when the Tracker scrolls (negative top = the panel padding) */
+.right-tabs { display: flex; gap: 4px; margin: -12px -16px 8px; padding: 12px 16px 8px; position: sticky; top: -12px; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line-light); }
+.right-tabs .count { font-size: 10px; padding: 0 6px; border-radius: 8px; background: color-mix(in srgb, var(--muted) 22%, transparent); }
+.git-head { margin: 2px 0 8px; overflow-wrap: anywhere; display: flex; align-items: flex-start; gap: 8px; }
+.git-head > .m { flex: 1; min-width: 0; }
+.git-file { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12.5px; color: var(--text); background: none; border: 0; border-radius: 6px; padding: 4px 6px; cursor: pointer; }
+.git-file:hover { background: color-mix(in srgb, var(--link) 14%, transparent); }
+.git-file .letter { width: 16px; flex-shrink: 0; text-align: center; font: 700 11px ui-monospace, monospace; border-radius: 3px; }
+.git-file.e-modified .letter { color: var(--orange); } .git-file.e-added .letter, .git-file.e-untracked .letter { color: var(--green); }
+.git-file.e-deleted .letter { color: var(--red); } .git-file.e-renamed .letter { color: var(--link); }
+.git-file .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.git-file .lines { flex-shrink: 0; font: 11px ui-monospace, monospace; }
+.git-file .plus { color: var(--green); } .git-file .minus { color: var(--red); }
+
+
+/* Commits tab */
+.commit { border-radius: 6px; }
+.commit.open { background: color-mix(in srgb, var(--muted) 8%, transparent); }
+.commit-row { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12.5px; color: var(--text); background: none; border: 0; border-radius: 6px; padding: 5px 6px; cursor: pointer; }
+.commit-row:hover { background: color-mix(in srgb, var(--link) 14%, transparent); }
+.commit-row .hash { font: 11px ui-monospace, monospace; color: var(--link); flex-shrink: 0; }
+.commit-row .subject { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commit-row .when { flex-shrink: 0; font-size: 11px; }
+.unpushed { color: var(--orange); font-weight: 700; }
+.commit-detail { padding: 0 6px 8px 22px; }
+.commit-body { font: 11.5px/1.45 system-ui, sans-serif; white-space: pre-wrap; margin: 4px 0 6px; color: var(--muted); }
+.commits-title { font-size: 13px; margin: 16px 0 4px; padding-top: 10px; border-top: 1px solid var(--line-light); }
+/* Layout menu (list / tree) and file tree */
+.layout-menu { position: relative; flex-shrink: 0; }
+.layout-menu .plus.menu { font: inherit; font-size: 15px; line-height: 1; background: none; color: var(--muted); border: 1px solid transparent; border-radius: 5px; width: 22px; height: 20px; cursor: pointer; padding: 0; }
+.layout-menu .plus.menu:hover { border-color: var(--line); color: var(--text); }
+.layout-choice { position: absolute; right: 0; top: 22px; z-index: 5; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 4px; box-shadow: 0 6px 18px #0008; min-width: 110px; }
+.layout-choice[hidden] { display: none; }
+.layout-choice button { font: inherit; font-size: 12.5px; text-align: left; background: none; border: 0; color: var(--text); padding: 4px 8px; border-radius: 5px; cursor: pointer; }
+.layout-choice button:hover { background: color-mix(in srgb, var(--link) 18%, transparent); }
+.layout-choice button.on { font-weight: 700; }
+.git-tree .git-folder > summary { list-style: none; cursor: pointer; font-size: 12px; color: var(--muted); padding: 2px 4px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.git-tree .git-folder > summary::-webkit-details-marker { display: none; }
+.git-tree .git-folder > summary:hover { color: var(--text); background: color-mix(in srgb, var(--muted) 10%, transparent); }
+.git-tree .git-folder:not([open]) > summary .ic-folder { display: inline-block; transform: rotate(-90deg); }
+.git-tree .folder-content { padding-left: 12px; border-left: 1px solid var(--line-light); margin-left: 6px; }
+/* Modified files tab: the list scrolls at the top, the commits are pinned at the bottom (5 visible, infinite scroll) */
+#right.mode-git { display: flex; flex-direction: column; overflow: hidden; }
+#right.mode-git .git-top { flex: 1; min-height: 80px; overflow-y: auto; }
+#commits-zone { flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
+#commits-zone .commits-title { flex-shrink: 0; }
+#commits-zone .commit-list { overflow-y: auto; max-height: 152px; } /* ~5 rows */
+#commits-zone.expanded .commit-list { max-height: 45vh; } /* an expanded commit: more room for its files */
+.more-commits { text-align: center; margin: 4px 0; }
+.git-file .git-revert { flex-shrink: 0; font-size: 12px; padding: 0 4px; border-radius: 4px; opacity: 0; filter: grayscale(1); }
+.git-file:hover .git-revert, .git-file .git-revert.armed { opacity: .7; }
+.git-file .git-revert:hover { opacity: 1; filter: none; }
+.git-file .git-revert.armed { opacity: 1; filter: none; background: color-mix(in srgb, var(--red) 30%, transparent); outline: 1px solid var(--red); }
+@media (hover: none) { .git-file .git-revert { opacity: .7; } }

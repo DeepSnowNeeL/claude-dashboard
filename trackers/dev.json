@@ -1,0 +1,48 @@
+{
+  "id": "dev",
+  "name": { "fr": "Suivi de dev", "en": "Dev tracker" },
+  "description": {
+    "fr": "Approche, points clés et arbitrages, maquettes, architecture UML, modèle BDD : une méthode de développement (cadrage, maquette, design, exécution, push).",
+    "en": "Approach, key points and trade-offs, mockups, UML architecture, database model: a development method (framing, mockup, design, execution, push)."
+  },
+  "steps": [
+    { "key": "framing", "label": { "fr": "Cadrage", "en": "Framing" } },
+    { "key": "mockup", "label": { "fr": "Maquette", "en": "Mockup" } },
+    { "key": "design", "label": { "fr": "Design (vérif)", "en": "Design (check)" } },
+    { "key": "execution", "label": { "fr": "Exécution", "en": "Execution" } },
+    { "key": "push", "label": { "fr": "Push", "en": "Push" } }
+  ],
+  "method": {
+    "fr": "## Méthode de dev\n\nLe travail suit les étapes `framing` (cadrage) → `mockup` (maquette) → `design` → `execution` → `push`.\n\nSi un skill de brainstorming ou de méthode est disponible (par ex. `superpowers:brainstorming`), ses fichiers ne changent pas, mais **pour cette session, les règles ci-dessous l'emportent là où elles divergent** :\n\n- les décisions arrivent **groupées** (toutes celles de l'étape à la fois), pas une question par message ;\n- la **maquette passe avant** le design technique : si le sujet a de l'UI, on valide le visuel d'abord ; le design\n  (architecture, BDD) vient ensuite comme vérification « on s'est compris » ;\n- si la méthode prévoit une spec, une revue de spec, un plan ou une mise à jour de la doc, ils se font comme d'habitude\n  mais ne sont pas des étapes : spec et revue relèvent de `design`, plan et doc de `execution` ;\n- **le développeur ne relit ni la spec ni le plan** : la validation du panneau (approche, décisions, maquette,\n  architecture, BDD) vaut accord. Une fois la spec écrite et passée en revue, enchaîne sur le plan puis\n  l'implémentation sans demander « tu la relis ? ». Ne t'arrête que si la revue fait apparaître une vraie\n  décision : elle va alors dans `decisions`, comme les autres ;\n- tout le reste (conventions du projet, documentation, commit sur accord, pas de push sans demande) s'applique\n  tel quel.",
+    "en": "## Dev method\n\nThe work follows the steps `framing` → `mockup` → `design` → `execution` → `push`.\n\nIf a brainstorming or method skill is available (e.g. `superpowers:brainstorming`), its files do not change, but **for this session, the rules below take precedence wherever they diverge**:\n\n- decisions come **grouped** (all those of the step at once), not one question per message;\n- the **mockup comes before** the technical design: if the subject has UI, the visual is validated first; the design\n  (architecture, database) comes next as an \"are we on the same page\" check;\n- if the method calls for a spec, a spec review, a plan or a documentation update, they are done as usual but are\n  not steps: spec and review belong to `design`, plan and documentation to `execution`;\n- **the developer reads neither the spec nor the plan**: validating the panel (approach, decisions, mockup,\n  architecture, database) counts as approval. Once the spec is written and reviewed, go on to the plan then the\n  implementation without asking \"will you read it?\". Only stop if the review brings up a real decision: it then\n  goes into `decisions`, like the others;\n- everything else (project conventions, documentation, commit on approval, no push without being asked) applies\n  as is."
+  },
+  "blocks": [
+    { "key": "progress", "type": "progress" },
+    { "key": "approach", "type": "approach", "title": { "fr": "Approche retenue", "en": "Chosen approach" },
+      "instruction": {
+        "fr": "l'approche que tu recommandes, posée d'office. Ne fais pas choisir A/B/C quand une approche est clairement meilleure.",
+        "en": "the approach you recommend, set out up front. Do not make the developer pick A/B/C when one approach is clearly better."
+      } },
+    { "sideBySide": [
+      { "key": "keyPoints", "type": "list", "title": { "fr": "Points clés", "en": "Key points" },
+        "instruction": { "fr": "3 à 6 lignes.", "en": "3 to 6 lines." } },
+      { "key": "tradeoffs", "type": "list", "title": { "fr": "Arbitrages faits sans toi ({n})", "en": "Calls made without you ({n})" },
+        "instruction": { "fr": "ce que tu as tranché seul, une ligne chacun.", "en": "what you decided on your own, one line each." } }
+    ] },
+    { "key": "mockups", "type": "mockups", "title": { "fr": "Maquettes ({n})", "en": "Mockups ({n})" },
+      "instruction": {
+        "fr": "quand une maquette est refaite, l'ancienne passe dans `versions`.",
+        "en": "when a mockup is redone, the old one moves into `versions`."
+      } },
+    { "key": "architecture", "type": "architecture", "title": { "fr": "Architecture", "en": "Architecture" },
+      "instruction": {
+        "fr": "Style UML, jamais d'arbre de fichiers ni de liens RPC. `op` `+` / `~` / `-` sur chaque élément. Composants d'interface créés (Angular ou autre) avec leurs inputs/outputs et où ils sont utilisés ; `Service.méthode` impactés avec la raison en quelques mots. **Le code d'exemple est ce que le développeur regarde en premier** : donne un `example` (signature, extrait d'usage, avant/après) à chaque élément qui le permet. `level` : `component`, `components` ou `packages` selon la taille.",
+        "en": "UML style, never a file tree or RPC links. `op` `+` / `~` / `-` on every element. UI components created (Angular or other) with their inputs/outputs and where they are used; impacted `Service.method` with the reason in a few words. **The example code is what the developer looks at first**: give an `example` (signature, usage excerpt, before/after) for every element that allows it. `level`: `component`, `components` or `packages` depending on the size."
+      } },
+    { "key": "db", "type": "db", "title": { "fr": "BDD", "en": "Database" },
+      "instruction": {
+        "fr": "un `erDiagram` Mermaid partiel (MPD) : tables impactées avec leurs colonnes, tables voisines réduites à leur clé. Libellé préfixé `+ ` (nouvelle), `~ ` (modifiée), `- ` (supprimée) via un alias **posé uniquement sur le bloc de colonnes** (`QM[\"+ QuestionMatching\"] { … }`), les relations utilisant le nom court (`Q ||--o| QM : \"1-1\"`). Colonne modifiée signalée dans son commentaire (`enum type \"~ +ASSOCIATION\"`).",
+        "en": "a partial Mermaid `erDiagram` (physical data model): impacted tables with their columns, neighbouring tables reduced to their key. Label prefixed `+ ` (new), `~ ` (modified), `- ` (deleted) through an alias **set only on the column block** (`QM[\"+ QuestionMatching\"] { … }`), relations using the short name (`Q ||--o| QM : \"1-1\"`). A modified column is flagged in its comment (`enum type \"~ +ASSOCIATION\"`)."
+      } }
+  ]
+}

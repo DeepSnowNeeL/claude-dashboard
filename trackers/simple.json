@@ -1,0 +1,27 @@
+{
+  "id": "simple",
+  "name": { "fr": "Suivi simple", "en": "Simple tracker" },
+  "description": {
+    "fr": "Avancement, points clés, fichiers et liens. Le profil livré avec l'application : /tracker pour en composer un autre.",
+    "en": "Progress, key points, files and links. The profile shipped with the app: /tracker to compose another one."
+  },
+  "steps": [
+    { "key": "framing", "label": { "fr": "Cadrage", "en": "Framing" } },
+    { "key": "working", "label": { "fr": "En cours", "en": "In progress" } },
+    { "key": "delivered", "label": { "fr": "Livré", "en": "Delivered" } }
+  ],
+  "method": "",
+  "blocks": [
+    { "key": "progress", "type": "progress" },
+    { "key": "keyPoints", "type": "list", "title": { "fr": "Points clés", "en": "Key points" },
+      "instruction": {
+        "fr": "3 à 6 lignes : ce qu'il faut retenir en revenant sur la session.",
+        "en": "3 to 6 lines: what to remember when coming back to the session."
+      } },
+    { "key": "files", "type": "files", "title": { "fr": "Fichiers et liens", "en": "Files and links" },
+      "instruction": {
+        "fr": "les fichiers produits ou utiles (chemins absolus) et les liens à garder sous la main.",
+        "en": "the files produced or useful (absolute paths) and the links to keep at hand."
+      } }
+  ]
+}

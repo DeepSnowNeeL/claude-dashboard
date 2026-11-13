@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f1f1e">
+<title data-i18n="access.login.appName">Claude Dashboard</title>
+<link rel="icon" href="/favicon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<style>
+  :root { --bg: #faf9f5; --card: #fff; --text: #1f1f1e; --muted: #73726c; --line: #e3e1d8; --orange: #d97757; --red: #c0392b; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1f1f1e; --card: #2a2a28; --text: #ecebe5; --muted: #9b9a93; --line: #3a3a37; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 16px; }
+  .card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  input { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); }
+  button { width: 100%; margin-top: 12px; font: inherit; padding: 10px; border: 0; border-radius: 8px; background: var(--orange); color: #fff; cursor: pointer; }
+  button[disabled] { opacity: .5; }
+  button.link { background: none; color: var(--muted); text-decoration: underline; padding: 4px; }
+  .err { color: var(--red); font-size: 14px; margin-top: 10px; min-height: 1.5em; }
+  .pending { text-align: center; }
+  .code { font: 600 28px/1.2 ui-monospace, Consolas, monospace; letter-spacing: .12em; margin: 4px 0 12px; color: var(--text); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px; }
+  .circle { width: 28px; height: 28px; margin: 4px auto 14px; border: 3px solid var(--line); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card">
+  <form id="login" hidden>
+    <h1 data-i18n="access.login.appName">Claude Dashboard</h1>
+    <p data-i18n="access.login.intro">Remote access: master password.</p>
+    <input id="pwd" type="password" autocomplete="current-password" data-i18n-placeholder="access.login.password" placeholder="Password" required autofocus>
+    <button id="submit" data-i18n="access.login.submit">Log in</button>
+    <div class="err" id="error"></div>
+  </form>
+  <div class="pending" id="pending" hidden>
+    <div class="circle"></div>
+    <h1 data-i18n="access.login.pendingTitle">Waiting for approval</h1>
+    <p id="pending-pc"><span data-i18n="access.login.pendingBefore">Approve this device (</span><b id="name"></b><span data-i18n="access.login.pendingAfter">) from the PC: app notification, or 🔒 Remote access in the dashboard.</span></p>
+    <div id="pending-server" hidden>
+      <div class="code" id="code"></div>
+      <p><span data-i18n="access.login.pendingServer">Approve this device from a device already approved (⚙ Options → 🔒 Remote access), or on the server:</span><br><code id="command"></code></p>
+    </div>
+    <button class="link" id="cancel" type="button" data-i18n="access.login.cancel">Cancel</button>
+  </div>
+</div>
+<script type="module">
+  // Standalone page (shown before login): it fetches the language setting itself, /api/language and the
+  // dictionaries are served without a cookie
+  import { t, setLanguage, resolveLanguage, translateDom, language } from '/i18n/index.js';
+  const { setting } = await fetch('/api/language', { cache: 'no-store' }).then(x => x.json()).catch(() => ({}));
+  setLanguage(resolveLanguage(setting, navigator.language));
+  document.documentElement.lang = language();
+  translateDom(document);
+
+  const $ = s => document.querySelector(s);
+  let poll = null;
+  async function status() {
+    const r = await fetch('/access/status', { cache: 'no-store' }).then(x => x.json()).catch(() => ({}));
+    if (r.approved) return location.replace('/');
+    $('#login').hidden = !!r.connected;
+    $('#pending').hidden = !r.connected;
+    $('#name').textContent = r.name || t('access.login.thisDevice');
+    // Server mode: the approval code of this device, and the command that approves it inside the container
+    const server = !!(r.serverMode && r.code);
+    $('#pending-pc').hidden = server;
+    $('#pending-server').hidden = !server;
+    if (server) { $('#code').textContent = r.code; $('#command').textContent = `node dash.mjs devices approve ${r.code}`; }
+    clearTimeout(poll);
+    if (r.connected) poll = setTimeout(status, 3000);
+  }
+  $('#login').addEventListener('submit', async e => {
+    e.preventDefault();
+    $('#submit').disabled = true;
+    $('#error').textContent = '';
+    const r = await fetch('/access/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('#pwd').value }) })
+      .then(x => x.json()).catch(() => ({ error: t('access.login.unreachable') }));
+    $('#submit').disabled = false;
+    if (r.error) { $('#error').textContent = r.error; $('#pwd').select(); return; }
+    $('#pwd').value = '';
+    status();
+  });
+  $('#cancel').addEventListener('click', async () => {
+    await fetch('/access/logout', { method: 'POST' }).catch(() => {});
+    status();
+  });
+  status();
+  if (window.isSecureContext) navigator.serviceWorker?.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "dashboard",
+  "description": "Claude Dashboard skills, loaded only in the sessions it drives.",
+  "version": "1.0.0"
+}

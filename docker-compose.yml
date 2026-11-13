@@ -1,0 +1,40 @@
+# Claude dashboard in server mode (docs/server.md).
+#   docker compose up -d --build
+#   docker exec -it dash claude auth login        # once: log Claude Code in with your subscription
+#   docker exec dash node dash.mjs devices        # approve the devices that logged in with the password
+services:
+  dash:
+    build: .
+    image: claude-dashboard
+    container_name: dash
+    restart: unless-stopped
+    environment:
+      # Master password of the login page, set at the first start only (never overwrites one already set).
+      # Put DASH_PASSWORD=... in a .env file next to this one.
+      DASH_PASSWORD: ${DASH_PASSWORD:-}
+    ports:
+      # The gate (login + approved devices). Published on 127.0.0.1 only: put your HTTPS reverse proxy in front.
+      # Use "4749:4749" only if the proxy runs on another machine, and never publish 4747 or 4748.
+      - "127.0.0.1:4749:4749"
+    volumes:
+      - dash-data:/data                     # sessions, panels, access (password, devices), options
+      - claude-login:/home/node/.claude     # Claude Code login, settings and conversation transcripts
+      - ./workspace:/workspace              # your cloned repositories (create it first: mkdir workspace)
+      - ~/.ssh:/home/node/.ssh:ro           # SSH key for git (read-only)
+    # Example with Traefik (remove the "ports" section above, and put the container on Traefik's network):
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.dash.rule=Host(`dash.example.com`)
+    #   - traefik.http.routers.dash.entrypoints=websecure
+    #   - traefik.http.routers.dash.tls.certresolver=letsencrypt
+    #   - traefik.http.services.dash.loadbalancer.server.port=4749
+    # networks:
+    #   - traefik
+
+volumes:
+  dash-data:
+  claude-login:
+
+# networks:
+#   traefik:
+#     external: true

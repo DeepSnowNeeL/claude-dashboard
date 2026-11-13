@@ -1,0 +1,29 @@
+@media (max-width: 900px) {
+  body { overflow: hidden; }
+  .app { display: block; height: calc(100dvh - 58px - env(safe-area-inset-bottom)); padding: 0; }
+  .panel-handle { display: none; }
+  .side, .center, .right { display: none; width: 100%; max-width: none; min-width: 0; height: 100%; border-radius: 0; border: 0; box-sizing: border-box; }
+  body[data-mobile="sessions"] .side { display: flex; padding: 10px; }
+  body[data-mobile="conversation"] .center { display: flex; }
+  body[data-mobile="tracker"] .right { display: block; }
+  body[data-mobile="tracker"] .right.mode-git { display: flex; }
+  /* #right.mode-git (side.css) wins over .right: without this, the files tab shows below the conversation */
+  body:not([data-mobile="tracker"]) #right { display: none; }
+  .nav-mobile { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: var(--card); border-top: 1px solid var(--line); }
+  .nav-mobile button { flex: 1; font: inherit; font-size: 18px; background: none; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; }
+  .nav-mobile button span { font-size: 11px; }
+  .nav-mobile button.on { color: var(--accent); }
+  .nav-mobile button .dot-nav { position: absolute; margin: -18px 0 0 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .mobile-only { display: inline-flex; }
+}
+
+/* Mobile, last so it wins: header reduced to the title, the mode and End */
+@media (max-width: 900px) {
+  .header .stats, .steps, .head-row .commands > .m { display: none !important; }
+  .head .title { font-size: 15px; }
+  .commands { margin-top: 4px; }
+  /* Adding a project (folder path) or a group: done on desktop, hidden in the mobile PWA */
+  .insertions { display: none; }
+  /* If an input dialog opens anyway: 16 px to avoid the automatic iOS zoom */
+  .modal input:not([type=color]), .modal select { font-size: 16px; }
+}

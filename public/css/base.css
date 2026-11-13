@@ -1,0 +1,88 @@
+:root {
+  --bg: #f4f4f5; --card: #ffffff; --text: #18181b; --muted: #71717a; --line: #d4d4d8; --line-light: #e4e4e7;
+  --accent: #f59e0b; --accent-bg: #fffbeb; --link: #2563eb;
+  --green: #16a34a; --green-bg: #f0fdf4; --green-pill: #bbf7d0; --green-txt: #14532d;
+  --orange: #ea580c; --red: #dc2626; --red-bg: #fef2f2;
+  --blue-pill: #bfdbfe; --blue-txt: #1e3a8a; --yellow-pill: #fde68a; --yellow-txt: #78350f;
+  --code-bg: #18181b; --code-txt: #e4e4e7; --chip: #f4f4f5;
+  color-scheme: light;
+}
+/* Theme: the computer's, unless forced in ⚙ Options (data-theme on <html>, set before first paint) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115; --card: #181b22; --text: #e6e6e9; --muted: #9a9aa5; --line: #2c313c; --line-light: #232731;
+    --accent: #f59e0b; --accent-bg: #2a2213; --link: #7aa7ff;
+    --green: #22c55e; --green-bg: #12261a; --green-pill: #14532d; --green-txt: #bbf7d0;
+    --orange: #f97316; --red: #ef4444; --red-bg: #2a1515;
+    --blue-pill: #1e3a8a; --blue-txt: #bfdbfe; --yellow-pill: #78350f; --yellow-txt: #fde68a;
+    --code-bg: #0b0d11; --code-txt: #e4e4e7; --chip: #232731;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --card: #181b22; --text: #e6e6e9; --muted: #9a9aa5; --line: #2c313c; --line-light: #232731;
+  --accent: #f59e0b; --accent-bg: #2a2213; --link: #7aa7ff;
+  --green: #22c55e; --green-bg: #12261a; --green-pill: #14532d; --green-txt: #bbf7d0;
+  --orange: #f97316; --red: #ef4444; --red-bg: #2a1515;
+  --blue-pill: #1e3a8a; --blue-txt: #bfdbfe; --yellow-pill: #78350f; --yellow-txt: #fde68a;
+  --code-bg: #0b0d11; --code-txt: #e4e4e7; --chip: #232731;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--chip); padding: 0 4px; border-radius: 4px; }
+a { color: var(--link); }
+.m { color: var(--muted); font-size: 12px; }
+
+
+/* The chat comes first (up to 820 px); the right panel takes the rest, at least 30% of the width. */
+.center { flex: 0 1 820px; min-width: 0; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.right { flex: 1 1 30%; min-width: 30%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: auto; padding: 12px 16px; }
+/* Widths set with the handles (components/handles.js): the chat takes the rest */
+body.sessions-sized .side { width: var(--sessions-width); max-width: 40%; }
+body.right-sized .center { flex: 1 1 0; }
+body.right-sized .right { flex: 0 0 var(--right-width); min-width: 260px; max-width: 75%; }
+/* In the gap between the two panels (negative margins: it takes no room) */
+.panel-handle { width: 12px; margin-inline: -12px; flex-shrink: 0; cursor: col-resize; border-radius: 6px; z-index: 1; }
+.panel-handle:hover { background: color-mix(in srgb, var(--link) 30%, transparent); }
+body.resizing { cursor: col-resize; user-select: none; }
+body.resizing iframe, body.resizing .viewer { pointer-events: none; }
+/* Mobile and narrow screens: one panel at a time (Sessions, Conversation, Tracker), chosen from the bottom bar */
+.nav-mobile { display: none; }
+.mobile-only { display: none; }
+
+@media (max-width: 900px) {
+  /* Compact conversation header, finger-friendly input */
+  .head { padding: 8px 10px; }
+  .head .desc, .header .stats { display: none; }
+  .head-row { gap: 4px; }
+  .steps { display: none; }
+  .feed { padding: 10px; }
+  .input { padding: 8px 10px; }
+  .input textarea { font-size: 16px; } /* 16 px: no automatic zoom on input in iOS */
+  .input .bar { flex-wrap: wrap; }
+  .input .actions { margin-left: auto; } /* wrapped to the next line, Send / Stop stay on the right */
+  .input .choices .btn[data-shortcut] { font-size: 12px; }
+  .msg, .msg.peer { max-width: 100%; }
+  .viewer { inset: 0; border-radius: 0; }
+  .path-menu { max-width: calc(100vw - 16px); }
+}
+
+/* Loading skeletons (core/dom.js skeleton): grey bars swept by a shimmer */
+.skeleton { display: flex; flex-direction: column; gap: 9px; padding: 12px 4px; }
+.skeleton i { display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--chip) 30%, var(--line-light) 50%, var(--chip) 70%); background-size: 300% 100%; animation: shimmer 1.6s ease-in-out infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }
+.f-feed { gap: 18px; }
+.f-feed > div { display: flex; flex-direction: column; gap: 7px; }
+.f-user { align-self: flex-end; width: min(300px, 60%); padding: 9px 11px; border: 1px dashed var(--line); border-radius: 10px 10px 2px 10px; }
+.f-claude { width: min(640px, 92%); }
+.f-tool { width: min(640px, 92%); }
+.f-tool i { height: 8px; }
+.f-section { display: flex; flex-direction: column; gap: 8px; padding: 10px 0 14px; border-bottom: 1px solid var(--line-light); }
+.f-section .f-title { height: 13px; margin-bottom: 4px; }
+.f-code i { height: 9px; }
+.f-steps { flex-direction: row; gap: 6px; padding: 6px 0; }
+.f-steps i { height: 18px; border-radius: 9px; }
+.head .title .skeleton { display: inline-flex; padding: 0; }

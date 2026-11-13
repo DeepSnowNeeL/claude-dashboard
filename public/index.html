@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <title data-i18n="common.appTitle">Claude Dashboard</title>
+  <link rel="icon" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-512.png">
+  <link rel="stylesheet" href="/style.css">
+  <!-- Forced theme (⚙ Options), set before the first display: no flash of light then dark -->
+  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <input id="search" class="search" placeholder="🔎 find a session…" data-i18n-placeholder="common.side.searchPlaceholder" autocomplete="off">
+      <a class="btn new-session" href="#new" data-i18n="common.side.newSession">+ New session</a>
+      <div id="list"></div>
+      <div id="usage" class="usage"></div>
+      <div class="list-footer"><div id="access-footer" class="access-footer"></div><button id="level-footer" class="btn level-footer" hidden></button></div>
+    </aside>
+    <div class="panel-handle" id="handle-left" title="Drag to widen the session list · double-click: original width" data-i18n-title="common.handles.left"></div>
+    <section class="center" id="center"></section>
+    <div class="panel-handle" id="handle-right" title="Drag to widen the panel · double-click: original width" data-i18n-title="common.handles.right"></div>
+    <aside class="right" id="right"></aside>
+  </div>
+  <!-- Mobile: one panel at a time, chosen by this bar -->
+  <nav class="nav-mobile" id="nav-mobile">
+    <button data-mobile="sessions">☰<span data-i18n="common.mobileNav.sessions">Sessions</span></button>
+    <button data-mobile="conversation">💬<span data-i18n="common.mobileNav.conversation">Conversation</span></button>
+    <button data-mobile="tracker">📋<span data-i18n="common.mobileNav.tracker">Tracker</span></button>
+  </nav>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

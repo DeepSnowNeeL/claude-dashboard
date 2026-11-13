@@ -1,0 +1,28 @@
+// mcp texts (en).
+export default {
+  title: 'MCP servers',
+  searchPlaceholder: 'Search a server or a tool…',
+  states: {
+    connected: 'connected',
+    failed: 'failed',
+    needsAuth: 'authentication required',
+    pending: 'connecting…',
+    disabled: 'disabled',
+  },
+  noServer: 'No MCP server in this session.',
+  noMatch: 'No server or tool contains "{q}".',
+  authHelpServer: 'Authentication (OAuth) only works in interactive Claude Code, inside the container: <code>docker exec -it dash claude</code> in the session folder, then <code>/mcp</code>, pick <b>{name}</b>; then ↻ Reconnect here.',
+  authHelp: 'Authentication (OAuth) only works in interactive Claude Code: 🔑 opens a terminal on <code>/mcp</code> in the session folder; pick <b>{name}</b>, confirm in the browser, then ↻ Reconnect here.',
+  tools: { one: '{n} tool', other: '{n} tools' },
+  toolsOf: { one: '{k} of {n} tool', other: '{k} of {n} tools' },
+  authenticate: '🔑 Authenticate',
+  authenticateTitle: 'Opens Claude Code in a terminal on /mcp (authentication goes through the browser), then come back and click Reconnect',
+  reconnect: '↻ Reconnect',
+  reconnecting: '↻ Reconnecting…',
+  enable: 'Enable',
+  disable: 'Disable',
+  terminalOpened: 'Terminal opened on /mcp: pick {name}, confirm in the browser, then Reconnect',
+  reconnected: '✓ reconnected',
+  stillNotAuthenticated: 'Still not authenticated: go through 🔑 Authenticate first.',
+  reconnection: 'Reconnection: {state}',
+};

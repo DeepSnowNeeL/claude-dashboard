@@ -1,0 +1,64 @@
+/* Monaco viewer (diff or read-only) */
+.viewer { position: fixed; inset: 16px; z-index: 70; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 50px #000c; overflow: hidden; }
+.vis-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--line-light); }
+.vis-name { font: 600 12.5px ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.vis-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.vis-body { flex: 1; min-height: 0; }
+.vis-body > .m { padding: 16px; }
+
+/* Remark on a selection in the editor */
+.remark-bubble { position: fixed; z-index: 80; width: 380px; background: var(--card); border: 1px solid var(--link); border-radius: 8px; box-shadow: 0 8px 24px #000a; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.remark-bubble .m { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remark-bubble textarea { font: inherit; font-size: 13px; min-height: 54px; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.remark-bubble .sent { color: var(--green); font-size: 12px; padding: 4px; }
+
+/* Viewer tree, to the left of the editor */
+/* Grid depending on the panels present: folder tree on the left, modified files (or the commit's) on the right on a large
+   screen, as a tab of the tree below that; the list alone (commit diff) takes the place of the tree */
+.vis-frame { position: relative; flex: 1; min-height: 0; display: grid; grid-template: "body" minmax(0, 1fr) / minmax(0, 1fr); }
+.vis-frame .vis-body { grid-area: body; min-width: 0; }
+.vis-frame .vis-tree { grid-area: tree; }
+.vis-frame .vis-list { grid-area: list; }
+.vis-frame.with-tree { grid-template: "tree body" minmax(0, 1fr) / var(--vis-l, 280px) minmax(0, 1fr); }
+.vis-frame.with-list:not(.with-tree) { grid-template: "list body" minmax(0, 1fr) / var(--vis-l, 280px) minmax(0, 1fr); }
+.vis-frame.with-tree.with-list { grid-template: "tree body list" minmax(0, 1fr) / var(--vis-l, 280px) minmax(0, 1fr) var(--vis-r, 280px); }
+.vis-tabs { grid-area: tabs; display: none; gap: 4px; padding: 6px 6px 2px; border-right: 1px solid var(--line-light); }
+.vis-tabs .tab { flex: 1; }
+.vis-frame[data-tab="tree"] [data-vis-tab="tree"], .vis-frame[data-tab="list"] [data-vis-tab="list"] { color: var(--text); border-color: var(--link); box-shadow: 0 0 0 1px var(--link); font-weight: 600; }
+@media (max-width: 1400px) {
+  .vis-frame.with-tree.with-list { grid-template: "tabs body" auto "panel body" minmax(0, 1fr) / var(--vis-l, 280px) minmax(0, 1fr); }
+  .vis-frame.with-tree.with-list .vis-handle[data-handle="r"] { display: none !important; }
+  .vis-frame.with-tree.with-list .vis-handle[data-handle="l"] { left: calc(var(--vis-l, 280px) - 4px); }
+  .vis-frame.with-tree.with-list .vis-tabs { display: flex; }
+  .vis-frame.with-tree.with-list .vis-tree, .vis-frame.with-tree.with-list .vis-list { grid-area: panel; }
+  .vis-frame.with-tree.with-list[data-tab="tree"] .vis-list, .vis-frame.with-tree.with-list[data-tab="list"] .vis-tree { display: none; }
+}
+.vis-tree, .vis-list { overflow: auto; padding: 6px 4px; font-size: 12.5px; min-height: 0; }
+.vis-tree { border-right: 1px solid var(--line-light); }
+.vis-list { border-left: 1px solid var(--line-light); }
+.vis-frame.with-list:not(.with-tree) .vis-list { border-left: 0; border-right: 1px solid var(--line-light); }
+@media (max-width: 1400px) { .vis-frame.with-tree.with-list .vis-list { border-left: 0; border-right: 1px solid var(--line-light); } }
+.vis-list-head { padding: 2px 6px 6px; font-size: 11.5px; }
+.vis-list .git-file.sel { background: color-mix(in srgb, var(--link) 22%, transparent); }
+.vis-tree .ex-file.modified.e-modified { color: var(--orange); }
+.vis-tree .ex-file.modified.e-added, .vis-tree .ex-file.modified.e-untracked { color: var(--green); }
+.vis-tree .ex-file.modified.e-deleted { color: var(--red); text-decoration: line-through; }
+.vis-tree .vis-letter { float: right; font: 700 10px ui-monospace, monospace; margin-left: 6px; }
+.vis-tree .ex-folder.touched { color: color-mix(in srgb, var(--orange) 70%, var(--muted)); }
+/* Resize handles, placed on the panel edge (left: tree or list alone; right: list) */
+.vis-handle { position: absolute; top: 0; bottom: 0; width: 7px; z-index: 2; cursor: col-resize; display: none; }
+.vis-handle:hover, .vis-frame.resizing .vis-handle { background: color-mix(in srgb, var(--link) 35%, transparent); }
+.vis-handle[data-handle="l"] { left: calc(var(--vis-l, 280px) - 4px); }
+.vis-handle[data-handle="r"] { right: calc(var(--vis-r, 280px) - 4px); }
+.vis-frame.with-tree .vis-handle[data-handle="l"], .vis-frame.with-list .vis-handle[data-handle="l"], .vis-frame.with-tree.with-list .vis-handle[data-handle="r"] { display: block; }
+.vis-frame.resizing { cursor: col-resize; user-select: none; }
+.vis-frame.resizing .vis-body { pointer-events: none; } /* Monaco does not capture the drag */
+/* Full names, horizontal scroll when the indentation or a name overflows */
+.vis-scroll { width: max-content; min-width: 100%; }
+.vis-scroll .ex-folder, .vis-scroll .ex-file, .vis-scroll .name, .vis-scroll summary { overflow: visible; text-overflow: clip; }
+.vis-tree .ex-children { padding-left: 9px; margin-left: 6px; }
+@media (max-width: 900px) {
+  .vis-handle { display: none !important; }
+  .vis-frame.vis-frame { grid-template: "body" minmax(0, 1fr) / minmax(0, 1fr); }
+  .vis-tree, .vis-list, .vis-frame .vis-tabs { display: none !important; }
+}
