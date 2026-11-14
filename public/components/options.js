@@ -1,14 +1,14 @@
 // ⚙ Options window (one tab per topic) and bottom of the list: remote access, from the PC only.
 // From the internet (https), the bottom of the list only offers to log out.
-import { $, esc, toast, formatWhen } from '../core/dom.js';
-import { readOptions, saveOptions } from '../services/options.js';
+import { $, esc, toast, formatWhen, skeleton } from '../core/dom.js';
+import { readOptions, saveOptions, readTrackers, saveTracker } from '../services/options.js';
 import { loadList } from '../services/projects.js';
 import { readTheme, setTheme } from '../services/theme.js';
 import { accessState, readAccess, approveDevice, revokeDevice, logOut, saveAccess } from '../services/access.js';
 import { resetMermaid } from './mermaid.js';
 import { rerenderSide } from './side/tabs.js';
 import { t } from '../i18n/index.js';
-import { serverMode } from '../core/state.js';
+import { serverMode, projects } from '../core/state.js';
 
 async function loadAccess() {
   const z = $('#access-footer');
@@ -42,7 +42,7 @@ function applyTheme(th) {
 const LANGUAGES = ['auto', 'fr', 'en'];
 
 // --- Options window: one tab per topic (from the PC only) ---------------------------------------------
-const OPTION_TABS = ['general', 'access'];
+const OPTION_TABS = ['general', 'tracker', 'access'];
 // Claude Code auto-compact: threshold (window size taken into account), applied at the next start of each session
 // (Claude Code compacts at the window minus ≈ 33k of margin for the summary: 300k → 267k)
 const autoCompactChoices = () => [['default', t('options.autoCompact.default')],
@@ -65,6 +65,7 @@ export async function openOptions(tab = 'general') {
   const body = backdrop.querySelector('.options-body');
   const show = async k => {
     backdrop.querySelectorAll('.tab-opt').forEach(b => b.classList.toggle('on', b.dataset.tab === k));
+    if (k === 'tracker') return renderTrackerOptions(body);
     if (k === 'access') {
       body.innerHTML = '<div class="access" id="access-modal"></div>';
       renderAccessModal(true);
@@ -100,6 +101,33 @@ export async function openOptions(tab = 'general') {
   backdrop.querySelectorAll('.tab-opt').forEach(b => b.onclick = () => show(b.dataset.tab));
   show(tab);
 }
+// --- Tracker: profile of the installation and choice per project (files read by trackers.mjs, as /tracker writes them) ---
+async function renderTrackerOptions(body) {
+  const list = projects().filter(p => p.path);
+  body.innerHTML = skeleton('lines', 4);
+  let s;
+  try { s = await readTrackers(list.map(p => p.path)); } catch (err) { body.innerHTML = `<p class="m">${esc(err.message)}</p>`; return; }
+  const options = (selected, extra = '') => extra + s.profiles.map(p => `<option value="${esc(p.id)}" ${p.id === selected ? 'selected' : ''} title="${esc(p.description)}">${esc(p.name)}</option>`).join('');
+  // A full profile written by /tracker: kept as long as nothing else is chosen
+  const custom = c => (c?.custom ? `<option value="" selected disabled>${esc(t('options.tracker.custom', { name: c.name }))}</option>` : '');
+  body.innerHTML = `<label>${t('options.tracker.default')}
+      <select id="tracker-default">${options(s.default.custom ? null : s.default.id, custom(s.default))}</select></label>
+    <div class="m">${t('options.tracker.defaultHelp')}</div>
+    ${list.length ? `<h4>${t('options.tracker.perProject')}</h4>
+    <div class="tracker-projects">${list.map(p => {
+      const c = s.projects[p.path] || {};
+      const fallback = c.repo ? t('options.tracker.fromRepo', { name: c.repo.name }) : t('options.tracker.useDefault', { name: s.default.name });
+      return `<label class="tracker-project"><span title="${esc(p.path)}">${esc(p.name)}</span>
+        <select data-dir="${esc(p.path)}">${options(c.choice && !c.choice.custom ? c.choice.id : null, `<option value="__none" ${c.choice ? '' : 'selected'}>${esc(fallback)}</option>${custom(c.choice)}`)}</select></label>`;
+    }).join('')}</div>` : ''}
+    <div class="m">${t('options.tracker.help')}</div>`;
+  const save = async (scope, dir, profile) => {
+    try { await saveTracker(scope, dir, profile); toast(t('options.tracker.saved')); renderTrackerOptions(body); } catch (err) { alert(err.message); }
+  };
+  body.querySelector('#tracker-default').onchange = e => save('default', null, e.target.value);
+  body.querySelectorAll('[data-dir]').forEach(sel => { sel.onchange = () => save('install-repo', sel.dataset.dir, sel.value === '__none' ? null : sel.value); });
+}
+
 window.openRemoteAccess = () => openOptions('access'); // "New device" notification of the application
 /** @param {boolean} [all] false: only the state and the device list are redrawn (the input in progress stays) */
 function renderAccessModal(all = false) {

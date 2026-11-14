@@ -226,7 +226,10 @@ and the design of what is about to be built in visual form, with all the availab
   (steps, a dev method that takes precedence over a brainstorming skill, and the blocks above). **No setting: the
   presence of a file decides**, the first one found: `~/.claude-dashboard/trackers/repos/<main worktree>.json` (the
   installation's choice for this repo) > `<root>/.claude/tracker.json` (repo, shared) >
-  `~/.claude-dashboard/tracker.json` (installation default) > Simple tracker. Each file: a full profile, or a reference
+  `~/.claude-dashboard/tracker.json` (installation default) > Simple tracker. ⚙ Options → 📋 Tracker (PC only, engine
+  routes `GET` / `POST /api/trackers`, `trackerSettings()`) writes the installation default and the per-project choice
+  (`install-repo`; "Default" deletes it) as references to a built-in profile; a full profile made with `/tracker` shows
+  as such until another choice replaces it. Each file: a full profile, or a reference
   `{ "profile": "dev" }` to a built-in profile (which follows its updates). An installation that already has sessions
   gets `{ "profile": "dev" }` when the engine starts (`init()`). The engine attaches the resolved profile to each
   session (`tracker`: profile, source, file), the `/tracker` preview (`trackerPreview`) takes precedence. Skill
@@ -272,7 +275,8 @@ and the design of what is about to be built in visual form, with all the availab
   `localStorage` and set before display by `index.html`; PC only: **language** auto / Français / English, archiving and
   auto-compact: `autoCompact` `default` (Claude Code compacts around 967k on the 1M window), a number of tokens
   (env `CLAUDE_CODE_AUTO_COMPACT_WINDOW` of the query, threshold = window − 33k) or `off` (`DISABLE_AUTO_COMPACT`), read
-  when each query starts; a compaction puts a 🗜 line in the feed) and 🔒 Remote access (PC only). Outside the PC, only
+  when each query starts; a compaction puts a 🗜 line in the feed), 📋 Tracker (PC only: default and per-project tracker
+  profile, see "Tracker profiles") and 🔒 Remote access (PC only). Outside the PC, only
   the theme is offered.
 - **`/clear`** (and `/reset`, `/new`): the SDK's `conversation_reset` message empties the feed (a line marks it) and
   keeps the new conversation id for resuming; the Tracker panel and the header start from scratch like a new session

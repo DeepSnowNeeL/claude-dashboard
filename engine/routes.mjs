@@ -170,6 +170,20 @@ async function models(req, res, { params: { slug } }) {
   try { return sendJson(res, 200, await (await resume(slug)).models()); } catch (e) { return sendJson(res, 500, { error: e.message }); }
 }
 
+// ⚙ Options → Tracker (PC only, server.mjs and remote.mjs refuse the others): installation default and choice per project
+async function trackerOptions(req, res, { url }) {
+  if (req.method === 'GET') return sendJson(res, 200, trackers.trackerSettings(url.searchParams.getAll('dir').filter(d => fs.existsSync(d))));
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, err('invalidJson')); }
+  const { scope, dir, profile } = body || {};
+  if (!['default', 'install-repo'].includes(scope) || (scope === 'install-repo' && !(dir && fs.existsSync(dir)))) return sendJson(res, 400, err('invalidJson'));
+  if (scope === 'default' && typeof profile !== 'string') return sendJson(res, 400, err('invalidJson')); // never deleted: init() would put "dev" back
+  try { trackers.writeTracker(dir || null, scope, profile ?? null); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+  broadcast('*'); // the pages reread the list…
+  for (const slug of sessions.keys()) broadcast(slug); // …and the displayed session: its Tracker panel follows
+  return sendJson(res, 200, trackers.trackerSettings(dir ? [dir] : []));
+}
+
 // Queued messages handed back to the page to be edited again (up arrow)
 async function recallQueue(req, res, { params: { slug } }) {
   const s = drivers.get(slug);
@@ -426,6 +440,8 @@ export default {
   'POST /api/sessions/:slug/end': valid(end),
   'POST /api/sessions/:slug/archive': valid(archive),
   'GET /api/options': options,
+  'GET /api/trackers': trackerOptions,
+  'POST /api/trackers': trackerOptions,
   'POST /api/options': options,
   'GET /api/sessions/:slug/feed': valid(action('feed')),
   'POST /api/sessions/:slug/message': valid(action('message')),

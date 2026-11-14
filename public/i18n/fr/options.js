@@ -4,7 +4,17 @@ export default {
   logOutDevice: 'Se déconnecter de cet appareil',
   pendingTitle: 'Appareils qui demandent l\'accès distant',
   pending: '{n} en attente',
-  tabs: { general: 'Général', access: '🔒 Accès distant' },
+  tabs: { general: 'Général', tracker: '📋 Suivi', access: '🔒 Accès distant' },
+  tracker: {
+    default: 'Suivi par défaut',
+    defaultHelp: 'Pour les projets sans choix ci-dessous ni profil dans leur dépôt.',
+    perProject: 'Par projet',
+    useDefault: 'Par défaut ({name})',
+    fromRepo: 'Celui du dépôt ({name})',
+    custom: '{name} (composé avec /tracker)',
+    help: 'Ordre : ton choix pour le projet, sinon le profil du dépôt (.claude/tracker.json), sinon le défaut. Le panneau suit tout de suite ; les consignes de Claude, au prochain démarrage de chaque session. Pour composer un suivi sur mesure : /tracker dans une session.',
+    saved: 'Suivi enregistré',
+  },
   theme: {
     label: 'Thème',
     auto: 'Suivre l\'ordinateur',

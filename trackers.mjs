@@ -178,6 +178,26 @@ export function writeTracker(dir, scope, profile) {
   return f;
 }
 
+/** What a tracker file holds, for the Options selector: `{ id, name, custom }` (custom = full profile), or null. */
+function choiceOf(f) {
+  const j = f && readJson(f);
+  if (!j) return null;
+  const p = typeof j.profile === 'string' ? rawBuiltIn(j.profile) : j;
+  if (!p || profileError(p)) return null;
+  return { id: p.id, name: localize(p.name), custom: typeof j.profile !== 'string' };
+}
+/**
+ * ⚙ Options → Tracker: built-in profiles, installation default and, per project folder (`dirs`), your choice for its
+ * repo (`install-repo`), the repo's own profile (`.claude/tracker.json`) and the one that applies.
+ */
+export function trackerSettings(dirs = []) {
+  return {
+    profiles: builtInProfiles().map(p => ({ id: p.id, name: p.name, description: p.description || '' })),
+    default: choiceOf(DEFAULT_FILE) || { id: DEFAULT_PROFILE, name: localize(rawBuiltIn(DEFAULT_PROFILE).name), custom: false },
+    projects: Object.fromEntries(dirs.map(d => [d, { choice: choiceOf(installRepoFile(d)), repo: choiceOf(repoFile(d)), applied: profileOf(d).profile.name }])),
+  };
+}
+
 /** Setup: an installation already in use (sessions exist) keeps its display, "Dev tracker". */
 export function init() {
   if (readJson(DEFAULT_FILE)) return;

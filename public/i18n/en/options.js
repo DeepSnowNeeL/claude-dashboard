@@ -4,7 +4,17 @@ export default {
   logOutDevice: 'Log out of this device',
   pendingTitle: 'Devices asking for remote access',
   pending: '{n} pending',
-  tabs: { general: 'General', access: '🔒 Remote access' },
+  tabs: { general: 'General', tracker: '📋 Tracker', access: '🔒 Remote access' },
+  tracker: {
+    default: 'Default tracker',
+    defaultHelp: 'For the projects with no choice below and no profile in their repo.',
+    perProject: 'Per project',
+    useDefault: 'Default ({name})',
+    fromRepo: "The repo's ({name})",
+    custom: '{name} (made with /tracker)',
+    help: "Order: your choice for the project, otherwise the repo's profile (.claude/tracker.json), otherwise the default. The panel follows right away; Claude's instructions, at the next start of each session. To make a tailored tracker: /tracker in a session.",
+    saved: 'Tracker saved',
+  },
   theme: {
     label: 'Theme',
     auto: 'Follow the computer',

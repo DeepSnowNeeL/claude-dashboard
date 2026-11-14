@@ -11,6 +11,11 @@
 .tab-opt { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 6px 10px; cursor: pointer; }
 .tab-opt.on { color: var(--text); border-bottom-color: var(--orange); }
 .options-body, .options-body .access { display: flex; flex-direction: column; gap: 10px; }
+/* Tracker tab: one row per project (name · selector) */
+.options-body h4 { margin: 6px 0 0; font-size: 13px; }
+.tracker-projects { display: flex; flex-direction: column; gap: 4px; }
+.modal label.tracker-project { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: center; gap: 8px; font-size: 13px; }
+.tracker-project span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Subscription usage: one row per limit (label · bar · %) */
 .usage .group { margin: 6px 0 2px; font-size: 10px; }
 /* Header: plan on the left, signed-in account (e-mail · organisation) on the right, truncated */
