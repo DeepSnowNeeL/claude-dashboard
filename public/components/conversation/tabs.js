@@ -1,10 +1,10 @@
 // Subagents: tabs to switch from the main conversation to an agent's, and tabs of the background shells.
 // An effect rerenders them when the view, the agents or the shells change.
 import { effect } from '../../core/signals.js';
-import { $, esc, chrono, tickChronos } from '../../core/dom.js';
+import { $, esc, chrono, tickChronos, contextGauge, modelLabel, modelPill } from '../../core/dom.js';
 import { current, view, agents, shells } from '../../core/state.js';
 import { stopAgent } from '../../services/sessions.js';
-import { AGENT_ICON, agentStateLabel, requestView } from '../cards/agent.js';
+import { AGENT_ICON, agentStateLabel, agentNow, requestView } from '../cards/agent.js';
 import { openShell } from './shell.js';
 import { t } from '../../i18n/index.js';
 
@@ -21,7 +21,8 @@ function renderTabs() {
   const count = [running && t('conversation.tabs.subagents', { n: running }), shellTabs.length && t('conversation.tabs.shells', { n: shellTabs.length })].filter(Boolean).join(' · ');
   z.innerHTML = `${agentTabs.length ? `<button class="tab ${!view() ? 'on' : ''}" data-view="">${t('conversation.tabs.main')}</button>` : ''}
     ${agentTabs.map(a => `<button class="tab ${view() === a.key ? 'on' : ''} e-${esc(a.state)}" data-view="${esc(a.key)}" title="${esc(a.description)}">
-      ${AGENT_ICON[a.state] || '⏳'} 🤖 ${esc(a.description || a.type)} <span class="m">${chrono(a.start, a.state === 'working' ? null : a.end || Date.now(), a.state === 'working' ? null : a.durationMs)}</span></button>`).join('')}
+      ${AGENT_ICON[a.state] || '⏳'} 🤖 ${esc(a.description || a.type)} ${contextGauge(a.state === 'working' ? a.context : a.contextMax, a.window, { mini: true })}
+      <span class="m">${[a.model && modelLabel(a.model).name.split(' ')[0], `${a.tools || 0} 🔧`, chrono(a.start, a.state === 'working' ? null : a.end || Date.now(), a.state === 'working' ? null : a.durationMs)].filter(Boolean).join(' · ')}</span></button>`).join('')}
     ${shellTabs.map(x => `<button class="tab shell" data-shell="${esc(x.key)}" title="${esc(x.command || x.description)}">⏳ 🐚 ${esc(x.description || x.command || t('conversation.tabs.command'))} <span class="m">${chrono(x.start)}</span></button>`).join('')}
     <span class="m">${count ? t('conversation.tabs.running', { count }) : ''}</span>`;
   z.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => requestView(b, b.dataset.view || null)));
@@ -29,7 +30,8 @@ function renderTabs() {
   const a = view() && agents().get(view());
   $('#center').classList.toggle('agent-view', !!a);
   const banner = $('#agent-banner');
-  if (banner) banner.innerHTML = a ? `<span>🤖 <b>${esc(a.type)}</b> · ${esc(a.description)} · ${AGENT_ICON[a.state] || ''} ${agentStateLabel(a)}</span>
+  if (banner) banner.innerHTML = a ? `<div class="agent-banner-main"><div class="agent-head">🤖 <b>${esc(a.type)}</b> <span>· ${esc(a.description)}</span> ${modelPill(a.model)}</div>
+    ${agentNow(a)}<div class="agent-stats">${agentStateLabel(a)}</div></div>
     ${a.state === 'working' ? `<button class="btn stop" id="stop-agent">${t('conversation.tabs.stopAgent')}</button>` : ''}
     <button class="btn" data-back>${t('conversation.tabs.back')}</button>` : '';
   $('#stop-agent')?.addEventListener('click', () => stopAgent(current(), view()).catch(err => alert(err.message)));

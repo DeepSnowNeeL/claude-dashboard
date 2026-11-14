@@ -6,7 +6,7 @@
  * developer chose (pinned title, profile preview). Set through update_board, they would let a session in "ask" mode
  * change its own mode or folder at its next resume, or fake its counters: ignored.
  */
-export const ENGINE_KEYS = new Set(['slug', 'cwd', 'project', 'mode', 'prePlanMode', 'autoMode', 'sessionId', 'driven', 'model', 'stats', 'seen',
+export const ENGINE_KEYS = new Set(['slug', 'cwd', 'project', 'mode', 'prePlanMode', 'autoMode', 'sessionId', 'driven', 'model', 'modelChoice', 'stats', 'seen',
   'updatedAt', 'endedAt', 'archivedAt', 'titlePinned', 'autoTitle', 'trackerPreview', 'reportedSchemas', 'tracker',
   'paused', 'stopped', 'busy', 'activity', 'receivedAt', '__proto__', 'constructor', 'prototype']);
 

@@ -14,7 +14,7 @@ const explore = path => (window.desktop ? window.desktop.showInExplorer(path) : 
 const newSession = path => { location.hash = `new?cwd=${encodeURIComponent(path)}`; };
 
 /** Opens the menu: `entries` = [{ ic, label, run, danger }] or '-' (separator). */
-function open(title, entries, x, y) {
+export function openMenu(title, entries, x, y) {
   document.querySelector('.path-menu')?.remove();
   const m = document.createElement('div');
   m.className = 'path-menu tree-menu';
@@ -34,7 +34,7 @@ function open(title, entries, x, y) {
 
 function sessionMenu(s, x, y) {
   const finished = s.status === 'done';
-  open(`${s.ticket ? `${s.ticket} · ` : ''}${s.title || s.slug}`, [
+  openMenu(`${s.ticket ? `${s.ticket} · ` : ''}${s.title || s.slug}`, [
     { ic: '💬', label: t('tree.menu.open'), run: () => { location.hash = s.slug; } },
     s.driven && { ic: '✎', label: t('tree.menu.rename'), run: async () => {
       const title = await ask({ title: t('tree.menu.renameTitle'), label: t('tree.menu.renameLabel'), value: s.title || '' });
@@ -77,14 +77,14 @@ function worktreeMenu(path, x, y) {
   const p = projects().find(pr => pr.worktrees.some(w => pathKey(w.path) === pathKey(path)));
   const w = p?.worktrees.find(x => pathKey(x.path) === pathKey(path));
   if (!w) return;
-  open(`⎇ ${w.branch || path}`, worktreeEntries(w, w.main), x, y);
+  openMenu(`⎇ ${w.branch || path}`, worktreeEntries(w, w.main), x, y);
 }
 
 function projectMenu(n, x, y) {
   const p = projects().find(x => x.id === n.dataset.project);
   if (!p) return;
   const main = p.worktrees.find(w => w.main) || p.worktrees[0];
-  open(p.name, [
+  openMenu(p.name, [
     ...(p.worktrees.length === 1 ? worktreeEntries(main, true) : [
       { ic: '＋', label: t('tree.menu.newSessionMain'), run: () => newSession(main.path) },
       !serverMode() && { ic: '📂', label: t('tree.menu.showInExplorer'), run: () => explore(p.path) },

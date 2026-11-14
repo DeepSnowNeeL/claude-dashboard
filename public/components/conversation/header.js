@@ -1,12 +1,13 @@
 // Conversation header: title (renamable), counters, ticket, steps, permission mode, End and Archive.
 // An effect rerenders it when the session detail changes.
 import { effect } from '../../core/signals.js';
-import { $, esc, rich, toast, ticketLink, displayName } from '../../core/dom.js';
+import { $, esc, rich, toast, ticketLink, displayName, kTokens, modelLabel } from '../../core/dom.js';
 import { current, detail, projects } from '../../core/state.js';
-import { setMode, end, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
+import { setMode, setModel, readModels, end, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
 import { loadList, pathKey } from '../../services/projects.js';
 import { trackerProfile } from '../tracker/renderers.js';
 import { modeOptions } from '../../core/modes.js';
+import { openMenu } from '../tree/menu.js';
 import { t } from '../../i18n/index.js';
 
 const STEPS = ['framing', 'mockup', 'design', 'execution', 'push'];
@@ -29,12 +30,13 @@ export function renderHeader(d) {
     <div class="header">
       <div class="title" id="session-title" title="${t('conversation.header.renameTitle')}${d.titlePinned ? t('conversation.header.renameTitlePinned') : ''}">${displayName(d)}<span class="pencil">✎</span>${d.titlePinned ? `<span class="m pinned" title="${t('conversation.header.pinnedTitle')}">📌</span>` : ''}</div>
       <span class="m stats" id="stats"></span>
-      <span class="m">${ticketLink(d) ? `<a href="${esc(ticketLink(d))}" target="_blank">${t('conversation.header.ticket', { ticket: esc(d.ticket || '') })}</a> · ` : ''}${folder(d)}${d.model ? ` · ${esc(d.model)}` : ''}</span>
+      <span class="m">${ticketLink(d) ? `<a href="${esc(ticketLink(d))}" target="_blank">${t('conversation.header.ticket', { ticket: esc(d.ticket || '') })}</a> · ` : ''}${folder(d)}</span>
     </div>
     ${d.description ? `<div class="desc">${rich(d.description)}</div>` : ''}
     <div class="head-row">
       <div class="steps">${steps.map(([k, lbl], i) => `<span class="${i < iStep ? 'done' : i === iStep ? 'current' : ''}">${i < iStep ? '✓ ' : ''}${esc(lbl)}</span>`).join('')}</div>
       ${d.driven ? `<div class="commands">
+        ${d.model ? `<button class="model-pill f-${modelLabel(d.model).family || 'other'}" id="model" title="${esc(t('conversation.header.modelTitle', { model: d.model }))}">${esc(modelLabel(d.model).name)} ▾</button>` : ''}
         <select id="mode" title="${t('conversation.header.modeTitle')}">${modeOptions(d.mode, d.autoMode)}</select>
         ${d.status === 'done' ? `<span class="m" title="${t('conversation.header.doneTitle')}">${t('conversation.header.done')}</span>`
           : d.paused ? `<span class="m" title="${t('conversation.header.pausedTitle')}">${t('conversation.header.paused')}</span>` : ''}
@@ -43,6 +45,7 @@ export function renderHeader(d) {
         <button class="btn" id="archive" title="${esc(t('conversation.header.archiveTitle'))}">${t('conversation.header.archive')}</button>
       </div>` : ''}
     </div>`;
+  $('#model')?.addEventListener('click', e => modelMenu(d, e.currentTarget));
   $('#mode')?.addEventListener('change', e => setMode(d.slug, e.target.value).catch(err => alert(err.message)));
   // Rename: the title becomes a field; Enter pins the name (Claude no longer changes it), empty = automatic name
   $('#session-title')?.addEventListener('click', () => {
@@ -87,6 +90,21 @@ export function renderHeader(d) {
   renderStats();
 }
 
+// Model pill: list of the models of the SDK, a choice applies from the next call (setModel)
+async function modelMenu(d, el) {
+  const r = el.getBoundingClientRect();
+  let list;
+  try { list = await readModels(d.slug); } catch (err) { return alert(err.message); }
+  const chosen = d.modelChoice ? list.models.findIndex(m => m.value === d.modelChoice) : list.models.findIndex(m => sameModel(m.resolvedModel || m.value, d.model));
+  openMenu(t('conversation.header.modelMenu'), list.models.map((m, i) => ({
+    ic: i === chosen ? '✓' : '',
+    label: m.displayName || m.value,
+    run: async () => { await setModel(d.slug, m.value); toast(t('conversation.header.modelChanged', { model: m.displayName || m.value })); },
+  })), r.left, r.bottom + 4);
+}
+const baseModel = id => String(id || '').replace(/\[\w+\]$/, '');
+const sameModel = (a, b) => { const x = baseModel(a).replace(/-\d{8}$/, ''); return !!x && x === baseModel(b).replace(/-\d{8}$/, ''); };
+
 // --- Session counters: Claude's time, exchanges, your active time ----------------------
 // Active = tab in the foreground with activity (mouse, keyboard, wheel) in the last minute.
 
@@ -94,7 +112,6 @@ const duration = ms => {
   const min = Math.round(ms / 60000);
   return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}`;
 };
-const kTokens = n => n >= 1e6 ? `${+(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : `${Math.round(n / 1000)}k`;
 // Context: orange from 50 % of the window, red from 75 %
 const tier = st => { const p = st.window ? st.context / st.window : 0; return p >= .75 ? 'ctx-red' : p >= .5 ? 'ctx-orange' : ''; };
 let pendingActive = 0, activeSlug = null, lastActivity = 0;

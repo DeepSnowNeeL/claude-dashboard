@@ -16,6 +16,7 @@ export function attachAgents(ctx) {
   const agentCard = a => ({
     id: `ag-${a.key}`, t: 'agent', key: a.key, type: a.type, description: a.description, state: a.state,
     agentId: a.agentId || a.taskId, start: a.start, end: a.end, tools: a.tools, durationMs: a.durationMs, lastTool: a.lastTool, summary: a.summary, background: a.background,
+    model: a.model, context: a.context, contextMax: a.contextMax, window: a.window, current: a.current, lastText: a.lastText,
   });
   function pushAgentEvent(a, ev) {
     const i = a.feed.findIndex(x => x.id === ev.id);

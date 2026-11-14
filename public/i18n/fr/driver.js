@@ -16,6 +16,7 @@ export default {
   },
   errors: {
     unknownSubagent: 'sous-agent inconnu, ou sans identifiant pour lui écrire',
+    unknownModel: 'modèle inconnu : {model}',
   },
   planWindow: {
     five_hour: '5 h',

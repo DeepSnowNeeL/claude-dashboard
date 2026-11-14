@@ -3,6 +3,11 @@ export default {
   appTitle: 'Tableau de bord Claude',
   appTitleUnread: '({n}) Tableau de bord Claude',
   closeEsc: 'Fermer (Échap)',
+  context: {
+    title: 'Contexte : {context} sur une fenêtre de {window} ({pct} %)',
+    now: p => (p.window ? `${p.context} / ${p.window} · ${p.pct} %` : p.context),
+    max: p => (p.window ? `${p.context} max · ${p.pct} %` : `${p.context} max`),
+  },
   time: {
     justNow: 'à l\'instant',
     minutesAgo: 'il y a {n} min',

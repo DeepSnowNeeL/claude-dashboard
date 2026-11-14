@@ -69,7 +69,7 @@ export function updateBoard(slug, fields) {
 // What /clear keeps: the technical identity of the session (folder, mode, Claude conversation, profile in preview) and
 // a title chosen by hand; everything else (Tracker panel, automatic title, ticket, description, step, counters)
 // starts from zero, like a new session.
-const KEPT_ON_CLEAR = ['slug', 'cwd', 'project', 'mode', 'status', 'driven', 'sessionId', 'model', 'trackerPreview', 'titlePinned'];
+const KEPT_ON_CLEAR = ['slug', 'cwd', 'project', 'mode', 'status', 'driven', 'sessionId', 'model', 'modelChoice', 'trackerPreview', 'titlePinned'];
 
 /** /clear: empties the Tracker panel and the header of the session, writes it to disk and notifies the page. */
 export function clearBoard(slug) {

@@ -7,6 +7,7 @@ export default {
     states: { working: 'running', completed: 'done', failed: 'failed', stopped: 'stopped' },
     tools: { one: '{n} tool', other: '{n} tools' },
     background: '(background)',
+    lastText: '"{text}"',
     seeConversation: 'See its conversation →',
     resumeTitle: 'Asks the session to resume this agent where it stopped (SendMessage, context kept)',
     resume: '↻ Resume this agent',

@@ -16,6 +16,21 @@ export function toolEvent(id, b) {
   }));
   return { id, t: 'tool', name: b.name, summary: summarizeTool(b.name, b.input), toolId: b.id, input };
 }
+/** Tokens sent to the model by a call: input + cache read + cache creation. */
+export const contextOf = u => (u ? (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0) : 0);
+/** Model id without its window suffix (`claude-opus-5-5[1m]` → `claude-opus-5-5`). */
+export const baseModel = id => String(id || '').replace(/\[\w+\]$/, '');
+/** Same model, whatever the window suffix or the date suffix (`-20250929`) of the ids. */
+export const sameModel = (a, b) => { const x = baseModel(a).replace(/-\d{8}$/, ''); return !!x && x === baseModel(b).replace(/-\d{8}$/, ''); };
+/** Context windows of the models (contextWindow of modelUsage, in the turn results); 200k until known. */
+const windows = new Map();
+export const windowOf = model => windows.get(baseModel(model)) || (/\[1m\]$/i.test(model || '') ? 1_000_000 : 200_000);
+/** Last line written by an agent, without its markdown marks (its "last sentence"). */
+export function lastSentence(text) {
+  const line = String(text).trim().split('\n').filter(l => l.trim()).at(-1) || '';
+  const clean = line.replace(/^[#>*\-\s]+/, '').replace(/\*\*/g, '').trim();
+  return clean.length > 160 ? `${clean.slice(0, 157)}…` : clean;
+}
 /** Text of a tool_result (string or blocks; images are mentioned, not passed on). */
 export function resultText(b, max = 8000) {
   const text = typeof b.content === 'string' ? b.content
@@ -112,11 +127,25 @@ export function attachEvents(ctx) {
   // Reading the stream: live text, grouped tools, end of turn.
   let text = null; // text event being written
   let lastContext = 0; // context size already counted (one message per block, same usage)
+  // Subagents: model, context, tool in progress and last sentence, read on each of their messages
+  function agentMessage(a, msg) {
+    const fields = { current: null };
+    if (msg.model && msg.model !== '<synthetic>') fields.model = msg.model;
+    const context = contextOf(msg.usage);
+    if (context) Object.assign(fields, { context, contextMax: Math.max(a.contextMax || 0, context) });
+    for (const b of msg.content || []) {
+      if (b.type === 'text' && b.text.trim()) fields.lastText = lastSentence(b.text);
+      else if (b.type === 'tool_use') fields.current = { name: b.name, summary: summarizeTool(b.name, b.input) };
+    }
+    fields.window = windowOf(fields.model || a.model);
+    ctx.updateAgent(a, fields);
+  }
   function handleMessage(m) {
     // Mode really in force (init, status): Claude Code changes it itself (EnterPlanMode, plan approved, auto unavailable)
     if (m.type === 'system' && m.permissionMode) ctx.syncSdkMode(m.permissionMode);
     if (m.type === 'system' && m.subtype === 'init') {
       s.sessionId = m.session_id;
+      s.model = m.model;
       ctx.terminalCommands = new Set(m.terminal_slash_commands || []);
       updateBoard({ sessionId: m.session_id, model: m.model });
       // Auto mode offered if the session's model supports it (otherwise the selector greys it out)
@@ -152,10 +181,13 @@ export function attachEvents(ctx) {
     } else if (m.type === 'assistant') {
       const parent = agentOf(m.parent_tool_use_id);
       const push = parent ? ev => ctx.pushAgentEvent(parent, ev) : pushEvent;
+      if (parent) agentMessage(parent, m.message);
+      // Model changed by a /model typed in the input: the pill of the header follows (the [1m] of the init id is kept)
+      else if (m.message.model && m.message.model !== '<synthetic>' && !sameModel(m.message.model, s.model)) { s.model = m.message.model; updateBoard({ model: s.model }); }
       // Context size: what the last call of the main feed sent to the model
       const u = !parent && m.message.usage;
       if (u) {
-        const context = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+        const context = contextOf(u);
         if (context && context !== lastContext) {
           lastContext = context; count({ context });
           if (modelWindow) { const pct = Math.floor((context * 100) / modelWindow); achievements.set('contextPct', pct); achievements.record('bursting', pct); }
@@ -258,6 +290,7 @@ export function attachEvents(ctx) {
       turnTools = 0; s.planRejected = false; s.interrupted = false;
       s.turnEndedAt = s.lastTurnAt = Date.now();
       pushEvent({ id: newId(), t: 'end', ok: m.subtype === 'success' && !m.is_error, cost: m.total_cost_usd, duration: m.duration_ms });
+      for (const [model, x] of Object.entries(m.modelUsage || {})) if (x.contextWindow) windows.set(baseModel(model), x.contextWindow);
       const window = Math.max(0, ...Object.values(m.modelUsage || {}).map(x => x.contextWindow || 0));
       count({ claudeMs: m.duration_ms, window });
       if (window) modelWindow = window;

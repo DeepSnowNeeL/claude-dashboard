@@ -62,7 +62,7 @@ function autoCompactEnv() {
  * @param {object[]} [o.initialFeed] feed rebuilt from the history of the resumed session
  * @param {object} [o.achievements] levels and achievements (engine/progress.mjs, sessionAchievements): record, add, xp, stat, set, get, plan
  */
-export function createSession({ slug, cwd, mode = 'all', prePlan, updateBoard, emit, count = () => {}, clearBoard = () => {}, notifyChange = () => {}, onStopped = () => {}, launch, list, write, end, resume, initialFeed = [], achievements = INERT_ACHIEVEMENTS }) {
+export function createSession({ slug, cwd, mode = 'all', prePlan, model, updateBoard, emit, count = () => {}, clearBoard = () => {}, notifyChange = () => {}, onStopped = () => {}, launch, list, write, end, resume, initialFeed = [], achievements = INERT_ACHIEVEMENTS }) {
   const input = inputQueue();
   const pending = new Map(); // id → resolve
   let counter = 0;
@@ -96,6 +96,7 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, updateBoard, e
     options: {
       cwd,
       ...(resume ? { resume } : {}),
+      ...(model ? { model } : {}), // chosen from the header pill, kept across restarts (modelChoice)
       settingSources: ['user', 'project', 'local'],
       permissionMode: MODES[mode],
       allowDangerouslySkipPermissions: true,
@@ -174,6 +175,17 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, updateBoard, e
   };
   s.setMode = async m => { if (!MODES[m]) return; await s.q.setPermissionMode(MODES[m]); s.syncMode(m); };
   ctx.syncSdkMode = sdk => s.syncMode(modeKey(sdk));
+  /** Models offered by the header pill (`supportedModels()` of the SDK) and the current one. */
+  s.models = async () => ({ models: await s.q.supportedModels(), current: s.model || null });
+  /** Changes the model of the session (from its next call), as /model in the terminal; kept for the resumes. */
+  s.setModel = async value => {
+    const models = await s.q.supportedModels();
+    const choice = models.find(x => x.value === value);
+    if (!choice) throw new Error(t('driver.errors.unknownModel', { model: value }));
+    await s.q.setModel(value);
+    s.model = choice.resolvedModel || value;
+    updateBoard({ model: s.model, modelChoice: value, autoMode: !!choice.supportsAutoMode });
+  };
   /** Stops the Claude process of the session (running turn interrupted). Resuming stays possible through its id. */
   s.close = async () => {
     s.closed = true;

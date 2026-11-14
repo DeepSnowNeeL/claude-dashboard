@@ -91,7 +91,7 @@ button.link { background: none; border: 0; padding: 0; color: var(--link); curso
 /* Subagents: conversation tabs, card in the feed, read-only banner */
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 0 16px 10px; }
 .tabs:empty { display: none; }
-.tab { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 12px; padding: 3px 10px; cursor: pointer; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 12px; padding: 3px 10px; cursor: pointer; max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tab.on { color: var(--text); border-color: var(--link); box-shadow: 0 0 0 1px var(--link); font-weight: 600; }
 .tab.e-working { color: var(--blue-txt); }
 .tabs .m { font-size: 11px; margin-left: 6px; }
@@ -103,10 +103,33 @@ button.link { background: none; border: 0; padding: 0; color: var(--link); curso
 .card.agent.e-completed { border-left-color: var(--green); }
 .card.agent.e-failed, .card.agent.e-stopped { border-left-color: var(--red); }
 .card.agent .btn { margin-top: 6px; }
+.agent-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.agent-stats { display: flex; gap: 4px 14px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.agent-now { display: flex; gap: 6px; align-items: baseline; margin-top: 6px; font-size: 13px; min-width: 0; }
+.agent-now .spin { color: var(--orange); }
+.agent-now code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 100%; }
+.agent-thought { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; overflow-wrap: anywhere; }
+/* Model pill (subagents, header): colour per family */
+.model-pill { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--chip); color: var(--text); white-space: nowrap; }
+.model-pill.f-opus { background: var(--yellow-pill); color: var(--yellow-txt); }
+.model-pill.f-sonnet { background: color-mix(in srgb, #8b5cf6 25%, var(--card)); color: color-mix(in srgb, #6d28d9 80%, var(--text)); }
+.model-pill.f-haiku { background: var(--green-pill); color: var(--green-txt); }
+.model-pill.f-fable { background: var(--blue-pill); color: var(--blue-txt); }
+button.model-pill { font: inherit; font-size: 12px; font-weight: 600; border: 0; cursor: pointer; padding: 3px 9px; }
+button.model-pill:hover { filter: brightness(.95); box-shadow: 0 0 0 1px var(--line); }
+/* Context gauge: orange from 50 %, red from 75 % (as the 🧠 of the header) */
+.ctx-gauge { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.ctx-bar { display: inline-block; width: 80px; height: 6px; border-radius: 3px; background: var(--line-light); overflow: hidden; }
+.ctx-bar i { display: block; height: 100%; background: var(--link); }
+.ctx-gauge.ctx-orange .ctx-bar i { background: #e08a00; }
+.ctx-gauge.ctx-red .ctx-bar i { background: #e5484d; }
+.ctx-gauge.mini .ctx-bar { width: 28px; height: 4px; }
+.tab .ctx-gauge.mini { vertical-align: middle; margin-left: 4px; }
 .msg.instruction { align-self: stretch; border: 1px dashed var(--line); border-radius: 8px; padding: 7px 11px; font-size: 13px; }
 .agent-banner { display: none; }
 .center.agent-view .agent-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line-light); padding: 10px 16px; font-size: 13px; }
 .agent-banner .btn:first-of-type { margin-left: auto; }
+.agent-banner-main { flex: 1 1 320px; min-width: 0; }
 .pill.p-agents { background: var(--blue-pill); color: var(--blue-txt); }
 
 /* Activity indicator below the feed */

@@ -235,3 +235,33 @@ export const chrono = (start, end, durationMs) => !start ? ''
 export function tickChronos() {
   setInterval(() => document.querySelectorAll('.chrono[data-start]').forEach(el => { el.textContent = shortDuration(Date.now() - Number(el.dataset.start)); }), 1000);
 }
+
+// --- Models and context: header pill, subagent cards ---------------------------------------------------
+/** Tokens in short: "48k", "1M", "1.5M". */
+export const kTokens = n => n >= 1e6 ? `${+(n / 1e6).toFixed(n % 1e6 ? 1 : 0)}M` : `${Math.round(n / 1000)}k`;
+/** Short name and family of a model id: `claude-opus-5-5[1m]` → { name: 'Opus 5.5 · 1M', family: 'opus' }. */
+export function modelLabel(id) {
+  const raw = String(id || '');
+  const base = raw.replace(/\[\w+\]$/, '').replace(/^claude-/, '').replace(/-\d{8}$/, '');
+  const family = ['opus', 'sonnet', 'haiku', 'fable'].find(f => base.includes(f)) || '';
+  const version = base.replace(family, '').split('-').filter(Boolean).join('.');
+  const name = family ? `${family[0].toUpperCase()}${family.slice(1)}${version ? ` ${version}` : ''}` : raw;
+  return { name: /\[1m\]$/i.test(raw) ? `${name} · 1M` : name, family };
+}
+/** Pill of a model (colour per family, full id as tooltip). `short`: family only ("Sonnet"), for the tabs. */
+export function modelPill(id, short = false) {
+  if (!id) return '';
+  const { name, family } = modelLabel(id);
+  return `<span class="model-pill f-${family || 'other'}" title="${esc(id)}">${esc(short && family ? name.split(' ')[0] : name)}</span>`;
+}
+/** Context tier: orange from 50 % of the window, red from 75 % (as the 🧠 of the header). */
+export const contextTier = ratio => ratio >= 0.75 ? 'ctx-red' : ratio >= 0.5 ? 'ctx-orange' : '';
+/** Context gauge: bar + "48k / 200k · 24 %". `max`: highest reached (finished agent). `mini`: bar alone (tabs). */
+export function contextGauge(context, window, { max = false, mini = false } = {}) {
+  if (!context) return '';
+  const ratio = window ? Math.min(1, context / window) : 0, pct = Math.round(ratio * 100);
+  const title = t('common.context.title', { context: kTokens(context), window: window ? kTokens(window) : '?', pct });
+  const bar = window ? `<span class="ctx-bar"><i style="width:${pct}%"></i></span>` : '';
+  if (mini) return `<span class="ctx-gauge mini ${contextTier(ratio)}" title="${esc(title)}">${bar}</span>`;
+  return `<span class="ctx-gauge ${contextTier(ratio)}" title="${esc(title)}">🧠 ${bar} ${t(max ? 'common.context.max' : 'common.context.now', { context: kTokens(context), window: window ? kTokens(window) : '', pct })}</span>`;
+}

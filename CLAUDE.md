@@ -65,7 +65,9 @@ and the design of what is about to be built in visual form, with all the availab
   a project (the same for its main worktree, edit, remove from the tree).
 - **In the middle, the conversation**: header (title, renamable in one click: the chosen name is pinned 📌, Claude no
   longer changes it, empty = automatic name; discreet counters: Claude's time, exchanges, your active time; the
-  session's folder 📁 (click: path menu) and its branch ⎇; steps, permission mode), subagent tabs, the feed (messages,
+  session's folder 📁 (click: path menu) and its branch ⎇; steps, **model pill** (short name, colour per family;
+  click: `supportedModels()` list, `setModel`, choice kept in `modelChoice` and passed again as `model` on resume),
+  permission mode), subagent tabs, the feed (messages,
   one collapsed line per group of tools, decision, question, permission and subagent cards, output of `!` commands),
   the input. A click on a choice selects it without sending it. Messages rendered in markdown (`markdown()` of
   `core/dom.js`: quotes, nested lists, tables, headings…; the panel keeps the `rich()` subset); a Claude answer is
@@ -242,7 +244,11 @@ and the design of what is about to be built in visual form, with all the availab
 - **Subagents**: the SDK's `task_*` and the messages carrying `parent_tool_use_id` feed one conversation per agent
   (key = id of the Agent tool_use), viewable read only and stoppable (`stopTask`). Their duration (⏱, `chrono()` of
   `core/dom.js`, advanced every second without redrawing) is shown on the tab, the card and the banner, as for the
-  shells. Kept in memory only: after a restart, the history only shows the tool call.
+  shells. Each card, tab and the banner also show the agent's model pill, its context gauge (input + cache of its last
+  call over its model window, `contextWindow` of the results' `modelUsage`, 200k until known; highest reached once
+  finished), its tool count and, while it runs, the tool in progress with its argument and its last sentence (no AI
+  summary: `agentProgressSummaries` stays off). Kept in memory only: after a restart, the history only shows the tool
+  call (model and highest context are read again from the subagent transcripts).
 - **Background shells** (Bash `run_in_background`, Monitor: SDK tasks `local_bash` / `monitor`): one 🐚 tab per running
   shell next to the subagents' (🐚 pill in the list); a click opens its output, read every 2 s from the file given by
   the tool result (tail, 64 KB), with "Stop" (`stopTask`). A shell that finishes while the session is idle starts a

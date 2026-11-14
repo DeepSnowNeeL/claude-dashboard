@@ -1,6 +1,6 @@
 // Claude Code history: feed and subagents of a past session, recent folders.
 import { listSessions, getSessionMessages, listSubagents, getSubagentMessages } from '@anthropic-ai/claude-agent-sdk';
-import { toolEvent, resultText, AGENT_TOOLS } from './events.mjs';
+import { toolEvent, resultText, AGENT_TOOLS, contextOf, windowOf } from './events.mjs';
 import { BOARD_TOOL } from './mcp-tools.mjs';
 import { extractAttachments, attachmentUrl } from './attachments.mjs';
 import { migrateSession } from '../migration.mjs';
@@ -81,7 +81,7 @@ export async function feedFromHistory(slug, sessionId, cwd) {
           feed.push({
             id: `ag-${b.id}`, t: 'agent', key: b.id, type: b.input?.subagent_type || 'general-purpose', description: b.input?.description || '',
             agentId: a?.agentId, state: a?.state || 'stopped', tools: a?.tools || 0, summary: a?.summary || '', start: a?.start, end: a?.end,
-            durationMs: a?.start && a?.end ? a.end - a.start : undefined, background: !!b.input?.run_in_background, fromHistory: true,
+            durationMs: a?.start && a?.end ? a.end - a.start : undefined, model: a?.model, contextMax: a?.contextMax, window: a?.window, background: !!b.input?.run_in_background, fromHistory: true,
           });
         } else if (b.type === 'tool_use' && b.name === 'AskUserQuestion') feed.push({ id: id(), t: 'question', questions: b.input?.questions || [], state: 'answered' });
         else if (b.type === 'tool_use') { const ev = toolEvent(id(), b); calls.set(b.id, ev); feed.push(ev); }
@@ -116,11 +116,13 @@ async function agentsFromHistory(slug, sessionId) {
     const key = msgs.find(m => m.parent_tool_use_id)?.parent_tool_use_id;
     if (!key) continue;
     const feed = [];
-    let tools = 0, summary = '';
+    let tools = 0, summary = '', model, contextMax = 0;
     const calls = new Map();
     for (const m of msgs) {
       const c = m.message?.content;
       if (m.type === 'user') attachResults(c, calls);
+      if (m.type === 'assistant' && m.message?.model && m.message.model !== '<synthetic>') model = m.message.model;
+      if (m.type === 'assistant') contextMax = Math.max(contextMax, contextOf(m.message?.usage));
       if (m.type === 'user' && typeof c === 'string' && !feed.length) feed.push({ id: `${slug}-ha${++n}`, t: 'user', text: c, fromParent: true });
       else if (m.type === 'assistant' && Array.isArray(c)) for (const raw of c) {
         const b = raw.type === 'tool_use' && OLD_TOOL_NAMES[raw.name] ? { ...raw, name: toolName(raw.name) } : raw;
@@ -131,7 +133,7 @@ async function agentsFromHistory(slug, sessionId) {
     const last = msgs.at(-1);
     const finished = last?.type === 'assistant' && !(last.message?.content || []).some(b => b.type === 'tool_use');
     const ts = m => (m?.timestamp ? Date.parse(m.timestamp) : undefined);
-    agents.set(key, { key, agentId, feed, tools, summary: finished ? summary : '', state: finished ? 'completed' : 'stopped', start: ts(msgs[0]), end: ts(last) });
+    agents.set(key, { key, agentId, feed, tools, summary: finished ? summary : '', state: finished ? 'completed' : 'stopped', start: ts(msgs[0]), end: ts(last), model, contextMax, window: windowOf(model) });
   }
   agentsCache.set(sessionId, agents);
   return agents;

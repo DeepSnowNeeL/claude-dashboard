@@ -74,6 +74,9 @@ export default {
     ready: 'Session prête dans <code>{cwd}</code> : écris ton premier message ci-dessous.',
   },
   header: {
+    modelTitle: 'Modèle de la session : {model} (clic : en changer)',
+    modelMenu: 'Modèle',
+    modelChanged: 'Modèle : {model}, à partir du prochain message',
     steps: { framing: 'Cadrage', mockup: 'Maquette', design: 'Design (vérif)', execution: 'Exécution', push: 'Push' },
     folderTitle: 'Dossier de la session : {path}',
     branchTitle: 'branche du worktree',

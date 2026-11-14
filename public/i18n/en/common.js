@@ -3,6 +3,11 @@ export default {
   appTitle: 'Claude Dashboard',
   appTitleUnread: '({n}) Claude Dashboard',
   closeEsc: 'Close (Esc)',
+  context: {
+    title: 'Context: {context} of a {window} window ({pct} %)',
+    now: p => (p.window ? `${p.context} / ${p.window} · ${p.pct} %` : p.context),
+    max: p => (p.window ? `${p.context} max · ${p.pct} %` : `${p.context} max`),
+  },
   time: {
     justNow: 'just now',
     minutesAgo: '{n} min ago',

@@ -88,7 +88,7 @@ export async function resume(slug) {
   const { data } = sessions.get(slug);
   const initialFeed = data.sessionId ? await feedFromHistory(slug, data.sessionId, data.cwd) : [];
   if (drivers.has(slug)) return drivers.get(slug); // concurrent resume while reading the history
-  const s = createSession({ slug, cwd: data.cwd, mode: data.mode || 'all', prePlan: data.prePlanMode || undefined, resume: data.sessionId, initialFeed, ...callbacks(slug) });
+  const s = createSession({ slug, cwd: data.cwd, mode: data.mode || 'all', prePlan: data.prePlanMode || undefined, model: data.modelChoice || undefined, resume: data.sessionId, initialFeed, ...callbacks(slug) });
   drivers.set(slug, s);
   // Session from before the counters: exchanges are found in the history, not Claude's time.
   if (!data.stats) count(slug, { exchanges: initialFeed.filter(ev => ev.t === 'user').length });

@@ -10,6 +10,9 @@ export const readAgentFeed = (slug, key) => api(`/api/sessions/${slug}/agents/${
 export const send = (slug, body) => api(`/api/sessions/${slug}/message`, body);
 export const interrupt = slug => api(`/api/sessions/${slug}/interrupt`, {});
 export const setMode = (slug, mode) => api(`/api/sessions/${slug}/mode`, { mode });
+/** Models offered for the session ({ models: [{ value, displayName, description, resolvedModel }], current }). */
+export const readModels = slug => api(`/api/sessions/${slug}/models`);
+export const setModel = (slug, model) => api(`/api/sessions/${slug}/model`, { model });
 export const end = slug => api(`/api/sessions/${slug}/end`, {});
 export const archive = slug => api(`/api/sessions/${slug}/archive`, {});
 export const rename = (slug, title) => api(`/api/sessions/${slug}/rename`, { title });

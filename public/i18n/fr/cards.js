@@ -7,6 +7,7 @@ export default {
     states: { working: 'en cours', completed: 'terminé', failed: 'en échec', stopped: 'arrêté' },
     tools: { one: '{n} outil', other: '{n} outils' },
     background: '(arrière-plan)',
+    lastText: '« {text} »',
     seeConversation: 'Voir sa conversation →',
     resumeTitle: 'Demande à la session de reprendre cet agent là où il s\'est arrêté (SendMessage, contexte gardé)',
     resume: '↻ Reprendre cet agent',

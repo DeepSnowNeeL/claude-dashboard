@@ -163,6 +163,13 @@ const mcp = action => async (req, res, { params: { slug } }) => {
   } catch (e) { return sendJson(res, 500, { error: e.message }); }
 };
 
+// Models offered by the header pill: those of the SDK (resumes a paused session, like /mcp)
+async function models(req, res, { params: { slug } }) {
+  const data = sessions.get(slug)?.data;
+  if (!drivers.has(slug) && !resumable(data)) return sendJson(res, 404, err('notDriven'));
+  try { return sendJson(res, 200, await (await resume(slug)).models()); } catch (e) { return sendJson(res, 500, { error: e.message }); }
+}
+
 // Queued messages handed back to the page to be edited again (up arrow)
 async function recallQueue(req, res, { params: { slug } }) {
   const s = drivers.get(slug);
@@ -288,6 +295,7 @@ const action = name => async (req, res, { params: { slug } }) => {
     onOrigin(slug, originOf(req));
   } else if (name === 'interrupt') { if (!s.stopCommand()) { if (s.busy) onInterrupt(slug); await s.interrupt(); } }
   else if (name === 'mode') await s.setMode(body.mode);
+  else if (name === 'model') { try { await s.setModel(String(body.model || '')); } catch (e) { return sendJson(res, 400, { error: e.message }); } }
   return sendJson(res, 200, { ok: true });
 };
 
@@ -426,6 +434,8 @@ export default {
   'POST /api/sessions/:slug/answer': valid(action('answer')),
   'POST /api/sessions/:slug/interrupt': valid(action('interrupt')),
   'POST /api/sessions/:slug/mode': valid(action('mode')),
+  'POST /api/sessions/:slug/model': valid(action('model')),
+  'GET /api/sessions/:slug/models': valid(models),
   'GET /api/sessions/:slug': valid(session),
   'POST /api/sessions/:slug': valid(session),
   'PATCH /api/sessions/:slug': valid(session),
