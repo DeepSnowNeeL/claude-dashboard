@@ -37,7 +37,8 @@ and the design of what is about to be built in visual form, with all the availab
   counters (⏳ waiting for your answer, ⚙ Claude working). A "+" on each worktree opens the "New session" page of the
   folder: ▶ New session starts it in one click, empty (the first message is typed in its input), or the folder history
   resumes an old one. The folder is set by default (the "+" one, otherwise the one of the last displayed session),
-  "change" opens the input; "In a new worktree" (unchecked by default) asks for a branch and creates the worktree next
+  "change" opens the input; the permission mode is the one of the last session started from this browser (`dash-new-session-mode` in
+  `localStorage`); "In a new worktree" (unchecked by default) asks for a branch and creates the worktree next
   to the repo (`createWorktree` of `projects.mjs`, shared with `launch_session`). Within a worktree, the order never
   depends on the status: manual order, otherwise newest to oldest (creation date read from the slug).
   Each session has a `ticket · quick-context` header and a one-sentence description; a dot marks the sessions driven

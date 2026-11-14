@@ -4,8 +4,13 @@ import { create, resume } from '../services/sessions.js';
 import { readHistory, readFolders } from '../services/projects.js';
 import { projects, relativeDir, serverMode } from '../core/state.js';
 import { readWorkspace } from '../services/options.js';
-import { modeOptions } from '../core/modes.js';
+import { modeOptions, MODE_KEYS } from '../core/modes.js';
+import { read, write } from '../core/storage.js';
 import { t, locale } from '../i18n/index.js';
+
+// Permission mode of the last session started from this browser: the next one starts with it
+const MODE_KEY = 'dash-new-session-mode';
+const lastMode = () => { const m = read(MODE_KEY, 'all'); return MODE_KEYS.includes(m) ? m : 'all'; };
 
 // On the right of "New session": the folder's past sessions (terminal and page alike), searchable, to resume.
 let history = [];
@@ -90,7 +95,7 @@ export function renderNewSession(initialCwd) {
       <label id="worktree-input" hidden>${t('newSession.branch')}<input id="new-branch" placeholder="${t('newSession.branchPlaceholder')}" autocomplete="off">
         <span class="m" id="worktree-target"></span></label>
       <label>${t('newSession.permissions')}
-        <select id="new-session-mode">${modeOptions('all')}</select></label>
+        <select id="new-session-mode">${modeOptions(lastMode())}</select></label>
       <div class="bar"><span class="m">${t('newSession.readyHint')}</span><button class="btn on large" type="submit">${t('newSession.start')}</button></div>
     </form></div>`;
   if (cwd0) $('#new-session-form button[type=submit]').focus(); // Enter starts the session
@@ -150,6 +155,7 @@ export function renderNewSession(initialCwd) {
   $('#new-session-form').addEventListener('submit', async e => {
     e.preventDefault();
     const cwd = $('#cwd').value, mode = $('#new-session-mode').value, before = location.hash;
+    write(MODE_KEY, mode);
     const branch = $('#with-worktree').checked ? $('#new-branch').value.trim() : '';
     showLoading(t('newSession.title'));
     try {
