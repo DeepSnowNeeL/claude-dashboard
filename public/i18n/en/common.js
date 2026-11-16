@@ -3,6 +3,14 @@ export default {
   appTitle: 'Claude Dashboard',
   appTitleUnread: '({n}) Claude Dashboard',
   closeEsc: 'Close (Esc)',
+  updateBanner: {
+    engine: 'The engine runs an older version of the code (update pulled).',
+    page: 'The page runs an older version of the code (update pulled).',
+    both: 'The engine and the page run an older version of the code (update pulled).',
+    restart: 'Restart',
+    waiting: 'Restarting as soon as these sessions are idle: {list}',
+    restarting: 'Restarting…',
+  },
   context: {
     title: 'Context: {context} of a {window} window ({pct} %)',
     now: p => (p.window ? `${p.context} / ${p.window} · ${p.pct} %` : p.context),

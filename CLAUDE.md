@@ -400,6 +400,12 @@ backward-compatibility code: its French names are recognised on purpose. Tests: 
   of Electron with the app icon, which loads the repo's code in place (nothing bundled: F5 and restarts work as
   before). Name "Claude Dashboard" or "Tableau de bord Claude" depending on the language. To redo, with the app quit,
   after an Electron update or a move of the repo.
+- **"Not up to date" banner** (`server/updates.mjs`, `components/update-banner.js`, PC only): after a `git pull` the page
+  serves the new files on F5 but the engine and the page server keep their old code. Each one reads its starting commit
+  in `.git` (`headCommit()`, no git process; engine route `GET /api/engine/version`, an engine without it is an old
+  one); `GET /api/updates` compares with the commit on disk and reports a process only when files it runs changed in
+  between (`git diff --name-only`). The banner (checked every minute) offers Restart: `POST /api/updates/restart`
+  stops the engine deferred (as soon as its sessions are idle) and restarts the page through `dash.mjs restart`.
 - **Working on the dashboard from a session it drives**: its engine holds that very session. `node dash.mjs restart`
   (page) is safe; for the engine, **always** `node dash.mjs restart-engine --deferred` (it stops as soon as the turn
   ends, the page restarts it, the session comes back paused); never `--force`, which cuts it.

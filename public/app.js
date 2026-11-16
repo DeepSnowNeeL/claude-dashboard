@@ -18,6 +18,7 @@ import { renderTracker } from './components/tracker/panel.js';
 import { mountOptions } from './components/options.js';
 import { mountAchievements } from './components/achievements.js';
 import { mountUpdating } from './components/updating.js';
+import { mountUpdateBanner } from './components/update-banner.js';
 import { loadProgress } from './services/progress.js';
 import { mountMobile } from './components/mobile.js';
 import { show, refresh, mountConversation, markNewsRead } from './components/conversation/conversation.js';
@@ -50,6 +51,7 @@ mountCopy(); // Ctrl+C: the formatting without the colors of the application
 mountTree($('#list'));
 mountMobile();
 mountOptions();
+mountUpdateBanner(); // engine or page behind the code on disk (git pull): banner with a Restart button
 const onAchievement = mountAchievements(); // level badge, 🏆 window, toasts
 mountPalette(); // Ctrl+P
 mountSide($('#right'), renderTracker);

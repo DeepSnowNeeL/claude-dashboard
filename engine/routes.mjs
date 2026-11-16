@@ -19,7 +19,9 @@ import { isSensitive } from '../server/sensitive.mjs';
 import { createWorktree } from '../projects.mjs';
 import { progressView, markAchievementsSeen, announcementsSince } from './progress.mjs';
 import { originOf, onDevMessage, onOrigin, onCreate, onInterrupt, onWorktree, onSeen } from './achievement-counters.mjs';
+import { headCommit } from '../server/updates.mjs';
 import { subscriptionUsage, availableModels } from '../driver.mjs';
+const ENGINE_COMMIT = headCommit(); // read at startup: the code this engine runs
 
 let deferredStop = null;
 
@@ -388,6 +390,8 @@ export default {
   'GET /api/ping': async (req, res) => sendJson(res, 200, { ok: true, engine: true }),
   'GET /api/state': async (req, res) => sendJson(res, 200, { running: workInProgress(), drivers: drivers.size }),
   // Engine shutdown (dash.mjs restart-moteur): refused while work is running, unless forced
+  // Commit the engine started with: the page compares it with the one on disk ("not up to date" banner)
+  'GET /api/engine/version': async (req, res) => sendJson(res, 200, { commit: ENGINE_COMMIT }),
   'POST /api/engine/stop': async (req, res, { url }) => {
     // Deferred: the engine stops by itself as soon as everything is idle (useful from a driven session, whose
     // own turn would block an immediate stop); the page restarts it right away.

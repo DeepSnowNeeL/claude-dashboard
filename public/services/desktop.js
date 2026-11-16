@@ -11,3 +11,7 @@ export const showInExplorer = path => api('/api/explorer', { path });
 export const openWithDefault = path => api('/api/explorer', { path, open: true });
 /** Opens the path in VS Code, in the window of its repository (server). */
 export const openInVsCode = (path, line) => api('/api/vscode', { path, line });
+/** `{ engine, page }`: true when that process runs older code than the files on disk (PC only: fails elsewhere). */
+export const readUpdates = () => api('/api/updates');
+/** Restarts what is behind: the engine as soon as its sessions are idle (`{ running }`), the page right away. */
+export const restartOutdated = what => api('/api/updates/restart', what);

@@ -59,7 +59,7 @@ async function handle(req, res, external = false) {
   }
 
   // Stopping the page or the engine, opening a terminal, the explorer or VS Code: from the PC only
-  if (remote && (/^\/api\/(stop|engine\/stop|auth\/|explorer|vscode|options|trackers|worktree\/)/.test(p))) return sendJson(res, 403, { error: t('server.errors.pcOnly') });
+  if (remote && (/^\/api\/(stop|engine\/stop|updates|auth\/|explorer|vscode|options|trackers|worktree\/)/.test(p))) return sendJson(res, 403, { error: t('server.errors.pcOnly') });
   // Adding or removing a project folder (any folder of the machine enters the allowed paths): from the PC only, and
   // from approved devices in server mode, which have the rights of the PC
   if ((remote || (external && !SERVER_MODE)) && p === '/api/projects' && req.method !== 'GET') return sendJson(res, 403, { error: t('server.errors.pcOnly') });

@@ -13,7 +13,7 @@ const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'pu
 
 // What an approved device may never do. Local mode: whatever acts on the PC or on access itself. Server mode (no PC,
 // approved devices get its rights): only desktop actions (Windows explorer, VS Code, terminals) and stopping the page.
-const FORBIDDEN = SERVER_MODE ? /^\/api\/(stop|explorer|vscode|auth\/)/ : /^\/api\/(stop|engine\/stop|auth\/|explorer|access|network|options|trackers)/;
+const FORBIDDEN = SERVER_MODE ? /^\/api\/(stop|explorer|vscode|auth\/)/ : /^\/api\/(stop|engine\/stop|updates|auth\/|explorer|access|network|options|trackers)/;
 
 // Event streams (SSE) opened through the gate, by device: logging out or revoking a device closes them at once
 // (otherwise it would keep receiving the sessions' updates until it reconnects)

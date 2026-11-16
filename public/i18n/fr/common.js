@@ -3,6 +3,14 @@ export default {
   appTitle: 'Tableau de bord Claude',
   appTitleUnread: '({n}) Tableau de bord Claude',
   closeEsc: 'Fermer (Échap)',
+  updateBanner: {
+    engine: 'Le moteur tourne avec une ancienne version du code (mise à jour récupérée).',
+    page: 'La page tourne avec une ancienne version du code (mise à jour récupérée).',
+    both: 'Le moteur et la page tournent avec une ancienne version du code (mise à jour récupérée).',
+    restart: 'Redémarrer',
+    waiting: 'Redémarrage dès que ces sessions sont au repos : {list}',
+    restarting: 'Redémarrage…',
+  },
   context: {
     title: 'Contexte : {context} sur une fenêtre de {window} ({pct} %)',
     now: p => (p.window ? `${p.context} / ${p.window} · ${p.pct} %` : p.context),

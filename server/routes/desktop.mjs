@@ -8,7 +8,12 @@ import { sendJson, readBody, SERVER_MODE } from '../../common.mjs';
 import { isPathAllowed, isSensitive } from '../paths.mjs';
 import { git } from '../git.mjs';
 import { pathKey, forgetWorktrees } from '../../projects.mjs';
-import { engine, notifyChange, announceRestart } from '../engine-client.mjs';
+import { engine, engineHeaders, notifyChange, announceRestart } from '../engine-client.mjs';
+import { updateStatus } from '../updates.mjs';
+import { ENGINE_PORT } from '../../common.mjs';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 import { t } from '../../public/i18n/index.js';
 
 /**
@@ -117,7 +122,31 @@ async function removeWorktree(req, res) {
   return sendJson(res, 200, { ok: true });
 }
 
+// "Not up to date" banner: engine and page compared with the commit on disk (an engine without the version route is an
+// old one); the button restarts what is behind, the engine as soon as its sessions are idle
+async function updates(req, res) {
+  let engineCommit;
+  try {
+    const r = await fetch(`http://127.0.0.1:${ENGINE_PORT}/api/engine/version`, { headers: engineHeaders(), signal: AbortSignal.timeout(2000) });
+    engineCommit = r.status === 404 ? null : (await r.json()).commit;
+  } catch { engineCommit = undefined; } // engine not running: the page starts it with the current code
+  const status = await updateStatus(engineCommit);
+  if (engineCommit === undefined) status.engine = false;
+  return sendJson(res, 200, status);
+}
+async function restartOutdated(req, res) {
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, { error: t('server.errors.invalidJson') }); }
+  let running = [];
+  if (body.engine) running = (await engine('/api/engine/stop?deferred=1', { method: 'POST' }).catch(() => ({}))).running || [];
+  sendJson(res, 200, { ok: true, running });
+  // The page restarts itself through the CLI (which stops it, waits, starts it again), with the same Node (Electron's)
+  if (body.page) spawn(process.execPath, [path.join(ROOT, 'dash.mjs'), 'restart'], { cwd: ROOT, detached: true, stdio: 'ignore', windowsHide: true }).unref();
+}
+
 export default {
+  'GET /api/updates': updates,
+  'POST /api/updates/restart': restartOutdated,
   'POST /api/worktree/remove': removeWorktree,
   'POST /api/vscode': openVsCode,
   // Stopping the page alone (dash.mjs restart): no session is touched
