@@ -1,6 +1,7 @@
 // SDK messages → feed events: live text, tools and results, subagents, plan limits, end of turn;
 // activity indicator.
 import { BOARD_TOOL } from './mcp-tools.mjs';
+import { addCall } from './pricing.mjs';
 import { t, locale } from '../public/i18n/index.js';
 
 export const AGENT_TOOLS = new Set(['Agent', 'Task']); // the tool that launches a subagent (renamed Task → Agent depending on versions)
@@ -133,6 +134,7 @@ export function attachEvents(ctx) {
     if (msg.model && msg.model !== '<synthetic>') fields.model = msg.model;
     const context = contextOf(msg.usage);
     if (context) Object.assign(fields, { context, contextMax: Math.max(a.contextMax || 0, context) });
+    if (msg.usage) fields.consumption = addCall(a.calls ||= new Map(), msg.id, msg.model || a.model, msg.usage);
     for (const b of msg.content || []) {
       if (b.type === 'text' && b.text.trim()) fields.lastText = lastSentence(b.text);
       else if (b.type === 'tool_use') fields.current = { name: b.name, summary: summarizeTool(b.name, b.input) };

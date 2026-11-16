@@ -251,7 +251,8 @@ and the design of what is about to be built in visual form, with all the availab
   `core/dom.js`, advanced every second without redrawing) is shown on the tab, the card and the banner, as for the
   shells. Each card, tab and the banner also show the agent's model pill, its context gauge (input + cache of its last
   call over its model window, `contextWindow` of the results' `modelUsage`, 200k until known; highest reached once
-  finished), its tool count and, while it runs, the tool in progress with its argument and its last sentence (no AI
+  finished), its tool count, its API-equivalent cost (💰, `driver/pricing.mjs`: each call priced from its usage and
+  model, one count per message id; tokens per category in the tooltip) and, while it runs, the tool in progress with its argument and its last sentence (no AI
   summary: `agentProgressSummaries` stays off). Kept in memory only: after a restart, the history only shows the tool
   call (model and highest context are read again from the subagent transcripts).
 - **Background shells** (Bash `run_in_background`, Monitor: SDK tasks `local_bash` / `monitor`): one 🐚 tab per running

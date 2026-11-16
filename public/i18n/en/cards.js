@@ -6,6 +6,9 @@ export default {
   agent: {
     states: { working: 'running', completed: 'done', failed: 'failed', stopped: 'stopped' },
     tools: { one: '{n} tool', other: '{n} tools' },
+    cost: '${cost}',
+    costUnder: '< 0.01',
+    costTitle: '{input} input · {write} cache write · {read} cache read · {output} output (API-equivalent cost, estimated)',
     background: '(background)',
     lastText: '"{text}"',
     seeConversation: 'See its conversation →',

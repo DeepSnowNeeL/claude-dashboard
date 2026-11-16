@@ -3,17 +3,31 @@
 import { esc, chrono, modelPill, contextGauge } from '../../core/dom.js';
 import { agents, current, detail } from '../../core/state.js';
 import { send } from '../../services/sessions.js';
-import { t } from '../../i18n/index.js';
+import { t, locale } from '../../i18n/index.js';
 
 export const AGENT_ICON = { working: '⏳', completed: '✓', failed: '✗', stopped: '■' };
 
-/** State of an agent in HTML: state, context gauge, tools, duration (ticking while it runs). */
+/** API-equivalent cost of an agent (`consumption` computed by the engine), e.g. "0,38 $"; '' while unknown. */
+export function agentCost(a) {
+  const c = a.consumption;
+  if (!c?.cost) return '';
+  const cost = c.cost < 0.01 ? t('cards.agent.costUnder') : c.cost.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return t('cards.agent.cost', { cost });
+}
+/** Detail of the cost (tooltip): tokens per category. */
+export function agentCostTitle(a) {
+  const c = a.consumption, k = n => `${Math.round((n || 0) / 1000).toLocaleString(locale())} k`;
+  return c ? t('cards.agent.costTitle', { input: k(c.input), write: k(c.cacheWrite), read: k(c.cacheRead), output: k(c.output) }) : '';
+}
+
+/** State of an agent in HTML: state, context gauge, tools, duration (ticking while it runs), cost. */
 export function agentStateLabel(a) {
   const state = ['working', 'completed', 'failed', 'stopped'].includes(a.state) ? t(`cards.agent.states.${a.state}`) : a.state;
   const end = a.state === 'working' ? null : (a.end || Date.now());
   const context = a.state === 'working' ? contextGauge(a.context, a.window) : contextGauge(a.contextMax, a.window, { max: true });
   return [`${AGENT_ICON[a.state] || ''} ${esc(state)}`, context, `🔧 ${t('cards.agent.tools', { n: a.tools || 0 })}`, `⏱ ${chrono(a.start, end, a.state === 'working' ? null : a.durationMs)}`]
-    .filter(Boolean).map(x => `<span>${x}</span>`).join('');
+    .filter(Boolean).map(x => `<span>${x}</span>`).join('')
+    + (agentCost(a) ? `<span title="${esc(agentCostTitle(a))}">💰 ${esc(agentCost(a))}</span>` : '');
 }
 /** What a running agent is doing: tool in progress with its argument, and its last sentence. */
 export function agentNow(a) {
