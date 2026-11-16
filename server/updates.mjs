@@ -47,9 +47,13 @@ async function outdated(started, files) {
 
 export const PAGE_COMMIT = headCommit(); // commit the page server started with
 
-/** `{ engine, page }`: true when that process runs older code than the files on disk. `engineCommit` null = old engine. */
+/**
+ * `{ engine, page, head }`: true when that process runs older code than the files on disk (`engineCommit` null = old
+ * engine); `head`, the commit on disk.
+ */
 export async function updateStatus(engineCommit) {
   return {
+    head: headCommit(),
     engine: engineCommit === null ? true : await outdated(engineCommit, ENGINE_FILES),
     page: await outdated(PAGE_COMMIT, PAGE_FILES),
   };
