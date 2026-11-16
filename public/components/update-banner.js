@@ -9,7 +9,7 @@ let el = null, status = null, pending = null;
 function render() {
   const behind = status && (status.engine || status.page);
   if (!behind) { el?.remove(); el = null; pending = null; return; }
-  if (!el) { el = document.createElement('div'); el.className = 'update-banner'; document.body.prepend(el); }
+  if (!el) { el = document.createElement('div'); el.className = 'code-update'; document.body.prepend(el); }
   const what = status.engine && status.page ? 'both' : status.engine ? 'engine' : 'page';
   el.innerHTML = `<span>🔄 ${t(`common.updateBanner.${what}`)}</span>
     ${pending ? `<span class="m">${esc(pending)}</span>` : `<button class="btn" id="update-restart">${t('common.updateBanner.restart')}</button>`}`;

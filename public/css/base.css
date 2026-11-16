@@ -88,8 +88,9 @@ body.resizing iframe, body.resizing .viewer { pointer-events: none; }
 .head .title .skeleton { display: inline-flex; padding: 0; }
 
 /* Mobile: waiting screen while the dashboard restarts (components/updating.js) */
-/* Engine or page behind the code on disk: thin bar at the top, above everything */
-.update-banner { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 900; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: calc(100vw - 32px); padding: 6px 8px 6px 14px; border-radius: 10px; background: var(--accent-bg); border: 1px solid var(--accent); color: var(--text); font-size: 13px; box-shadow: 0 4px 14px #0004; }
+/* Engine or page behind the code on disk: card at the bottom right, above everything */
+.code-update { position: fixed; right: 16px; bottom: 16px; z-index: 900; display: flex; align-items: center; gap: 10px; max-width: min(440px, calc(100vw - 32px)); padding: 10px 12px 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); border: 1px solid var(--accent); color: var(--text); font-size: 13px; box-shadow: 0 6px 20px #0006; }
+.code-update .btn { flex: none; }
 .updating { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg); }
 .updating-card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 28px 24px 22px; text-align: center; }
 .updating-icon { font-size: 40px; line-height: 1; margin-bottom: 12px; }
