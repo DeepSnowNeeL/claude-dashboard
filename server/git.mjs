@@ -30,10 +30,12 @@ export async function gitStatus(dir) {
   const lines = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])).split('\0').filter(Boolean);
   const files = [];
   for (let i = 0; i < lines.length; i++) {
-    const code = lines[i].slice(0, 2), rel = lines[i].slice(3);
+    const code = lines[i].slice(0, 2), entry = lines[i].slice(3), rel = entry.replace(/\/$/, '');
     if (code[0] === 'R' || code[0] === 'C') i++; // a rename carries the old name next
     const state = code === '??' ? 'untracked' : code.includes('D') ? 'deleted' : code.includes('A') ? 'added' : code.includes('R') ? 'renamed' : 'modified';
-    files.push({ rel, path: path.join(root, rel), state });
+    // A folder: nested repository not added ("?? sub/", even with --untracked-files=all) or submodule (" M sub")
+    const dir = entry.endsWith('/') || (state !== 'untracked' && state !== 'deleted' && !!fs.statSync(path.join(root, rel), { throwIfNoEntry: false })?.isDirectory());
+    files.push({ rel, path: path.join(root, rel), state, ...(dir ? { dir: true } : {}) });
   }
   // Lines added / removed per file, compared with the last commit
   const counts = new Map();

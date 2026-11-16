@@ -67,8 +67,11 @@ export function paintFiles(d, bar, commitsZone) {
     filesLayout.set(b.dataset.layout);
   }));
   $('#right').querySelectorAll('.git-file:not([data-commit])').forEach(b => b.addEventListener('click', e => {
-    const path = list[+b.dataset.i].path, del = e.target.closest('[data-cancel]');
-    if (!del) return openViewer(path, list.map(f => f.path), +b.dataset.i, { files: list });
+    const f = list[+b.dataset.i], path = f.path, del = e.target.closest('[data-cancel]');
+    // A folder (nested repository, submodule) does not open in the editor: the path menu (explorer…) instead
+    if (f.dir) return pathMenu({ dataset: { path }, textContent: '' }, e.clientX, e.clientY);
+    const files = list.filter(x => !x.dir);
+    if (!del) return openViewer(path, files.map(x => x.path), files.indexOf(f), { files });
     if (armed !== path) {
       $('#right .git-revert.armed')?.classList.remove('armed');
       arm(path);

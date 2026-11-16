@@ -11,10 +11,11 @@ const fileLines = f => (f.binary ? `<span class="m">${t('side.gitFiles.binary')}
   : `${f.insertions ? `<span class="plus">+${f.insertions}</span>` : ''}${f.deletions ? ` <span class="minus">−${f.deletions}</span>` : ''}`);
 function fileButton(f, i, attrs, withFolder, revert) {
   const [letter, label] = GIT_STATES[f.state] || ['M', f.state];
-  const name = f.rel.split('/').pop(), folder = f.rel.slice(0, -name.length);
-  // 🗑 deletes a new file, ↶ brings the others back to the last commit: a span (no button inside a button)
+  const base = f.rel.split('/').pop(), folder = f.rel.slice(0, -base.length), name = f.dir ? `${base}/` : base;
+  // 🗑 deletes a new file, ↶ brings the others back to the last commit: a span (no button inside a button).
+  // Not on a folder (nested repository, submodule): it has its own git
   const isNew = f.state === 'untracked' || f.state === 'added';
-  const del = !revert ? '' : `<span class="git-revert" data-cancel title="${isNew ? t('side.gitFiles.deleteTitle') : t('side.gitFiles.revertTitle')}">${isNew ? '🗑' : '↶'}</span>`;
+  const del = !revert || f.dir ? '' : `<span class="git-revert" data-cancel title="${isNew ? t('side.gitFiles.deleteTitle') : t('side.gitFiles.revertTitle')}">${isNew ? '🗑' : '↶'}</span>`;
   return `<button class="git-file e-${esc(f.state)}" ${attrs} data-i="${i}" title="${esc(label)} · ${esc(f.rel)}">
     <span class="letter">${letter}</span><span class="name"><b>${esc(name)}</b>${withFolder ? ` <span class="m">${esc(folder)}</span>` : ''}</span>
     <span class="lines">${fileLines(f)}</span>${del}</button>`;
