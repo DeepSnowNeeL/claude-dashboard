@@ -98,7 +98,7 @@ async function modelMenu(d, el) {
   const chosen = d.modelChoice ? list.models.findIndex(m => m.value === d.modelChoice) : list.models.findIndex(m => sameModel(m.resolvedModel || m.value, d.model));
   openMenu(t('conversation.header.modelMenu'), list.models.map((m, i) => ({
     ic: i === chosen ? '✓' : '',
-    label: m.displayName || m.value,
+    label: m.value === 'default' && m.resolvedModel ? t('newSession.modelDefaultIs', { model: modelLabel(m.resolvedModel).name }) : m.displayName || m.value,
     run: async () => { await setModel(d.slug, m.value); toast(t('conversation.header.modelChanged', { model: m.displayName || m.value })); },
   })), r.left, r.bottom + 4);
 }

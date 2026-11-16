@@ -1,5 +1,5 @@
 // "New session" page: folder choice, one-click start, folder history to resume.
-import { $, esc, skeleton, sessionSkeleton } from '../core/dom.js';
+import { $, esc, skeleton, sessionSkeleton, modelLabel } from '../core/dom.js';
 import { create, resume, readAvailableModels } from '../services/sessions.js';
 import { readHistory, readFolders } from '../services/projects.js';
 import { projects, relativeDir, serverMode } from '../core/state.js';
@@ -11,6 +11,8 @@ import { t, locale } from '../i18n/index.js';
 // Permission mode of the last session started from this browser: the next one starts with it
 const MODE_KEY = 'dash-new-session-mode';
 const MODEL_KEY = 'dash-new-session-model';
+/** "Default (Opus 5.5)": the model the account's default resolves to. */
+const defaultLabel = m => (m.resolvedModel ? t('newSession.modelDefaultIs', { model: modelLabel(m.resolvedModel).name }) : t('newSession.modelDefault'));
 const lastMode = () => { const m = read(MODE_KEY, 'all'); return MODE_KEYS.includes(m) ? m : 'all'; };
 
 // On the right of "New session": the folder's past sessions (terminal and page alike), searchable, to resume.
@@ -158,7 +160,7 @@ export function renderNewSession(initialCwd) {
   readAvailableModels().then(({ models }) => {
     const sel = $('#new-session-model'), last = read(MODEL_KEY, 'default');
     if (!sel) return;
-    sel.innerHTML = models.map(m => `<option value="${esc(m.value)}" title="${esc(m.description || '')}" ${m.value === last ? 'selected' : ''}>${esc(m.value === 'default' ? t('newSession.modelDefault') : m.displayName || m.value)}</option>`).join('');
+    sel.innerHTML = models.map(m => `<option value="${esc(m.value)}" title="${esc(m.description || '')}" ${m.value === last ? 'selected' : ''}>${esc(m.value === 'default' ? defaultLabel(m) : m.displayName || m.value)}</option>`).join('');
   }).catch(() => { $('#new-session-model')?.closest('label')?.setAttribute('hidden', ''); });
 
   $('#new-session-form').addEventListener('submit', async e => {

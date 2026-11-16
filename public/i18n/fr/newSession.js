@@ -26,6 +26,7 @@ export default {
   permissions: 'Permissions des outils',
   model: 'Modèle',
   modelDefault: 'Par défaut (celui du compte)',
+  modelDefaultIs: 'Par défaut du compte ({model})',
   readyHint: 'La session s\'ouvre prête : tu écris ton premier message dans sa saisie. Elle charge tes réglages, CLAUDE.md, skills et plugins comme dans le terminal.',
   start: '▶ Nouvelle session',
   createdIn: 'créé dans {path}',
