@@ -36,7 +36,7 @@ export function renderHeader(d) {
     <div class="head-row">
       <div class="steps">${steps.map(([k, lbl], i) => `<span class="${i < iStep ? 'done' : i === iStep ? 'current' : ''}">${i < iStep ? '✓ ' : ''}${esc(lbl)}</span>`).join('')}</div>
       ${d.driven ? `<div class="commands">
-        ${d.model ? `<button class="model-pill f-${modelLabel(d.model).family || 'other'}" id="model" title="${esc(t('conversation.header.modelTitle', { model: d.model }))}">${esc(modelLabel(d.model).name)} ▾</button>` : ''}
+        ${modelButton(d)}
         <select id="mode" title="${t('conversation.header.modeTitle')}">${modeOptions(d.mode, d.autoMode)}</select>
         ${d.status === 'done' ? `<span class="m" title="${t('conversation.header.doneTitle')}">${t('conversation.header.done')}</span>`
           : d.paused ? `<span class="m" title="${t('conversation.header.pausedTitle')}">${t('conversation.header.paused')}</span>` : ''}
@@ -90,12 +90,20 @@ export function renderHeader(d) {
   renderStats();
 }
 
-// Model pill: list of the models of the SDK, a choice applies from the next call (setModel)
+// Model pill: the model of the last call, or before the first message the one chosen (otherwise "Default"),
+// so that it can be changed before writing anything
+function modelButton(d) {
+  const id = d.model || (d.modelChoice && d.modelChoice !== 'default' ? d.modelChoice : '');
+  const name = id ? modelLabel(id).name : t('conversation.header.modelDefault');
+  return `<button class="model-pill f-${modelLabel(id).family || 'other'}" id="model" title="${esc(t('conversation.header.modelTitle', { model: id || name }))}">${esc(name)} ▾</button>`;
+}
+// Model menu: list of the models of the SDK, a choice applies from the next call (setModel)
 async function modelMenu(d, el) {
   const r = el.getBoundingClientRect();
   let list;
   try { list = await readModels(d.slug); } catch (err) { return alert(err.message); }
-  const chosen = d.modelChoice ? list.models.findIndex(m => m.value === d.modelChoice) : list.models.findIndex(m => sameModel(m.resolvedModel || m.value, d.model));
+  const chosen = d.modelChoice ? list.models.findIndex(m => m.value === d.modelChoice)
+    : d.model ? list.models.findIndex(m => sameModel(m.resolvedModel || m.value, d.model)) : list.models.findIndex(m => m.value === 'default');
   openMenu(t('conversation.header.modelMenu'), list.models.map((m, i) => ({
     ic: i === chosen ? '✓' : '',
     label: m.value === 'default' && m.resolvedModel ? t('newSession.modelDefaultIs', { model: modelLabel(m.resolvedModel).name }) : m.displayName || m.value,

@@ -75,6 +75,7 @@ export default {
   },
   header: {
     modelTitle: 'Session model: {model} (click to change it)',
+    modelDefault: 'Default model',
     modelMenu: 'Model',
     modelChanged: 'Model: {model}, from the next message',
     steps: { framing: 'Framing', mockup: 'Mockup', design: 'Design (check)', execution: 'Execution', push: 'Push' },

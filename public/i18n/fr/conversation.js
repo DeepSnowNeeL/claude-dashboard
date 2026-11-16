@@ -75,6 +75,7 @@ export default {
   },
   header: {
     modelTitle: 'Modèle de la session : {model} (clic : en changer)',
+    modelDefault: 'Modèle par défaut',
     modelMenu: 'Modèle',
     modelChanged: 'Modèle : {model}, à partir du prochain message',
     steps: { framing: 'Cadrage', mockup: 'Maquette', design: 'Design (vérif)', execution: 'Exécution', push: 'Push' },
