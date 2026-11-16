@@ -275,7 +275,7 @@ async function poll() {
       tray.setImage(trayIcon(false));
       tray.setToolTip(t('electron.tooltip.remoteUnreachable', { url: serverUrl }));
       tray.setContextMenu(trayMenu(0));
-      win?.setOverlayIcon(null, '');
+      setBadge(null, '');
     }
     return;
   }
@@ -288,7 +288,7 @@ async function poll() {
   tray.setImage(trayIcon(blocked || unread));
   tray.setToolTip(what ? t('electron.tooltip.summary', { what }) : t('electron.tooltip.nothing'));
   tray.setContextMenu(trayMenu(waiting.length));
-  win?.setOverlayIcon(blocked ? badge('red') : unread ? badge('blue') : null, what);
+  setBadge(blocked ? 'red' : unread ? 'blue' : null, what, blocked || unread);
   for (const s of fresh) {
     if (win?.isFocused()) continue; // already in sight
     const n = new Notification({ title: `${s.ticket ? `${s.ticket} · ` : ''}${s.title}`, body: s.statusSummary || t('electron.notif.waitingBody'), silent: false });
@@ -335,6 +335,15 @@ async function pollDevices() {
     n.show();
     win?.flashFrame(true);
   }
+}
+
+/**
+ * Badge of the app icon: overlay on the Windows taskbar, text on the macOS dock. setOverlayIcon only exists on
+ * Windows: called on a Mac, it threw and stopped the poll before the notifications.
+ */
+function setBadge(color, what, n = 0) {
+  if (process.platform === 'win32') win?.setOverlayIcon(color ? badge(color) : null, what);
+  else if (process.platform === 'darwin') app.dock?.setBadge(color ? String(n) : '');
 }
 
 // --- Window -----------------------------------------------------------------------------------
@@ -417,7 +426,8 @@ const OPENABLE = /\.(pdf|png|jpe?g|gif|webp|bmp|ico|svg|txt|md|csv|tsv|json|log|
 // Electron flaw on Windows: after alert() / confirm(), the keyboard does not come back to the page; losing and
 // regaining the focus (what Alt+Tab does) gives it back
 ipcMain.handle('restore-focus', () => {
-  if (!win || win.isDestroyed()) return;
+  // Windows only: on macOS blur() sends the window behind the others (orderBack), it vanished then came back
+  if (process.platform !== 'win32' || !win || win.isDestroyed()) return;
   win.blur();
   win.focus();
   win.webContents.focus();
