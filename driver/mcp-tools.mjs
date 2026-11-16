@@ -6,6 +6,7 @@ import { z } from 'zod';
 import * as trackers from '../trackers.mjs';
 import { createWorktree } from '../projects.mjs';
 import { boardFields } from '../engine/board-fields.mjs';
+import { migrateSession } from '../migration.mjs';
 import { t } from '../public/i18n/index.js';
 import { childMode } from './modes.mjs';
 
@@ -30,8 +31,9 @@ export function attachMcpTools(ctx) {
       'Updates the Tracker panel of the dashboard (merges the given fields; null clears). See the session instructions for the fields (they depend on the tracker profile).',
       { state: z.record(z.string(), z.any()).describe('Board fields to merge') },
       async ({ state }) => {
-        // The engine's own keys (folder, mode, conversation, counters…) are not the session's to change
-        const { fields, ignored } = boardFields(state);
+        // The engine's own keys (folder, mode, conversation, counters…) are not the session's to change. A conversation
+        // started before the English keys imitates its history and keeps sending French ones (choix, libelle…): converted
+        const { fields, ignored } = boardFields(migrateSession(state));
         updateBoard(fields);
         if (Array.isArray(fields.decisions) && fields.decisions.length) pushEvent({ id: newId(), t: 'decisions', decisions: fields.decisions });
         return { content: [{ type: 'text', text: ignored.length ? `board updated; ignored (managed by the dashboard, or not an http(s) URL): ${ignored.join(', ')}` : 'board updated' }] };

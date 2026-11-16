@@ -3,7 +3,7 @@
 // it is only restarted for a change in driver.mjs or the engine/ folder (`dash.mjs restart-moteur`,
 // which waits until everything is idle). Listens locally only; the page relays the calls to it.
 // The routes are declared in engine/routes.mjs; here: loading the sessions, startup and listening.
-import { migrate } from './migration.mjs';
+import { migrate, migrateSession } from './migration.mjs';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,7 +31,8 @@ function loadFromDisk() {
   for (const f of fs.readdirSync(SESSIONS_DIR)) {
     if (!f.endsWith('.json')) continue;
     try {
-      const data = JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f), 'utf8'));
+      // A session from before the English keys keeps sending French ones (it imitates its history): converted here too
+      const data = migrateSession(JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f), 'utf8')));
       // Cut in the middle of a turn (PC restarted, engine killed): it stays open, paused, flagged so it gets restarted
       if (data.status === 'working') Object.assign(data, { status: 'waiting', statusSummary: t('engine.status.cutAtRestart') });
       if (data.slug) sessions.set(data.slug, { data, receivedAt: data.updatedAt || fs.statSync(path.join(SESSIONS_DIR, f)).mtime.toISOString() });
