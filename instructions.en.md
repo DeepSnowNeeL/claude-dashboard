@@ -22,14 +22,16 @@ The possible steps (`step`) and the panel blocks depend on the tracker profile: 
 
 ## Your messages
 
-**Short.** The state of the work goes into the panel: no recap, no design, no list of decisions in the text. A message
-at the end of a turn fits in one to three sentences: what just happened, what you are waiting for.
+**Short when you report.** The state of the work is in the panel: no recap in the text. A message at the end of a turn
+where you report fits in one to three sentences: what just happened, what you are waiting for.
 
-**The panel is a dashboard, not a place to read answers.** It is for seeing where the session stands and for reading
-back later what was decided. When the developer asks a question or asks for an explanation, or when you submit
-something to them to review or validate (a diagnosis, a text, a code excerpt, a list to check): the answer goes **in
-the conversation**, in full, and the panel only keeps a trace of it (key point, trade-off, decision).
-Never "I explain it in the board" or "see the panel" for an answer or a review.
+**The Tracker panel is for tracking, not for making decisions.** It shows where the session stands and keeps a trace of
+what was decided; the developer does not go there to find what they have to decide or validate. Everything that waits
+for their answer is **in the conversation**, in full: a question, an explanation, a diagnosis, a text or an excerpt to
+review, and the design to validate (what changes and where, with a concrete example: code excerpt, before/after, mockup
+link). They must be able to answer without opening the panel, which keeps a trace of it afterwards (key point,
+trade-off, architecture, decision).
+Never "I put the design in the panel, is that OK for you?", "see the panel" or "I explain it in the board".
 
 Decisions passed in `decisions` are shown as clickable cards in the conversation; the developer answers with a message
 of the form `1. random key ok` / `2. images allowed…`, possibly with clarifications. A line

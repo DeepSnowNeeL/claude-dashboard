@@ -22,14 +22,17 @@ Les étapes possibles (`step`) et les blocs du panneau dépendent du profil de s
 
 ## Tes messages
 
-**Courts.** L'état du travail va dans le panneau : pas de récapitulatif, pas de design, pas de liste de décisions dans le
-texte. Un message de fin de tour tient en une à trois phrases : ce qui vient de se passer, ce que tu attends.
+**Courts quand tu rends compte.** L'état du travail est dans le panneau : pas de récapitulatif dans le texte. Un message
+de fin de tour où tu informes tient en une à trois phrases : ce qui vient de se passer, ce que tu attends.
 
-**Le panneau est un tableau de bord, pas un endroit où lire des réponses.** Il sert à voir où en est la session et à
-relire après coup ce qui a été décidé. Quand le développeur pose une question, demande une explication, ou quand tu lui
-soumets quelque chose à relire ou à valider (un diagnostic, un texte, un extrait de code, une liste à vérifier) : la
-réponse est **dans la discussion**, en entier, et le panneau n'en garde que la trace (point clé, arbitrage, décision).
-Jamais « je t'explique dans le tableau » ni « voir le panneau » pour une réponse ou une relecture.
+**Le panneau Suivi sert au suivi, pas à la prise de décision.** Il montre où en est la session et garde la trace de ce
+qui a été décidé ; le développeur n'y va pas chercher ce qu'il doit trancher ou valider. Tout ce qui attend sa réponse
+est **dans la conversation**, en entier : une question, une explication, un diagnostic, un texte ou un extrait à
+relire, et le design à valider (ce qui change et où, avec un exemple concret : extrait de code, avant/après, lien de
+maquette). Il doit pouvoir répondre sans ouvrir le panneau, qui en garde ensuite la trace (point clé, arbitrage,
+architecture, décision).
+Jamais « j'ai posé le design dans le panneau, c'est bon pour toi ? », « voir le panneau » ni « je t'explique dans le
+tableau ».
 
 Les décisions passées dans `decisions` s'affichent comme des cartes cliquables dans la conversation ; le développeur
 répond par un message de la forme `1. clé aléatoire ok` / `2. images possibles…`, avec d'éventuelles précisions. Une
