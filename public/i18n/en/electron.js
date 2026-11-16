@@ -12,6 +12,7 @@ export default {
     connectedTo: 'Server: {url}',
     connectOther: 'Connect to another server…',
     backToLocal: 'Back to local mode (this PC)',
+    restartEngine: 'Restart the engine (as soon as sessions are idle)',
     quit: 'Quit (sessions keep running)',
   },
   tooltip: {
@@ -41,6 +42,9 @@ export default {
     newDeviceTitle: 'New device: remote access',
     newDeviceBody: '{name} ({ip}) is asking for access. Click to allow or deny.',
     connectedBody: 'Connected to {url}. Log in in the window if asked.',
+    engineRestartTitle: 'Engine restart',
+    engineRestartNow: 'Engine and page restarted with the code on disk.',
+    engineRestartDeferred: { one: 'The engine will restart as soon as the running task is done; the page is already restarted.', other: 'The engine will restart as soon as the {n} running tasks are done; the page is already restarted.' },
     localBody: 'Back to the dashboard of this PC.',
   },
   connect: {

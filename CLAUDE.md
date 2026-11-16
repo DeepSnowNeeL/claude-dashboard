@@ -387,7 +387,7 @@ backward-compatibility code: its French names are recognised on purpose. Tests: 
 - **Electron app** (`electron/main.cjs`, `electron/preload.cjs`, `electron/language.cjs`): a window on the page, a tray
   icon (in color when a session is blocked or has unread items, Windows notification on each new wait, option "Start
   with Windows": Run key with `--at-startup`, the app then starts with its window hidden, icon only; "Reachable from
-  the wifi"). It starts the page and the engine (embedded Node, detached processes) but holds nothing: quitting it
+  the wifi"; "Restart the engine": deferred engine stop, as `restart-engine --deferred`, and page restarted). It starts the page and the engine (embedded Node, detached processes) but holds nothing: quitting it
   cuts no session. Closing the window hides it. The page finds `window.desktop` there (explorer and browser in the
   foreground, which a background server cannot do on Windows).
   Icon: the control tower (`electron/icons/source.png`; the gpt-image proposals in `electron/icons/proposals/` are not

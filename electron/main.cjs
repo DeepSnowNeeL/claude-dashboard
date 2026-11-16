@@ -190,6 +190,18 @@ async function applyReload() {
   new Notification({ title: t('electron.notif.updatedTitle'), body: order.engine ? t('electron.notif.updatedBoth') : t('electron.notif.updatedPage') }).show();
 }
 
+/**
+ * Tray menu: restarts the engine (deferred: as soon as no turn, agent or command is running, the sessions then come
+ * back paused) and the page, to run the code on disk after a pull.
+ */
+async function restartEngine() {
+  const r = await fetch(`${LOCAL_BASE}/api/engine/stop?deferred=1`, { method: 'POST' }).then(x => x.json()).catch(() => null);
+  await restartPage();
+  win?.webContents.reload();
+  const n = r?.running?.length || 0;
+  new Notification({ title: t('electron.notif.engineRestartTitle'), body: n ? t('electron.notif.engineRestartDeferred', { n }) : t('electron.notif.engineRestartNow') }).show();
+}
+
 function watchReload() {
   let timer = null;
   try {
@@ -251,6 +263,7 @@ function trayMenu(n) {
       // The local network only concerns the local page
       { label: t('electron.tray.wifi'), type: 'checkbox', checked: networkOpen(),
         click: m => openNetwork(m.checked) },
+      { label: t('electron.tray.restartEngine'), click: restartEngine },
     ]),
     { type: 'separator' },
     { label: t('electron.tray.startup'), type: 'checkbox', checked: app.getLoginItemSettings({ args: STARTUP_ARGS }).openAtLogin,

@@ -12,6 +12,7 @@ export default {
     connectedTo: 'Serveur : {url}',
     connectOther: 'Se connecter à un autre serveur…',
     backToLocal: 'Revenir au mode local (ce PC)',
+    restartEngine: 'Redémarrer le moteur (dès que les sessions sont au repos)',
     quit: 'Quitter (les sessions continuent)',
   },
   tooltip: {
@@ -41,6 +42,9 @@ export default {
     newDeviceTitle: 'Nouvel appareil : accès distant',
     newDeviceBody: "{name} ({ip}) demande l'accès. Clique pour autoriser ou refuser.",
     connectedBody: 'Connecté à {url}. Identifie-toi dans la fenêtre si demandé.',
+    engineRestartTitle: 'Redémarrage du moteur',
+    engineRestartNow: 'Moteur et page relancés avec le code sur le disque.',
+    engineRestartDeferred: { one: 'Le moteur redémarrera dès que la tâche en cours sera finie ; la page est déjà relancée.', other: 'Le moteur redémarrera dès que les {n} tâches en cours seront finies ; la page est déjà relancée.' },
     localBody: 'Retour au tableau de bord de ce PC.',
   },
   connect: {
