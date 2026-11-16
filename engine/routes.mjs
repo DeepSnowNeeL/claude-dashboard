@@ -19,7 +19,7 @@ import { isSensitive } from '../server/sensitive.mjs';
 import { createWorktree } from '../projects.mjs';
 import { progressView, markAchievementsSeen, announcementsSince } from './progress.mjs';
 import { originOf, onDevMessage, onOrigin, onCreate, onInterrupt, onWorktree, onSeen } from './achievement-counters.mjs';
-import { subscriptionUsage } from '../driver.mjs';
+import { subscriptionUsage, availableModels } from '../driver.mjs';
 
 let deferredStop = null;
 
@@ -74,7 +74,14 @@ async function create(req, res) {
   }
   // Without text: the session is created empty, ready, and the first message is typed in its own input
   const text = String(body.text || '').trim();
-  const slug = newSession(cwd, text, MODES[body.mode] ? body.mode : 'all');
+  // Model chosen in the form: one the SDK offers ('default' = the account's, nothing passed)
+  let model;
+  if (body.model && body.model !== 'default') {
+    const known = await availableModels().catch(() => []);
+    if (!known.some(m => m.value === body.model)) return sendJson(res, 400, { error: t('driver.errors.unknownModel', { model: String(body.model) }) });
+    model = body.model;
+  }
+  const slug = newSession(cwd, text, MODES[body.mode] ? body.mode : 'all', undefined, model);
   onCreate(slug, originOf(req), text);
   return sendJson(res, 200, { slug });
 }
@@ -440,6 +447,7 @@ export default {
   'POST /api/sessions/:slug/end': valid(end),
   'POST /api/sessions/:slug/archive': valid(archive),
   'GET /api/options': options,
+  'GET /api/models': async (req, res) => { try { return sendJson(res, 200, { models: await availableModels() }); } catch (e) { return sendJson(res, 500, { error: e.message }); } },
   'GET /api/trackers': trackerOptions,
   'POST /api/trackers': trackerOptions,
   'POST /api/options': options,

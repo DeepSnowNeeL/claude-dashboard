@@ -16,7 +16,7 @@ import { MODES, modeKey } from './modes.mjs';
 
 export { FILES_DIR, attachmentUrl, extractAttachments } from './attachments.mjs';
 export { feedFromHistory, agentFeedFromHistory, historyAgents, recentFolders } from './history.mjs';
-export { subscriptionUsage } from './usage.mjs';
+export { subscriptionUsage, availableModels } from './usage.mjs';
 
 const HERE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'); // repository root (instructions.*.md, plugin/)
 export { MODES, childMode } from './modes.mjs';

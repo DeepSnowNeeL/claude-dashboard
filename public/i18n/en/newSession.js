@@ -24,6 +24,8 @@ export default {
   branch: 'Branch',
   branchPlaceholder: '1234-csv-export',
   permissions: 'Tool permissions',
+  model: 'Model',
+  modelDefault: "Default (the account's)",
   readyHint: 'The session opens ready: type your first message in its input. It loads your settings, CLAUDE.md, skills and plugins just like the terminal.',
   start: '▶ New session',
   createdIn: 'created in {path}',

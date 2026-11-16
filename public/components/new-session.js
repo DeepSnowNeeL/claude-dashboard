@@ -1,6 +1,6 @@
 // "New session" page: folder choice, one-click start, folder history to resume.
 import { $, esc, skeleton, sessionSkeleton } from '../core/dom.js';
-import { create, resume } from '../services/sessions.js';
+import { create, resume, readAvailableModels } from '../services/sessions.js';
 import { readHistory, readFolders } from '../services/projects.js';
 import { projects, relativeDir, serverMode } from '../core/state.js';
 import { readWorkspace } from '../services/options.js';
@@ -10,6 +10,7 @@ import { t, locale } from '../i18n/index.js';
 
 // Permission mode of the last session started from this browser: the next one starts with it
 const MODE_KEY = 'dash-new-session-mode';
+const MODEL_KEY = 'dash-new-session-model';
 const lastMode = () => { const m = read(MODE_KEY, 'all'); return MODE_KEYS.includes(m) ? m : 'all'; };
 
 // On the right of "New session": the folder's past sessions (terminal and page alike), searchable, to resume.
@@ -96,6 +97,8 @@ export function renderNewSession(initialCwd) {
         <span class="m" id="worktree-target"></span></label>
       <label>${t('newSession.permissions')}
         <select id="new-session-mode">${modeOptions(lastMode())}</select></label>
+      <label>${t('newSession.model')}
+        <select id="new-session-model"><option value="default">${t('newSession.modelDefault')}</option></select></label>
       <div class="bar"><span class="m">${t('newSession.readyHint')}</span><button class="btn on large" type="submit">${t('newSession.start')}</button></div>
     </form></div>`;
   if (cwd0) $('#new-session-form button[type=submit]').focus(); // Enter starts the session
@@ -151,16 +154,24 @@ export function renderNewSession(initialCwd) {
     if (e.target.checked) $('#new-branch').focus();
   });
   $('#new-branch').addEventListener('input', updateTarget);
+  // Models of the SDK, read in the background: the form is usable (default model) while they load
+  readAvailableModels().then(({ models }) => {
+    const sel = $('#new-session-model'), last = read(MODEL_KEY, 'default');
+    if (!sel) return;
+    sel.innerHTML = models.map(m => `<option value="${esc(m.value)}" title="${esc(m.description || '')}" ${m.value === last ? 'selected' : ''}>${esc(m.value === 'default' ? t('newSession.modelDefault') : m.displayName || m.value)}</option>`).join('');
+  }).catch(() => { $('#new-session-model')?.closest('label')?.setAttribute('hidden', ''); });
 
   $('#new-session-form').addEventListener('submit', async e => {
     e.preventDefault();
     const cwd = $('#cwd').value, mode = $('#new-session-mode').value, before = location.hash;
     write(MODE_KEY, mode);
+    const model = $('#new-session-model')?.value || 'default';
+    write(MODEL_KEY, model);
     const branch = $('#with-worktree').checked ? $('#new-branch').value.trim() : '';
     showLoading(t('newSession.title'));
     try {
       // No first message: it opens ready, cursor in its input
-      const { slug } = await create(cwd, mode, branch);
+      const { slug } = await create(cwd, mode, branch, model);
       if (location.hash === before) location.hash = slug;
     } catch (err) { alert(err.message); if (location.hash === before) renderNewSession(cwd); }
   });

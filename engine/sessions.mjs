@@ -68,12 +68,12 @@ export async function endSession(slug) {
 }
 
 /** New driven session in `cwd`, with its first message. Returns its slug. */
-export function newSession(cwd, text, mode = 'all', prePlan) {
+export function newSession(cwd, text, mode = 'all', prePlan, model) {
   const slug = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
   const empty = !String(text || '').trim(); // created with one click ("+" of a worktree): it waits for its first message
-  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, ...(prePlan ? { prePlanMode: prePlan } : {}), status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
+  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, ...(prePlan ? { prePlanMode: prePlan } : {}), ...(model ? { modelChoice: model } : {}), status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
   sessions.set(slug, { data, receivedAt: new Date().toISOString() });
-  const s = createSession({ slug, cwd, mode, prePlan, ...callbacks(slug) });
+  const s = createSession({ slug, cwd, mode, prePlan, model, ...callbacks(slug) });
   drivers.set(slug, s);
   s.devTurn = true; // the first turn is not "autonomous"
   if (!empty) s.send(String(text));

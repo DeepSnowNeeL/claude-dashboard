@@ -6,6 +6,14 @@ import { t } from '../public/i18n/index.js';
 // The SDK API is experimental (method name bound to change): a failure, or an answer without limits (it happens
 // at times), returns the last good answer; null only if there never was one, the page then hides the block.
 let probe = null, usageCache = null, usageCacheAt = 0, lastGood = null;
+/** Models of the SDK (for the "New session" form, before any session exists), from the same probe; cached 10 min. */
+let modelsCache = null, modelsAt = 0;
+export async function availableModels() {
+  if (modelsCache && Date.now() - modelsAt < 600_000) return modelsCache;
+  probe ??= query({ prompt: (async function* () { await new Promise(() => {}); })(), options: { settingSources: [] } });
+  try { modelsCache = await probe.supportedModels(); modelsAt = Date.now(); } catch (e) { probe = null; if (!modelsCache) throw e; }
+  return modelsCache;
+}
 export async function subscriptionUsage() {
   if (usageCache && Date.now() - usageCacheAt < 60_000) return usageCache;
   try {
