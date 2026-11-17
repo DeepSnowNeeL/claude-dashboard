@@ -83,7 +83,7 @@ export const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp',
-  '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.ico': 'image/x-icon', '.mp4': 'video/mp4',
+  '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf', '.ico': 'image/x-icon', '.mp4': 'video/mp4',
   '.pdf': 'application/pdf',
   // Text and code: shown as is by the browser (paths clicked in the conversation)
   ...Object.fromEntries(['.md', '.txt', '.log', '.java', '.ts', '.scss', '.xml', '.yml', '.yaml', '.sql', '.csv', '.properties', '.gradle', '.sh', '.ps1', '.py', '.vm', '.jsonl']
@@ -144,6 +144,9 @@ export function fileHeaders(file, sandboxed = false) {
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-store' };
   if (sandboxed) {
     headers['X-Content-Type-Options'] = 'nosniff';
+    // A font is fetched in CORS mode, and a sandboxed page has an opaque origin: without this header, the icon fonts
+    // of a mockup (Font Awesome...) are blocked. A font reveals nothing, the sensitive files never get this far.
+    if (type.startsWith('font/')) headers['Access-Control-Allow-Origin'] = '*';
     if (ACTIVE_TYPES.test(type)) {
       headers['Content-Security-Policy'] = SANDBOX_CSP;
       // Its URL can carry a read token (server/file-tokens.mjs): never sent to the sites it links to
