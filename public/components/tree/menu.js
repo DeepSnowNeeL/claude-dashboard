@@ -1,7 +1,7 @@
 // Right click in the tree: menu of a session, a worktree or a project (same box as the path menu,
 // which closes it on a click elsewhere or Escape).
 import { sessions, projects, serverMode } from '../../core/state.js';
-import { esc } from '../../core/dom.js';
+import { esc, ticketLink } from '../../core/dom.js';
 import { end, archive, rename } from '../../services/sessions.js';
 import { showInExplorer } from '../../services/desktop.js';
 import { removeWorktree } from '../../services/git.js';
@@ -34,8 +34,12 @@ export function openMenu(title, entries, x, y) {
 
 function sessionMenu(s, x, y) {
   const finished = s.status === 'done';
+  const parent = s.parent && sessions().find(p => p.slug === s.parent);
+  const ticket = ticketLink(s);
   openMenu(`${s.ticket ? `${s.ticket} · ` : ''}${s.title || s.slug}`, [
     { ic: '💬', label: t('tree.menu.open'), run: () => { location.hash = s.slug; } },
+    parent && { ic: '↖', label: t('tree.menu.openParent', { name: parent.title || parent.slug }), run: () => { location.hash = parent.slug; } },
+    ticket && { ic: '🎫', label: t('tree.menu.openTicket', { ticket: s.ticket }), run: () => window.open(ticket, '_blank', 'noopener') },
     s.driven && { ic: '✎', label: t('tree.menu.rename'), run: async () => {
       const title = await ask({ title: t('tree.menu.renameTitle'), label: t('tree.menu.renameLabel'), value: s.title || '' });
       if (title) { await rename(s.slug, title); await loadList(); }

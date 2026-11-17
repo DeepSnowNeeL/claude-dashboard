@@ -64,7 +64,8 @@ and the design of what is about to be built in visual form, with all the availab
   `projects-meta.json`); "Remove from the tree" works for any project: refused while it has open sessions, its ended
   sessions are archived (otherwise it would come back), it comes back if a session opens in it. The sessions of a
   worktree are reordered by drag and drop (`orders.json`; new ones go on top).
-  **Right click** (`tree/menu.js`, same box as the path menu): on a session (open, rename, new session in its folder,
+  **Right click** (`tree/menu.js`, same box as the path menu): on a session (open, show the parent session, open the
+  ticket, rename, new session in its folder,
   explorer, copy the path, the `claude -r` command or the link, end, archive), on a worktree (new session, explorer,
   copy path and branch, **remove the worktree**: `POST /api/worktree/remove`, PC only, never the main one, refused if
   it has open sessions, one more confirmation if it has uncommitted changes, branch kept, ended sessions archived), on

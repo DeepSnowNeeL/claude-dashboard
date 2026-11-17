@@ -104,10 +104,10 @@ export async function resume(slug) {
 }
 
 export function summarize(slug, { data, receivedAt }) {
-  const { title, ticket, description, status, step, statusSummary, project, cwd, sessionId, parent, model } = data;
+  const { title, ticket, ticketUrl, description, status, step, statusSummary, project, cwd, sessionId, parent, model } = data;
   const p = drivers.get(slug);
   return {
-    slug, title, ticket, description, status, step, statusSummary, project, cwd, sessionId, parent, model, updatedAt: data.updatedAt || receivedAt,
+    slug, title, ticket, ticketUrl, description, status, step, statusSummary, project, cwd, sessionId, parent, model, updatedAt: data.updatedAt || receivedAt,
     driven: !!p || resumable(data), busy: !!p?.busy, runningAgents: p?.runningAgents() || 0, runningShells: p?.runningShells?.() || 0,
     blocked: p?.blocked?.() || null,
     // New items (Claude's text, agent or shell done, error) since the developer looked at the session

@@ -77,6 +77,8 @@ export default {
   },
   menu: {
     open: 'Open',
+    openParent: 'Show the parent session ({name})',
+    openTicket: 'Open ticket {ticket}',
     rename: 'Rename…',
     renameTitle: 'Rename session',
     renameLabel: 'New name (pinned: Claude will no longer change it)',

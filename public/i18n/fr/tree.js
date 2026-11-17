@@ -77,6 +77,8 @@ export default {
   },
   menu: {
     open: 'Ouvrir',
+    openParent: 'Afficher la session mère ({name})',
+    openTicket: 'Ouvrir le ticket {ticket}',
     rename: 'Renommer…',
     renameTitle: 'Renommer la session',
     renameLabel: 'Nouveau nom (fixé : Claude ne le change plus)',
