@@ -20,6 +20,7 @@ import { createWorktree } from '../projects.mjs';
 import { progressView, markAchievementsSeen, announcementsSince } from './progress.mjs';
 import { originOf, onDevMessage, onOrigin, onCreate, onInterrupt, onWorktree, onSeen } from './achievement-counters.mjs';
 import { headCommit } from '../server/updates.mjs';
+import * as push from './push.mjs';
 import { subscriptionUsage, availableModels } from '../driver.mjs';
 const ENGINE_COMMIT = headCommit(); // read at startup: the code this engine runs
 
@@ -93,6 +94,33 @@ async function active(req, res, { params }) {
   let body;
   try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, err('invalidJson')); }
   count(params.slug, { activeMs: Math.min(Number(body.ms) || 0, 120_000) }, false);
+  return sendJson(res, 200, { ok: true });
+}
+
+// Phone notifications (Web Push): VAPID key, subscription and settings of a device (identified by its endpoint), test
+async function pushRoute(req, res, { p }) {
+  if (req.method === 'GET') return sendJson(res, 200, { publicKey: push.publicKey() });
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, err('invalidJson')); }
+  const what = p.split('/').pop();
+  if (what === 'subscribe') {
+    const r = push.subscribe(body, req.headers['user-agent']);
+    return r ? sendJson(res, 200, r) : sendJson(res, 400, err('invalidJson'));
+  }
+  if (what === 'device') return sendJson(res, 200, { settings: push.deviceSettings(body.endpoint) });
+  if (what === 'settings') { const r = push.updateSettings(body); return r ? sendJson(res, 200, r) : notFound(res); }
+  if (what === 'unsubscribe') { push.removeSubscription(body.endpoint); return sendJson(res, 200, { ok: true }); }
+  if (what === 'test') {
+    try { const r = await push.testPush(body.endpoint); return r === null ? notFound(res) : sendJson(res, 200, { ok: r }); } catch (e) { return sendJson(res, 502, { error: e.message }); }
+  }
+  return notFound(res);
+}
+
+// Activity of the PC (keyboard, mouse), sent by the app or the page open on the PC: phone notifications wait for it to be idle
+async function presence(req, res) {
+  let body = {};
+  try { body = JSON.parse((await readBody(req)) || '{}'); } catch {}
+  push.notePresence(body.idleMs);
   return sendJson(res, 200, { ok: true });
 }
 
@@ -451,6 +479,13 @@ export default {
   'POST /api/sessions/:slug/end': valid(end),
   'POST /api/sessions/:slug/archive': valid(archive),
   'GET /api/options': options,
+  'GET /api/push': pushRoute,
+  'POST /api/push/subscribe': pushRoute,
+  'POST /api/push/device': pushRoute,
+  'POST /api/push/settings': pushRoute,
+  'POST /api/push/unsubscribe': pushRoute,
+  'POST /api/push/test': pushRoute,
+  'POST /api/presence': presence,
   'GET /api/models': async (req, res) => { try { return sendJson(res, 200, { models: await availableModels() }); } catch (e) { return sendJson(res, 500, { error: e.message }); } },
   'GET /api/trackers': trackerOptions,
   'POST /api/trackers': trackerOptions,

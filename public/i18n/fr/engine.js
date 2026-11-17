@@ -1,6 +1,13 @@
 // engine texts (fr).
 export default {
   newSessionTitle: 'nouvelle session',
+  push: {
+    permission: 'Commande à valider',
+    question: 'Question',
+    plan: 'Plan à valider',
+    testTitle: '🔔 Claude Dashboard',
+    testBody: 'Les notifications marchent sur cet appareil.',
+  },
   status: {
     cutAtRestart: 'coupée au redémarrage',
     ended: 'terminée',

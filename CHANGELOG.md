@@ -13,6 +13,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 - Updates from GitHub: when this repository has new commits (clone or fork), a discreet line under ⚙ Options lists
   the new CHANGELOG entries and starts a Claude session that merges them into your copy, keeping your changes.
   Can be turned off in ⚙ Options → General.
+- Phone notifications: when a session is blocked (question, command to approve, plan) and the PC has had no keyboard
+  or mouse action for 10 minutes, the phone app gets a notification; a tap opens the session. Offered once on the
+  first opening on the phone, then in ⚙ Options (on/off, idle delay, test). Needs the HTTPS access; on iPhone, the
+  dashboard added to the home screen.
 
 ## 2026-11-16
 

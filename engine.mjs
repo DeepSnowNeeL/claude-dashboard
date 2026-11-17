@@ -19,6 +19,7 @@ import { autoArchive } from './engine/archives.mjs';
 import { loadProgress, writeProgress } from './engine/progress.mjs';
 import { startPlanAchievements } from './engine/plan-achievements.mjs';
 import routes from './engine/routes.mjs';
+import { startPush } from './engine/push.mjs';
 
 // Before anything reads ~/.claude-dashboard: data from the French build is converted, then the language is set
 migrate();
@@ -60,6 +61,7 @@ loadFromDisk();
 loadProgress(); // levels and achievements: a threshold changed in the definitions applies here
 process.on('exit', () => { try { writeProgress(); } catch { /* disk unavailable: we lose at most one second */ } });
 startPlanAchievements();
+startPush(); // phone notifications of the blocked sessions, when the PC is idle
 setInterval(() => { for (const r of sseClients) r.write(': ping\n\n'); }, 25000);
 autoArchive();
 setInterval(autoArchive, 3600_000);

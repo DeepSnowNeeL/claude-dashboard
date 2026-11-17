@@ -141,6 +141,16 @@ and the design of what is about to be built in visual form, with all the availab
   A diagram Mermaid rejects is sent back to Claude (`POST /api/sessions/:slug/schema-error`, once per version of the
   diagram, hash in `reportedSchemas`): it fixes it by itself, a ⚠ line marks it in the feed.
 
+- **Phone notifications** (Web Push, `engine/push.mjs`, no library: VAPID JWT ES256 and RFC 8291 aes128gcm with
+  `node:crypto`): when a session has a pending card (permission, plan, question) and the PC has been idle (no keyboard
+  or mouse) for the delay of the device (10 min by default, 0 = always), the engine (check every 20 s) notifies each
+  subscribed device once per card. PC activity: the app posts `powerMonitor.getSystemIdleTime()` at each poll (5 s),
+  a browser on the PC posts its interactions (`watchPcActivity()` of `services/push.js`, once a minute) to
+  `POST /api/presence` (PC only). Keys and subscriptions (one per device, by endpoint, with `enabled`, `idleMinutes`)
+  in `~/.claude-dashboard/push.json`; a subscription answered 404 / 410 is dropped. Phone: banner shown once
+  (`components/push-banner.js`, under 900 px, `dash-push-asked`), ⚙ Options → General outside the PC (on/off, delay,
+  test, or why it cannot: http, iPhone not added to the home screen); `sw.js` shows the notification, a tap opens
+  `/#slug`. HTTPS only (the internet access), not the wifi address.
 - **Skeleton loading**: what loads is shown right away in its animated grey form (`skeleton()` /
   `sessionSkeleton()` of `core/dom.js`: feed, panel, lines, code), never a frozen page. Resuming a session or creating
   one opens its skeleton view at once, title included, while the engine answers.

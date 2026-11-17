@@ -1,6 +1,13 @@
 // engine texts (en).
 export default {
   newSessionTitle: 'new session',
+  push: {
+    permission: 'Command to approve',
+    question: 'Question',
+    plan: 'Plan to approve',
+    testTitle: '🔔 Claude Dashboard',
+    testBody: 'Notifications work on this device.',
+  },
   status: {
     cutAtRestart: 'cut off by a restart',
     ended: 'ended',

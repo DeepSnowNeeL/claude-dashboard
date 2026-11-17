@@ -5,7 +5,7 @@
 // Remote mode ("Connect to a server…" in the tray menu): the window shows a dashboard running on a server (Docker,
 // docs/server.md) instead; nothing is started locally and the polling goes through the Electron session, so the
 // login cookie of the server is sent.
-const { app, BrowserWindow, Tray, Menu, Notification, nativeImage, shell, ipcMain, screen, dialog, session } = require('electron');
+const { app, BrowserWindow, Tray, Menu, Notification, nativeImage, shell, ipcMain, screen, dialog, session, powerMonitor } = require('electron');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { loadI18n, applyLanguage, DASH_DIR } = require('./language.cjs');
@@ -278,6 +278,8 @@ function trayMenu(n) {
 /** Session poll: icon, tooltip, taskbar flashing and a notification for each new wait. */
 async function poll() {
   applyLanguage(app); // the language can be changed from the page's Options
+  // Keyboard and mouse activity of the whole PC: the phone notifications wait for it to be idle (local page only)
+  if (!remote()) api('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idleMs: powerMonitor.getSystemIdleTime() * 1000 }) }).catch(() => {});
   let list = [];
   try {
     const r = await api('/api/sessions');

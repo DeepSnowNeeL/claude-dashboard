@@ -8,6 +8,7 @@ import { accessState, readAccess, approveDevice, revokeDevice, logOut, saveAcces
 import { resetMermaid } from './mermaid.js';
 import { checkUpstream } from './upstream-update.js';
 import { rerenderSide } from './side/tabs.js';
+import { pushBlocker, deviceSettings, enablePush, savePushSettings, testPush } from '../services/push.js';
 import { t } from '../i18n/index.js';
 import { serverMode, projects } from '../core/state.js';
 
@@ -89,8 +90,9 @@ export async function openOptions(tab = 'general') {
       <div class="m">${t('options.autoCompact.help')}</div>
       <label>${t('options.upstreamCheck.label')}
         <select id="opt-upstream">${['on', 'off'].map(k => `<option value="${k}" ${(o.upstreamCheck !== false) === (k === 'on') ? 'selected' : ''}>${t(`options.upstreamCheck.${k}`)}</option>`).join('')}</select></label>
-      <div class="m">${t('options.upstreamCheck.help')}</div>` : ''}`;
+      <div class="m">${t('options.upstreamCheck.help')}</div>` : '<div id="opt-push"></div>'}`;
     body.querySelector('#opt-theme').onchange = e => applyTheme(e.target.value);
+    if (body.querySelector('#opt-push')) renderPushOptions(body.querySelector('#opt-push'));
     // New language: the page reloads, simplest way to redraw everything in it
     if (body.querySelector('#opt-language')) body.querySelector('#opt-language').onchange = async e => {
       try { await saveOptions({ language: e.target.value }); location.reload(); } catch (err) { alert(err.message); }
@@ -108,6 +110,39 @@ export async function openOptions(tab = 'general') {
   backdrop.querySelectorAll('.tab-opt').forEach(b => b.onclick = () => show(b.dataset.tab));
   show(tab);
 }
+// --- Notifications of this device (outside the PC): blocked sessions, when the PC is idle ----------------------------
+const PUSH_DELAYS = [2, 5, 10, 20, 30, 60, 0]; // minutes, 0 = always (even with the PC in use)
+async function renderPushOptions(el) {
+  const head = `<h4>🔔 ${t('options.push.title')}</h4>`;
+  const blocker = pushBlocker();
+  if (blocker) { el.innerHTML = `${head}<div class="m">${t(`options.push.blocker.${blocker}`)}</div>`; return; }
+  if (Notification.permission === 'denied') { el.innerHTML = `${head}<div class="m">${t('options.push.blockedByBrowser')}</div>`; return; }
+  let settings = null;
+  try { settings = await deviceSettings(); } catch { /* not subscribed on the PC side */ }
+  const on = !!settings?.enabled, delay = settings?.idleMinutes ?? 10;
+  el.innerHTML = `${head}<label>${t('options.push.label')}
+      <select id="opt-push-on">${['on', 'off'].map(k => `<option value="${k}" ${on === (k === 'on') ? 'selected' : ''}>${t(`options.push.${k}`)}</option>`).join('')}</select></label>
+    <div class="m">${t('options.push.help')}</div>
+    <label>${t('options.push.delay')}
+      <select id="opt-push-delay" ${on ? '' : 'disabled'}>${PUSH_DELAYS.map(m => `<option value="${m}" ${delay === m ? 'selected' : ''}>${m ? t('options.push.minutes', { n: m }) : t('options.push.always')}</option>`).join('')}</select></label>
+    <div class="m">${t('options.push.delayHelp')}</div>
+    ${on ? `<button class="btn" id="opt-push-test">${t('options.push.test')}</button>` : ''}`;
+  el.querySelector('#opt-push-on').onchange = async e => {
+    try {
+      if (e.target.value === 'on') await (settings ? savePushSettings({ enabled: true }) : enablePush(delay));
+      else await savePushSettings({ enabled: false });
+      toast(t('options.saved'));
+    } catch (err) { alert(err.message === 'denied' ? t('options.push.denied') : err.message); }
+    renderPushOptions(el);
+  };
+  el.querySelector('#opt-push-delay').onchange = async e => {
+    try { await savePushSettings({ idleMinutes: Number(e.target.value) }); toast(t('options.saved')); } catch (err) { alert(err.message); }
+  };
+  el.querySelector('#opt-push-test')?.addEventListener('click', async () => {
+    try { await testPush(); toast(t('options.push.testSent')); } catch (err) { alert(err.message); }
+  });
+}
+
 // --- Tracker: profile of the installation and choice per project (files read by trackers.mjs, as /tracker writes them) ---
 async function renderTrackerOptions(body) {
   const list = projects().filter(p => p.path);

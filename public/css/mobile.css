@@ -31,3 +31,9 @@
   /* If an input dialog opens anyway: 16 px to avoid the automatic iOS zoom */
   .modal input:not([type=color]), .modal select { font-size: 16px; }
 }
+
+/* First opening on the phone: offer of the notifications of the blocked sessions (components/push-banner.js) */
+.push-banner { position: fixed; left: 10px; right: 10px; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 60; padding: 12px; border: 1px solid var(--accent); background: var(--accent-bg); border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); }
+.push-banner b { display: block; margin-bottom: 4px; }
+.push-banner .m { color: var(--muted); font-size: 12.5px; }
+.push-banner-act { display: flex; gap: 8px; margin: 10px 0 6px; }

@@ -22,6 +22,8 @@ import { mountUpdateBanner } from './components/update-banner.js';
 import { mountUpstreamUpdate } from './components/upstream-update.js';
 import { loadProgress } from './services/progress.js';
 import { mountMobile } from './components/mobile.js';
+import { mountPushBanner } from './components/push-banner.js';
+import { watchPcActivity } from './services/push.js';
 import { show, refresh, mountConversation, markNewsRead } from './components/conversation/conversation.js';
 import { mountHeader } from './components/conversation/header.js';
 import { mountFeed, addEvent } from './components/conversation/feed.js';
@@ -52,6 +54,8 @@ mountPathMenu();
 mountCopy(); // Ctrl+C: the formatting without the colors of the application
 mountTree($('#list'));
 mountMobile();
+mountPushBanner(); // phone: offers the notifications of the blocked sessions, once
+watchPcActivity(); // PC without the app: its keyboard and mouse delay the phone notifications
 mountOptions();
 mountUpdateBanner(); // engine or page behind the code on disk (git pull): banner with a Restart button
 mountUpstreamUpdate(); // news on GitHub: discreet line under ⚙ Options, a session merges them in

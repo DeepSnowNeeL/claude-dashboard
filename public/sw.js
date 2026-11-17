@@ -1,5 +1,6 @@
 // PWA service worker: makes the page installable as an app on the phone, and replaces the white screen with
 // public/offline.html when the PC cannot be reached (turned off, asleep, page server stopped).
+// It also shows the phone notifications of the blocked sessions (Web Push, sent by the engine).
 // Nothing else is cached: the page only makes sense connected to the sessions.
 const CACHE = 'offline-v1';
 const OFFLINE = '/offline.html';
@@ -72,4 +73,25 @@ self.addEventListener('fetch', e => {
   if (url.origin !== self.location.origin) return;
   if (req.mode === 'navigate') e.respondWith(navigate(req));
   else if (url.pathname.startsWith('/i18n/') || url.pathname === OFFLINE || url.pathname === '/icon-512.png') e.respondWith(networkThenCache(req));
+});
+
+// Phone notification (engine/push.mjs): { title, body, tag, slug }. A click opens the session, in the app if it is open.
+self.addEventListener('push', e => {
+  let m = {};
+  try { m = e.data?.json() || {}; } catch { m = { title: e.data?.text() }; }
+  e.waitUntil(self.registration.showNotification(m.title || 'Claude', {
+    body: m.body || '', tag: m.tag, renotify: true, icon: '/icon-512.png', badge: '/favicon.png', data: { slug: m.slug },
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.slug ? `/#${e.notification.data.slug}` : '/', self.location.origin).href;
+  e.waitUntil((async () => {
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const client = open.find(c => new URL(c.url).origin === self.location.origin);
+    if (!client) return self.clients.openWindow(url);
+    await client.focus();
+    return client.navigate(url).catch(() => {});
+  })());
 });
