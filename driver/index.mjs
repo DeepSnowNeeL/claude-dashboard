@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import * as trackers from '../trackers.mjs';
 import { DASH_DIR, applyLanguage } from '../common.mjs';
@@ -91,11 +92,14 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, model, updateB
 
   // Language of the instructions: the current setting (options.json), so that a change applies to the next query
   applyLanguage();
+  // Conversation id on the command line of this session's claude.exe (--resume=… or --session-id=…): the Processes
+  // tab finds the process with it (engine/processes.mjs)
+  s.processTag = resume || randomUUID();
   s.q = query({
     prompt: input.iterable,
     options: {
       cwd,
-      ...(resume ? { resume } : {}),
+      ...(resume ? { resume } : { sessionId: s.processTag }),
       ...(model ? { model } : {}), // chosen from the header pill, kept across restarts (modelChoice)
       settingSources: ['user', 'project', 'local'],
       permissionMode: MODES[mode],

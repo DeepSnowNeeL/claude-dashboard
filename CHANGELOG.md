@@ -4,6 +4,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-17
 
+- New **Processes** tab in the right panel (on the PC): the dev servers, builds and other processes running on the
+  PC, sorted by who launched them (a dashboard session, with the command and the subagent; an editor or terminal;
+  nobody anymore), with their ports, memory and age, and a Stop button that ends the whole tree. Servers forgotten
+  by a finished session no longer have to be hunted down in the task manager.
 - Right click on a session: "Show the parent session" and "Open ticket" (the session's own link, otherwise the
   project's ticket URL template, set in the project editor).
 - A session launched by another one goes right under it in the tree (same worktree), or shows a "launched by" link;

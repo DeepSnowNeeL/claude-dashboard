@@ -1,4 +1,4 @@
-// Right panel: "Tracker", "Modified files" and "Explorer" tabs. An effect redraws it when the displayed
+// Right panel: "Tracker", "Modified files", "Explorer" and "Processes" (PC only) tabs. An effect redraws it when the displayed
 // session, the tab or the git state change; the Tracker content is drawn by the function app.js passes.
 import { signal, effect } from '../../core/signals.js';
 import { current, detail, sideTab, gitStatus } from '../../core/state.js';
@@ -8,6 +8,8 @@ import { readGitStatus } from '../../services/git.js';
 import { renderExplorer } from '../explorer/explorer.js';
 import { renderCommits, expandedCommit } from './commits.js';
 import { paintFiles } from './files.js';
+import { processes, processCount, renderProcesses, refreshProcesses } from './processes.js';
+import { onPc } from '../../services/processes.js';
 import { t } from '../../i18n/index.js';
 
 const rerun = signal(0); // "redraw everything" (theme change, Tracker section marked seen)
@@ -24,12 +26,18 @@ const filesLabel = d => {
   return `${t('side.tabs.files')}${n ? ` <span class="count">${n}</span>` : ''}`;
 };
 
+const processesLabel = () => {
+  const { n, warn } = processCount();
+  return `${t('side.tabs.processes')}${n ? ` <span class="count${warn ? ' warn' : ''}">${n}</span>` : ''}`;
+};
+
 function sideTabs(d) {
   if (!d.cwd) return '';
   return `<div class="right-tabs">
     <button class="tab ${sideTab() === 'tracker' ? 'on' : ''}" data-right-tab="tracker">${t('side.tabs.tracker')}</button>
     <button class="tab ${sideTab() === 'files' ? 'on' : ''}" data-right-tab="files">${filesLabel(d)}</button>
     <button class="tab ${sideTab() === 'explorer' ? 'on' : ''}" data-right-tab="explorer" title="${t('side.tabs.explorerTitle')}">${t('side.tabs.explorer')}</button>
+    ${onPc() ? `<button class="tab ${sideTab() === 'processes' ? 'on' : ''}" data-right-tab="processes" title="${t('side.tabs.processesTitle')}">${processesLabel()}</button>` : ''}
   </div>`;
 }
 
@@ -58,7 +66,8 @@ function followPolling(slug) {
   timer = setInterval(() => {
     const d = detail();
     if (!d?.cwd || d.slug !== slug || d.slug !== current() || document.querySelector('.viewer') || document.hidden) return;
-    if (sideTab() === 'files') refreshGit(d, $('#commits-zone')?.dataset.slug === d.slug ? $('#commits-zone') : null);
+    if (sideTab() === 'processes') refreshProcesses();
+    else if (sideTab() === 'files') refreshGit(d, $('#commits-zone')?.dataset.slug === d.slug ? $('#commits-zone') : null);
     else countGitFiles(d);
   }, 10_000);
 }
@@ -76,12 +85,18 @@ export function mountSide(el, renderTracker) {
     rerenderSide();
   });
   const sideEffect = effect(() => {
-    const d = detail(), tab = sideTab();
-    gitStatus(); rerun();
+    const d = detail(), tab = sideTab() === 'processes' && !onPc() ? 'tracker' : sideTab();
+    const git = gitStatus(), procs = processes(); rerun();
     if (!d) return stopPolling();
     followPolling(d.slug);
     const changed = !last || last.d !== d || last.tab !== tab;
-    last = { d, tab };
+    // Only the processes changed outside their tab: update the count, without repainting
+    const onlyProcs = last && !changed && last.git === git && last.procs !== procs;
+    last = { d, tab, git, procs };
+    if (tab === 'processes' && d.cwd) return renderProcesses(d, sideTabs(d));
+    const pb = el.querySelector('[data-right-tab="processes"]');
+    if (pb) pb.innerHTML = processesLabel();
+    if (onlyProcs) return;
     // Only the git state changed outside the files tab: update the count, without repainting
     if (!changed && tab !== 'files') {
       const b = el.querySelector('[data-right-tab="files"]');

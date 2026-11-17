@@ -131,6 +131,19 @@ and the design of what is about to be built in visual form, with all the availab
   A selection in the editor shows a 💬 Comment button (no focus taken, the selection can still be copied); a click
   opens the remark bubble: Enter sends to the displayed session the file, the lines
   (`path:L12-L20`, with the version if it is a commit diff), the selected code and the remark.
+  A fourth tab, **Processes** (PC only, spec `docs/specs/2026-11-17-processes-tab.md`), lists what runs on the PC
+  for development, in collapsible sections (`dash-processes-collapsed`): sessions of the displayed session's project,
+  sessions of other projects, editors and terminals (VS Code, JetBrains, Orca, Windows Terminal, grouped by instance),
+  orphans in the projects (command line containing a project path), unknown origin (a dev executable listening on a
+  port). One line per root process: ports, RAM of its tree, age, chain of parents, the Bash command and the subagent
+  that launched it; Stop kills the tree (`taskkill /T /F`) after an inline confirmation. `engine/processes.mjs`:
+  `snapshot()` (one PowerShell call `Win32_Process` + `Get-NetTCPConnection`, about 2 s; `ps` + `lsof` elsewhere),
+  `classify()` (pure, `tests/processes.test.mjs`). A session's `claude.exe` is found by the conversation id on its
+  command line (`s.processTag`: `--resume=` or the `sessionId` the driver gives a new query). Who launched a process
+  is remembered in `DASH_DIR/processes.json` (`pid:created`), so a server started detached keeps its session once
+  its shell has closed: the engine reads every 20 s while a session works, the page every 10 s while the tab is
+  displayed (once a minute otherwise, for the count). Routes `GET /api/processes`, `POST /api/processes/kill`
+  (refused from the wifi and the internet; the PID must still have the same start date).
 - **Architecture**: UML style, no file tree or RPC links. Badges `+` added / `~` modified / `−` deleted (not just
   colors). Angular components created and where they are used, impacted `Service.method` with the reason in a few
   words. Each element's example code comes before its description.

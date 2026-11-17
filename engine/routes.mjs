@@ -7,7 +7,7 @@ import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { feedFromHistory, agentFeedFromHistory, MODES, FILES_DIR, attachmentUrl } from '../driver.mjs';
-import { sendJson, readBody, readBinary, serveFile, applyLanguage } from '../common.mjs';
+import { sendJson, readBody, readBinary, serveFile, applyLanguage, norm } from '../common.mjs';
 import { t, LANGUAGES } from '../public/i18n/index.js';
 import * as trackers from '../trackers.mjs';
 import { sessions, drivers, resumable, newSession, resume, endSession, summarize, workInProgress } from './sessions.mjs';
@@ -16,7 +16,9 @@ import { SESSIONS_DIR, updateBoard, count, markSeen } from './board.mjs';
 import { ARCHIVE_DIR, readOptions, OPTIONS_FILE, archiveSession, archiveOf, autoArchive } from './archives.mjs';
 import { isAllowed } from './guard.mjs';
 import { isSensitive } from '../server/sensitive.mjs';
-import { createWorktree } from '../projects.mjs';
+import { createWorktree, tree } from '../projects.mjs';
+
+import { readProcesses, killProcess } from './processes.mjs';
 import { progressView, markAchievementsSeen, announcementsSince } from './progress.mjs';
 import { originOf, onDevMessage, onOrigin, onCreate, onInterrupt, onWorktree, onSeen } from './achievement-counters.mjs';
 import { headCommit } from '../server/updates.mjs';
@@ -414,6 +416,46 @@ async function mockupFile(req, res, { p }) {
   return serveFile(res, path.resolve(requested), { sandboxed: true });
 }
 
+// --- Processes tab (engine/processes.mjs): what Claude, the editors and the terminals launched ---------------------
+
+/** Bash / PowerShell calls of a driven session and of its subagents: which call launched a process. */
+const shellCallsOf = d => {
+  const calls = (feed, agent) => (feed || []).filter(e => e.t === 'tool' && (e.name === 'Bash' || e.name === 'PowerShell') && e.input?.command)
+    .map(e => ({ command: String(e.input.command), agent }));
+  return [...calls(d.feed, null), ...[...(d.agents?.values() || [])].flatMap(a => calls(a.feed, a.description || a.type))];
+};
+/** Sessions (with the conversation id of their running claude.exe) and known projects, for the classification. */
+async function processContext() {
+  const list = [...sessions].map(([slug, v]) => ({ slug, cwd: v.data.cwd }));
+  const projects = await tree(list.map(x => x.cwd)).catch(() => []);
+  const projectOf = cwd => projects.find(p => p.worktrees.some(w => norm(w.path) === norm(cwd || '')))?.name || null;
+  return {
+    sessions: list.map(({ slug, cwd }) => {
+      const d = drivers.get(slug);
+      return { slug, tag: d && !d.dead ? d.processTag || null : null, project: projectOf(cwd), calls: d ? shellCallsOf(d) : [] };
+    }),
+    projects: projects.map(p => ({ name: p.name, paths: p.worktrees.map(w => w.path) })),
+  };
+}
+// While a session works, a reading every 20 s: a server it starts detached is seen (and remembered) before the
+// shell that launched it closes
+setInterval(() => {
+  if ([...drivers.values()].some(d => d.busy || d.runningAgents?.() || d.runningShells?.())) readProcesses(processContext, 15_000).catch(() => {});
+}, 20_000).unref();
+async function processes(req, res) {
+  try {
+    const [r, ctx] = await Promise.all([readProcesses(processContext), processContext()]);
+    return sendJson(res, 200, { ...r, projects: Object.fromEntries(ctx.sessions.map(x => [x.slug, x.project])) });
+  } catch (e) { return sendJson(res, 500, { error: e.message }); }
+}
+async function killRoute(req, res) {
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, err('invalidJson')); }
+  const pid = Number(body.pid);
+  if (!Number.isInteger(pid) || pid <= 4 || typeof body.created !== 'string') return sendJson(res, 400, err('invalidJson'));
+  try { return sendJson(res, 200, await killProcess(processContext, pid, body.created)); } catch (e) { return sendJson(res, 500, { error: e.message }); }
+}
+
 export default {
   'GET /api/ping': async (req, res) => sendJson(res, 200, { ok: true, engine: true }),
   'GET /api/state': async (req, res) => sendJson(res, 200, { running: workInProgress(), drivers: drivers.size }),
@@ -486,6 +528,8 @@ export default {
   'POST /api/push/unsubscribe': pushRoute,
   'POST /api/push/test': pushRoute,
   'POST /api/presence': presence,
+  'GET /api/processes': processes,
+  'POST /api/processes/kill': killRoute,
   'GET /api/models': async (req, res) => { try { return sendJson(res, 200, { models: await availableModels() }); } catch (e) { return sendJson(res, 500, { error: e.message }); } },
   'GET /api/trackers': trackerOptions,
   'POST /api/trackers': trackerOptions,
