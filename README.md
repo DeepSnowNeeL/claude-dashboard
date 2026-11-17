@@ -107,6 +107,12 @@ Why it is easy to hack:
 - **Small and dependency-light**: three npm dependencies (the Agent SDK, zod, Electron), a tiny signal library for the
   UI, `node:http` for the server.
 
+**Staying up to date, fork or not.** Every 6 hours the dashboard checks this repository (the URL is in
+`server/upstream.mjs`, so a fork keeps watching it) and, when it has commits you do not have, shows a discreet line
+under ⚙ Options with the new CHANGELOG entries. One click starts a Claude session that merges them into your copy,
+keeps your own changes, resolves the conflicts and restarts what needs it; it pushes nothing. Turn it off in
+⚙ Options → General ("Check for updates on GitHub").
+
 Some ideas for forks: a Kanban view of sessions, a "review" tracker profile for pull requests, voice input, a panel
 that shows CI status, a cost budget per project, Slack/Discord notifications, themes, more languages (add
 `public/i18n/<lang>/` and `instructions.<lang>.md`), a macOS menu-bar version, cloning repos from the page in server

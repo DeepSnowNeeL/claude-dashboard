@@ -41,6 +41,12 @@ export default {
     off: 'never (disabled)',
     help: 'Claude Code replaces the conversation with a summary when the context reaches this threshold: each call costs less (the whole context is read again on every call), at the expense of older details. Applied at the next start of each session (after "End" or an engine restart). <code>/compact</code> does it by hand.',
   },
+  upstreamCheck: {
+    label: 'Check for updates on GitHub',
+    on: 'yes, every 6 hours',
+    off: 'no',
+    help: 'When the public repository has new commits this folder does not have yet (clone or fork), a discreet line under ⚙ Options offers a Claude session that brings them in. Turn it off for a copy that does not follow GitHub.',
+  },
   savedNextStart: 'Setting saved: applied at the next start of each session',
   saved: 'Setting saved',
   access: {

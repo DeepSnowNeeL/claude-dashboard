@@ -48,7 +48,7 @@ export const readMcp = slug => api(`/api/sessions/${slug}/mcp`);
 export const mcpAction = (slug, action, name, active) => api(`/api/sessions/${slug}/mcp/${action}`, { name, active });
 
 /** Creates an empty session in a folder; returns { slug }. */
-export const create = (cwd, mode, branch, model) => api('/api/sessions', { cwd, mode, ...(branch ? { branch } : {}), ...(model ? { model } : {}) });
+export const create = (cwd, mode, branch, model, text) => api('/api/sessions', { cwd, mode, ...(branch ? { branch } : {}), ...(model ? { model } : {}), ...(text ? { text } : {}) });
 /** Models offered for a new session (`{ models: [{ value, displayName, description }] }`). */
 export const readAvailableModels = () => api('/api/models');
 /** Resumes a conversation from the history of the folder; `h` = { sessionId, cwd, title, firstPrompt }. */

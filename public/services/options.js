@@ -10,6 +10,8 @@ export const readTrackers = dirs => api(`/api/trackers?${dirs.map(d => `dir=${en
 export const saveTracker = (scope, dir, profile) => api('/api/trackers', { scope, dir, profile });
 
 /** Interface language setting ('auto' | 'fr' | 'en'), readable from everywhere (remote devices included). */
+// News on the public GitHub repository not in this checkout yet
+export const readUpstream = () => api('/api/upstream');
 export const readLanguage = () => api('/api/language').then(r => r.setting || 'auto');
 /** { setting, serverMode }: language setting and whether the dashboard runs in server mode (Docker). */
 export const readLanguageInfo = () => api('/api/language');

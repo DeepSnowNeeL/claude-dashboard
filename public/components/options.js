@@ -6,6 +6,7 @@ import { loadList } from '../services/projects.js';
 import { readTheme, setTheme } from '../services/theme.js';
 import { accessState, readAccess, approveDevice, revokeDevice, logOut, saveAccess } from '../services/access.js';
 import { resetMermaid } from './mermaid.js';
+import { checkUpstream } from './upstream-update.js';
 import { rerenderSide } from './side/tabs.js';
 import { t } from '../i18n/index.js';
 import { serverMode, projects } from '../core/state.js';
@@ -85,7 +86,10 @@ export async function openOptions(tab = 'general') {
       <div class="m">${t('options.archive.help')}</div>
       <label>${t('options.autoCompact.label')}
         <select id="opt-compact">${autoCompactChoices().map(([v, lbl]) => `<option value="${v}" ${String(o.autoCompact ?? 'default') === v ? 'selected' : ''}>${lbl}</option>`).join('')}</select></label>
-      <div class="m">${t('options.autoCompact.help')}</div>` : ''}`;
+      <div class="m">${t('options.autoCompact.help')}</div>
+      <label>${t('options.upstreamCheck.label')}
+        <select id="opt-upstream">${['on', 'off'].map(k => `<option value="${k}" ${(o.upstreamCheck !== false) === (k === 'on') ? 'selected' : ''}>${t(`options.upstreamCheck.${k}`)}</option>`).join('')}</select></label>
+      <div class="m">${t('options.upstreamCheck.help')}</div>` : ''}`;
     body.querySelector('#opt-theme').onchange = e => applyTheme(e.target.value);
     // New language: the page reloads, simplest way to redraw everything in it
     if (body.querySelector('#opt-language')) body.querySelector('#opt-language').onchange = async e => {
@@ -93,6 +97,9 @@ export async function openOptions(tab = 'general') {
     };
     if (body.querySelector('#opt-compact')) body.querySelector('#opt-compact').onchange = async e => {
       try { await saveOptions({ autoCompact: e.target.value }); toast(t('options.savedNextStart')); } catch (err) { alert(err.message); }
+    };
+    if (body.querySelector('#opt-upstream')) body.querySelector('#opt-upstream').onchange = async e => {
+      try { await saveOptions({ upstreamCheck: e.target.value === 'on' }); toast(t('options.saved')); checkUpstream(); } catch (err) { alert(err.message); }
     };
     if (body.querySelector('#opt-archiving')) body.querySelector('#opt-archiving').onchange = async e => {
       try { await saveOptions({ archiveAfterDays: Number(e.target.value) }); toast(t('options.saved')); loadList(); } catch (err) { alert(err.message); }

@@ -19,6 +19,7 @@ import { mountOptions } from './components/options.js';
 import { mountAchievements } from './components/achievements.js';
 import { mountUpdating } from './components/updating.js';
 import { mountUpdateBanner } from './components/update-banner.js';
+import { mountUpstreamUpdate } from './components/upstream-update.js';
 import { loadProgress } from './services/progress.js';
 import { mountMobile } from './components/mobile.js';
 import { show, refresh, mountConversation, markNewsRead } from './components/conversation/conversation.js';
@@ -53,6 +54,7 @@ mountTree($('#list'));
 mountMobile();
 mountOptions();
 mountUpdateBanner(); // engine or page behind the code on disk (git pull): banner with a Restart button
+mountUpstreamUpdate(); // news on GitHub: discreet line under ⚙ Options, a session merges them in
 const onAchievement = mountAchievements(); // level badge, 🏆 window, toasts
 mountPalette(); // Ctrl+P
 mountSide($('#right'), renderTracker);

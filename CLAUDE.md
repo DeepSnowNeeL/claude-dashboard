@@ -415,6 +415,15 @@ backward-compatibility code: its French names are recognised on purpose. Tests: 
   one); `GET /api/updates` compares with the commit on disk and reports a process only when files it runs changed in
   between (`git diff --name-only`). The banner (checked every minute) offers Restart: `POST /api/updates/restart`
   stops the engine deferred (as soon as its sessions are idle) and restarts the page through `dash.mjs restart`.
+- **News from GitHub** (`server/upstream.mjs`, `components/upstream-update.js`): the page server fetches the public
+  repository (`UPSTREAM_URL`, fixed in the code so a fork keeps it; comparing with `origin` would miss everything on a
+  fork) at most every 6 hours into `refs/dash/upstream`, and `GET /api/upstream` (allowed from everywhere) returns the
+  commits HEAD lacks (`behind`), its own ones (`ahead`, a fork when > 0 or another `origin`) and the bullets added to
+  `CHANGELOG.md` since the common ancestor. The line under ⚙ Options (✕ hides it until the next upstream commit,
+  `dash-upstream-dismissed` in `localStorage`) opens those bullets, then starts a session in the repo with the
+  update prompt (`common.upstream.prompt`: merge, never rebase, keep local changes, `npm install`, restarts, no push),
+  in the last permission mode. Setting `upstreamCheck` of `options.json` (⚙ Options → General, PC only, on by default),
+  written by the page server like the language.
 - **Working on the dashboard from a session it drives**: its engine holds that very session. `node dash.mjs restart`
   (page) is safe; for the engine, **always** `node dash.mjs restart-engine --deferred` (it stops as soon as the turn
   ends, the page restarts it, the session comes back paused); never `--force`, which cuts it.

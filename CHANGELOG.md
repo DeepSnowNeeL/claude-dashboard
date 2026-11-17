@@ -10,6 +10,9 @@ What changed for people who use the dashboard, newest first. The commit history 
   the parent's conversation gets a live card for it. The ticket now sits on a small line under the session title.
 - Mockups: icon fonts (Font Awesome...) load again.
 - Modified files: a new file opens in a single plain editor instead of a diff against an empty file.
+- Updates from GitHub: when this repository has new commits (clone or fork), a discreet line under ⚙ Options lists
+  the new CHANGELOG entries and starts a Claude session that merges them into your copy, keeping your changes.
+  Can be turned off in ⚙ Options → General.
 
 ## 2026-11-16
 

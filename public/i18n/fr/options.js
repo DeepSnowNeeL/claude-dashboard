@@ -41,6 +41,12 @@ export default {
     off: 'jamais (désactivé)',
     help: 'Claude Code remplace la conversation par un résumé quand le contexte atteint ce seuil : chaque appel coûte moins cher (tout le contexte est relu à chaque appel), au prix des détails anciens. Pris en compte au prochain démarrage de chaque session (après « Terminer » ou un redémarrage du moteur). <code>/compact</code> le fait à la main.',
   },
+  upstreamCheck: {
+    label: 'Vérifier les mises à jour sur GitHub',
+    on: 'oui, toutes les 6 heures',
+    off: 'non',
+    help: "Quand le dépôt public a des commits que ce dossier n'a pas encore (clone ou fork), une ligne discrète sous ⚙ Options propose une session Claude qui les intègre. À couper pour une copie qui ne suit pas GitHub.",
+  },
   savedNextStart: 'Réglage enregistré : appliqué au prochain démarrage de chaque session',
   saved: 'Réglage enregistré',
   access: {

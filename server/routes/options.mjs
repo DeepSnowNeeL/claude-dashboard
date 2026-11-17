@@ -1,9 +1,10 @@
-// Installation settings visible from the page: local network, interface language.
+// Installation settings visible from the page: local network, interface language, news from GitHub.
 import fs from 'node:fs';
 import path from 'node:path';
 import { engineHeaders } from '../engine-client.mjs';
 import { PAGE_PORT, ENGINE_PORT, DASH_DIR, LANGUAGE_SETTINGS, SERVER_MODE, sendJson, readBody, languageSetting, applyLanguage } from '../../common.mjs';
 import { LAN, lanAddresses } from '../network.mjs';
+import { upstreamStatus } from '../upstream.mjs';
 import { t } from '../../public/i18n/index.js';
 
 const OPTIONS_FILE = path.join(DASH_DIR, 'options.json');
@@ -12,17 +13,21 @@ export default {
   '* /api/network': async (req, res) => sendJson(res, 200, { lan: LAN, addresses: LAN ? lanAddresses().map(a => `http://${a}:${PAGE_PORT}`) : [] }),
   // Language setting (auto, fr, en) and server mode: read by the page and the login page, from everywhere (it reveals nothing)
   'GET /api/language': async (req, res) => sendJson(res, 200, { setting: languageSetting(), serverMode: SERVER_MODE }),
+  // News on the public GitHub repository not in this checkout yet (from everywhere: it reveals nothing private)
+  'GET /api/upstream': async (req, res) => sendJson(res, 200, await upstreamStatus()),
   // Saving the options (PC only, server.mjs refuses the others): the language is written here, the rest of the options
   // belong to the engine, which reads the file again before writing it (the language is kept)
   'POST /api/options': async (req, res) => {
     let body;
     try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, { error: t('server.errors.invalidJson') }); }
     if (!body || typeof body !== 'object') return sendJson(res, 400, { error: t('server.errors.invalidJson') });
-    if ('language' in body) {
-      if (!LANGUAGE_SETTINGS.includes(body.language)) return sendJson(res, 400, { error: t('server.errors.invalidLanguage') });
+    if ('language' in body && !LANGUAGE_SETTINGS.includes(body.language)) return sendJson(res, 400, { error: t('server.errors.invalidLanguage') });
+    // Language and GitHub check belong to the page server: written here (the engine keeps them when it writes)
+    if ('language' in body || 'upstreamCheck' in body) {
       let options = {};
       try { options = JSON.parse(fs.readFileSync(OPTIONS_FILE, 'utf8')); } catch { /* no file yet */ }
-      options.language = body.language;
+      if ('language' in body) options.language = body.language;
+      if ('upstreamCheck' in body) options.upstreamCheck = body.upstreamCheck !== false;
       fs.mkdirSync(path.dirname(OPTIONS_FILE), { recursive: true });
       fs.writeFileSync(OPTIONS_FILE, JSON.stringify(options, null, 2));
       applyLanguage();
