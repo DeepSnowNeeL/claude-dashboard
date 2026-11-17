@@ -160,13 +160,15 @@ export async function openViewer(path, list = null, index = 0, options = {}) {
       ? `${options.title || options.commit} · ${d.binary ? t('editor.viewer.state.binary') : !d.exists ? t('editor.viewer.state.deletedByCommit') : !d.tracked ? t('editor.viewer.state.addedByCommit') : t('editor.viewer.state.modifiedByCommit')}`
       : d.binary ? t('editor.viewer.state.binary') : !d.root ? t('editor.viewer.state.notGit')
       : !d.exists ? t('editor.viewer.state.deleted') : !d.tracked ? t('editor.viewer.state.untracked') : d.modified ? t('editor.viewer.state.modified') : t('editor.viewer.state.unchanged');
-    v.querySelector('[data-vis="mode"]').hidden = !d.modified;
+    // A new file (absent from the last commit, or added by the commit) has nothing to compare: one plain editor
+    const diff = d.modified && d.tracked;
+    v.querySelector('[data-vis="mode"]').hidden = !diff;
     if (d.binary) { body.innerHTML = `<p class="m">${t('editor.viewer.binaryBody')}</p>`; return; }
     body.innerHTML = '';
     const dark = isDarkTheme();
     const common = { readOnly: true, automaticLayout: true, theme: dark ? 'vs-dark' : 'vs', minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 12.5 };
     const lang = languageOf(c);
-    if (d.modified) {
+    if (diff) {
       // Unchanged parts are folded: we land on the changes (a click unfolds them)
       editor = monaco.editor.createDiffEditor(body, { ...common, renderSideBySide: sideBySide, originalEditable: false, hideUnchangedRegions: { enabled: true, contextLineCount: 3 } });
       editor.setModel({ original: monaco.editor.createModel(d.original, lang), modified: monaco.editor.createModel(d.current, lang) });
