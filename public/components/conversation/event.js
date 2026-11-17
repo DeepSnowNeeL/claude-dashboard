@@ -9,6 +9,7 @@ import { questionCard, attachQuestion } from '../cards/question.js';
 import { permissionCard, attachPermission } from '../cards/permission.js';
 import { planCard, attachPlan } from '../cards/plan.js';
 import { agentCard, attachAgent } from '../cards/agent.js';
+import { fillLaunched } from '../cards/launched.js';
 import { parseSessionMessage, fillSessionMessage } from '../cards/session-message.js';
 import { t } from '../../i18n/index.js';
 
@@ -56,7 +57,8 @@ export function eventHtml(ev, activeDecisionsId) {
     el.className = 'msg claude';
     el.innerHTML = agentCard(ev);
     attachAgent(el, ev);
-  } else if (ev.t === 'command') {
+  } else if (ev.t === 'launched') fillLaunched(el, ev);
+  else if (ev.t === 'command') {
     el.className = 'msg cmd';
     el.innerHTML = `<div class="cmdl"><b>!</b> ${esc(ev.cmd)}<span class="m">${ev.running ? t('conversation.event.commandRunning') : ev.code === 0 || ev.code === undefined ? t('conversation.event.commandSeen') : t('conversation.event.commandExit', { code: esc(ev.code) })}${ev.running ? '' : ` · <button class="link" data-send-cmd>${t('conversation.event.sendNow')}</button>`}</span></div>
       ${ev.output ? `<pre class="code">${esc(ev.output)}</pre>` : ''}`;

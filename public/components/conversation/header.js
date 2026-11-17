@@ -2,7 +2,7 @@
 // An effect rerenders it when the session detail changes.
 import { effect } from '../../core/signals.js';
 import { $, esc, rich, toast, ticketLink, displayName, kTokens, modelLabel } from '../../core/dom.js';
-import { current, detail, projects } from '../../core/state.js';
+import { current, detail, projects, sessions } from '../../core/state.js';
 import { setMode, setModel, readModels, end, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
 import { loadList, pathKey } from '../../services/projects.js';
 import { trackerProfile } from '../tracker/renderers.js';
@@ -21,6 +21,12 @@ function folder(d) {
   return `<a class="path cwd" data-path="${esc(d.cwd)}" title="${esc(t('conversation.header.folderTitle', { path: d.cwd }))}">📁 ${esc(d.cwd)}</a>${w?.branch ? ` <span title="${t('conversation.header.branchTitle')}">⎇ ${esc(w.branch)}</span>` : ''}`;
 }
 
+/** Session launched by another one: link to it, next to the title. */
+function parentLink(d) {
+  const parent = d.parent && sessions().find(s => s.slug === d.parent);
+  return parent ? `<a class="parent" href="#${esc(parent.slug)}" title="${t('tree.parentTitle')}">↖ ${t('tree.launchedBy', { name: displayName(parent) })}</a>` : '';
+}
+
 export function renderHeader(d) {
   if (!$('#head')) return; // no conversation shown (new session, session not found)
   if (document.activeElement?.classList.contains('title-field')) return; // renaming in progress: do not wipe it
@@ -28,9 +34,9 @@ export function renderHeader(d) {
   const iStep = steps.findIndex(([k]) => k === d.step);
   $('#head').innerHTML = `
     <div class="header">
-      <div class="title" id="session-title" title="${t('conversation.header.renameTitle')}${d.titlePinned ? t('conversation.header.renameTitlePinned') : ''}">${displayName(d)}<span class="pencil">✎</span>${d.titlePinned ? `<span class="m pinned" title="${t('conversation.header.pinnedTitle')}">📌</span>` : ''}</div>
+      <div class="title" id="session-title" title="${t('conversation.header.renameTitle')}${d.titlePinned ? t('conversation.header.renameTitlePinned') : ''}">${displayName(d)}<span class="pencil">✎</span>${d.titlePinned ? `<span class="m pinned" title="${t('conversation.header.pinnedTitle')}">📌</span>` : ''}${parentLink(d)}</div>
       <span class="m stats" id="stats"></span>
-      <span class="m">${ticketLink(d) ? `<a href="${esc(ticketLink(d))}" target="_blank">${t('conversation.header.ticket', { ticket: esc(d.ticket || '') })}</a> · ` : ''}${folder(d)}</span>
+      <span class="m">${ticketLink(d) ? `<a href="${esc(ticketLink(d))}" target="_blank">${t('conversation.header.ticket', { ticket: esc(d.ticket || '') })}</a> · ` : d.ticket ? `🎫 ${esc(d.ticket)} · ` : ''}${folder(d)}</span>
     </div>
     ${d.description ? `<div class="desc">${rich(d.description)}</div>` : ''}
     <div class="head-row">
@@ -48,10 +54,10 @@ export function renderHeader(d) {
   $('#model')?.addEventListener('click', e => modelMenu(d, e.currentTarget));
   $('#mode')?.addEventListener('change', e => setMode(d.slug, e.target.value).catch(err => alert(err.message)));
   // Rename: the title becomes a field; Enter pins the name (Claude no longer changes it), empty = automatic name
-  $('#session-title')?.addEventListener('click', () => {
+  $('#session-title')?.addEventListener('click', e => {
     const el = $('#session-title');
-    if (el.querySelector('input')) return;
-    el.innerHTML = `${d.ticket ? `${esc(d.ticket)} · ` : ''}<input class="title-field" value="${esc(d.title || '')}" placeholder="${t('conversation.header.autoName')}">`;
+    if (el.querySelector('input') || e.target.closest('.parent')) return; // "↖ launched by" opens the parent
+    el.innerHTML = `<input class="title-field" value="${esc(d.title || '')}" placeholder="${t('conversation.header.autoName')}">`;
     const field = el.querySelector('input');
     field.focus(); field.select();
     let finished = false;

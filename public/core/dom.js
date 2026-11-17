@@ -192,8 +192,19 @@ export function formatWhen(iso, bare = false) {
   return d.toLocaleDateString(locale(), { weekday: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-/** Name of a session: `ticket · title`, or the title alone. */
-export const displayName = d => (d.ticket ? `${esc(d.ticket)} · ${esc(d.title)}` : esc(d.title));
+/** Name of a session: its title (the ticket goes discreetly under it: ticketTag). */
+export const displayName = d => esc(d.title || d.slug || '');
+/** Ticket of a session, a small line under its title (tree, card of a launched session); '' without a ticket. */
+export const ticketTag = d => (d.ticket ? `<div class="tk">🎫 ${esc(d.ticket)}</div>` : '');
+
+/** Pills of a session: stopped on a card, status, running subagents and shells (tree, card of a launched session). */
+export function statusPills(s) {
+  const g = s.status || 'working';
+  return (s.blocked ? `<span class="pill p-blocked" title="${t('tree.blockedTitle')}">${s.blocked === 'permission' ? t('tree.blockedPermission') : s.blocked === 'plan' ? t('tree.blockedPlan') : t('tree.blockedQuestion')}</span>` : '')
+    + `<span class="pill p-${esc(g)}">${g === 'waiting' ? '⏳ ' : g === 'done' ? '✓ ' : '⚙ '}${esc(s.statusSummary || s.step || '')}</span>`
+    + (s.runningAgents ? ` <span class="pill p-agents" title="${t('tree.runningAgents')}">🤖 ${s.runningAgents}</span>` : '')
+    + (s.runningShells ? ` <span class="pill p-agents" title="${t('tree.runningShells')}">🐚 ${s.runningShells}</span>` : '');
+}
 
 // Loading skeletons: the grey (animated) shape of what is coming, in its place, rather than a page that does not move.
 const bars = (widths, cls = '') => widths.map(w => `<i class="${cls}" style="width:${w}%"></i>`).join('');

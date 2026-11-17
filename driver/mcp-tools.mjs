@@ -69,6 +69,8 @@ export function attachMcpTools(ctx) {
         // Never more permissive than this session (a session in plan launches in "ask"): its tools would escape the
         // developer's approval
         const created = await launch({ cwd: folder, text: prompt, ...childMode(s.mode, m) });
+        // Card of the launched session in this feed (rebuilt from the tool result after a restart: driver/history.mjs)
+        pushEvent({ id: newId(), t: 'launched', slug: created, from: cwd, newWorktree: !!worktree });
         return { content: [{ type: 'text', text: `Session ${created} launched in ${folder}.` }] };
       }, { alwaysLoad: true }),
     tool('list_sessions',

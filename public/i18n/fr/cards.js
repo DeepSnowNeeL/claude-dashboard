@@ -52,6 +52,14 @@ export default {
     reply: 'Répondre',
     empty: 'Choisis une option ou écris une précision.',
   },
+  launched: {
+    title: 'Session lancée',
+    open: 'Ouvrir la session →',
+    sameFolder: 'même dossier',
+    newWorktree: 'nouveau worktree',
+    otherProject: 'autre projet : {name}',
+    gone: 'Session archivée ou supprimée.',
+  },
   sessionMessage: {
     unknown: 'inconnue',
     from: 'Message de la session {from}',

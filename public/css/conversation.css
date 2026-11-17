@@ -224,3 +224,22 @@ a.path:hover { color: var(--link); }
 /* Where the developer left off (new items since their last visit) */
 .sep-new { display: flex; align-items: center; gap: 8px; color: var(--link); font-size: 12px; font-weight: 600; margin: 12px 0; }
 .sep-new::before, .sep-new::after { content: ""; flex: 1; height: 2px; background: var(--link); }
+
+/* Session launched by this one: purple like the messages between sessions (subagents are blue), the whole card opens it */
+.card.launched { display: block; position: relative; max-width: 560px; text-decoration: none; color: inherit; border-left: 3px solid #a855f7; background: color-mix(in srgb, #a855f7 6%, var(--card)); }
+a.card.launched:hover { border-color: color-mix(in srgb, #a855f7 60%, var(--line)); border-left-color: #a855f7; }
+.card.launched.e-done { border-left-color: var(--green); }
+.card.launched.e-blocked { border-left-color: var(--red); background: var(--red-bg); }
+.card.launched.gone { opacity: .6; }
+.card.launched.unread::after { content: attr(data-n); position: absolute; top: -7px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+  background: var(--link); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--card); }
+.launched-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 12px; color: #a855f7; }
+.launched-head b { color: var(--text); font-size: 14px; }
+.card.launched .d { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
+.card.launched .pills { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.card.launched .where { display: flex; gap: 6px 12px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.card.launched .where .new { font-size: 10px; font-weight: 700; background: var(--green-pill); color: var(--green-txt); border-radius: 8px; padding: 0 6px; }
+.card.launched .open { margin-top: 8px; font-size: 12px; color: var(--link); font-weight: 600; }
+/* Header of a launched session: link to its parent */
+.head .parent { font-size: 12px; font-weight: 400; color: #a855f7; text-decoration: none; margin-left: 8px; }
+.head .parent:hover { text-decoration: underline; }

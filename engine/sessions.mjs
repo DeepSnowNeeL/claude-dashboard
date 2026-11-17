@@ -26,7 +26,7 @@ const callbacks = slug => ({
   // Levels and achievements: records, XP and the session's own counters (data.stats.achievements)
   achievements: { ...sessionAchievements(slug), plan: onRateLimit, parallel: recordParallel },
   // Tools launch_session, list_sessions, message_session: a session acts on the others
-  launch: async ({ cwd, text, mode, prePlan }) => { const created = newSession(cwd, text, mode, prePlan); onLaunch(slug); return created; },
+  launch: async ({ cwd, text, mode, prePlan }) => { const created = newSession(cwd, text, mode, prePlan, undefined, slug); onLaunch(slug); return created; },
   // Displayed title (the one set by the developer if they renamed it), project, worktree and group as in the tree
   list: async () => {
     const list = [...sessions].map(([s, v]) => summarize(s, v));
@@ -47,12 +47,16 @@ const callbacks = slug => ({
   write: async (target, text) => {
     if (!sessions.has(target)) return `Unknown session: ${target}`;
     if (!drivers.has(target) && !resumable(sessions.get(target).data)) return `${target} is not driven by the page`;
-    // Envelope recognised by the page ("message from another session" card, link to the sender)
-    const from = sessions.get(slug)?.data.title || slug;
-    (await resume(target)).send(`<session-message from="${slug}" title="${String(from).replace(/"/g, "'")}">\n${text}\n</session-message>`, 'end');
+    (await resume(target)).send(sessionMessage(slug, text), 'end');
     return null;
   },
 });
+
+/** Envelope recognised by the page ("message from another session" card, link to the sender). */
+function sessionMessage(from, text) {
+  const title = sessions.get(from)?.data.title || from;
+  return `<session-message from="${from}" title="${String(title).replace(/"/g, "'")}">\n${text}\n</session-message>`;
+}
 
 /**
  * End a session (End button, end_session tool): its Claude process stops, it moves to "done" and stays
@@ -67,16 +71,20 @@ export async function endSession(slug) {
   return null;
 }
 
-/** New driven session in `cwd`, with its first message. Returns its slug. */
-export function newSession(cwd, text, mode = 'all', prePlan, model) {
+/**
+ * New driven session in `cwd`, with its first message. Returns its slug. `parent`: slug of the session that launched it
+ * (launch_session), kept in its JSON (card in the parent's feed, place in the tree); its first message then goes in the
+ * envelope of the messages between sessions, so the page shows who wrote it.
+ */
+export function newSession(cwd, text, mode = 'all', prePlan, model, parent) {
   const slug = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
   const empty = !String(text || '').trim(); // created with one click ("+" of a worktree): it waits for its first message
-  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, ...(prePlan ? { prePlanMode: prePlan } : {}), ...(model ? { modelChoice: model } : {}), status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
+  const data = { slug, title: t('engine.newSessionTitle'), description: String(text || '').slice(0, 140), project: path.basename(cwd), cwd, mode, ...(prePlan ? { prePlanMode: prePlan } : {}), ...(model ? { modelChoice: model } : {}), ...(parent ? { parent } : {}), status: empty ? 'waiting' : 'working', ...(empty ? { statusSummary: t('engine.status.ready') } : {}), step: 'framing', driven: true };
   sessions.set(slug, { data, receivedAt: new Date().toISOString() });
   const s = createSession({ slug, cwd, mode, prePlan, model, ...callbacks(slug) });
   drivers.set(slug, s);
   s.devTurn = true; // the first turn is not "autonomous"
-  if (!empty) s.send(String(text));
+  if (!empty) s.send(parent ? sessionMessage(parent, String(text)) : String(text));
   else updateBoard(slug, {}); // writes its JSON right away (otherwise nothing on disk before the first message)
   broadcast('*'); // the list and the tree of the pages (new worktree included)
   return slug;
@@ -96,10 +104,10 @@ export async function resume(slug) {
 }
 
 export function summarize(slug, { data, receivedAt }) {
-  const { title, ticket, description, status, step, statusSummary, project, cwd, sessionId } = data;
+  const { title, ticket, description, status, step, statusSummary, project, cwd, sessionId, parent, model } = data;
   const p = drivers.get(slug);
   return {
-    slug, title, ticket, description, status, step, statusSummary, project, cwd, sessionId, updatedAt: data.updatedAt || receivedAt,
+    slug, title, ticket, description, status, step, statusSummary, project, cwd, sessionId, parent, model, updatedAt: data.updatedAt || receivedAt,
     driven: !!p || resumable(data), busy: !!p?.busy, runningAgents: p?.runningAgents() || 0, runningShells: p?.runningShells?.() || 0,
     blocked: p?.blocked?.() || null,
     // New items (Claude's text, agent or shell done, error) since the developer looked at the session

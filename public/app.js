@@ -27,6 +27,7 @@ import { mountFeed, addEvent } from './components/conversation/feed.js';
 import { mountInput } from './components/conversation/input.js';
 import { mountActivity } from './components/conversation/activity.js';
 import { mountTabs } from './components/conversation/tabs.js';
+import { mountLaunchedCards } from './components/cards/launched.js';
 
 // Interface language, before anything is drawn: the setting of the PC (options.json), `auto` follows the browser.
 // The same call says whether the dashboard runs in server mode (no desktop actions).
@@ -62,6 +63,7 @@ mountFeed($('#center'));
 mountInput($('#center'));
 mountActivity();
 mountTabs();
+mountLaunchedCards(); // cards of the sessions launched by the displayed one follow the list
 
 // PWA: installable as an app on the phone (https only, or localhost)
 if (window.isSecureContext) navigator.serviceWorker?.register('/sw.js').catch(() => {});

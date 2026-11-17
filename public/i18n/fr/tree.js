@@ -9,6 +9,9 @@ export default {
   blockedPlan: '📋 plan à valider',
   runningAgents: 'sous-agents en cours',
   runningShells: 'shells en arrière-plan en cours',
+  launchedBy: 'lancée par {name}',
+  parentTitle: 'Ouvrir la session qui l’a lancée',
+  kidsTitle: { one: '{n} session lancée par celle-ci, juste en dessous', other: '{n} sessions lancées par celle-ci, juste en dessous' },
   counters: {
     unread: 'nouveautés depuis ta dernière visite',
     blocked: 'bloquée sur une question ou une commande à valider',

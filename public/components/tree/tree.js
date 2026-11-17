@@ -2,7 +2,7 @@
 // browser). An effect redraws it when the sessions, projects, groups, orders, the displayed session or the folds change.
 import { signal, effect } from '../../core/signals.js';
 import { sessions, projects, groups, orders, current, listLoaded, serverMode } from '../../core/state.js';
-import { $, esc, timeAgo, displayName } from '../../core/dom.js';
+import { $, esc, timeAgo, displayName, ticketTag, statusPills } from '../../core/dom.js';
 import { read, write } from '../../core/storage.js';
 import { pathKey, saveGroups as storeGroups, loadList, addProject, saveProjectMeta, removeProject, saveOrder, projectLogoUrl } from '../../services/projects.js';
 import { t } from '../../i18n/index.js';
@@ -58,18 +58,22 @@ const STATUS_ORDER = { waiting: 0, working: 1, done: 2 };
 const createdAt = s => (/^n-[0-9a-z]{8}/.test(s.slug) ? parseInt(s.slug.slice(2, 10), 36) : 0);
 export const byStatus = (a, b) => (STATUS_ORDER[a.status || 'working'] - STATUS_ORDER[b.status || 'working']) || String(b.updatedAt).localeCompare(String(a.updatedAt));
 
-function sessionRow(s, worktree) {
-  const g = s.status || 'working';
-  const drag = worktree && s.status !== 'done' ? `draggable="true" data-drag-session="${esc(s.slug)}" data-wt="${esc(worktree)}"` : '';
+/**
+ * Row of a session. `nest`: slug of the parent it is drawn under (a launched session, same worktree), '' otherwise;
+ * `kids`: number of sessions drawn under it.
+ */
+function sessionRow(s, worktree, { nest = '', kids = 0 } = {}) {
+  const drag = worktree && s.status !== 'done' ? `draggable="true" data-drag-session="${esc(s.slug)}" data-wt="${esc(worktree)}" data-nest="${esc(nest)}"` : '';
   // New items not seen yet (Claude text, agent or shell finished): corner badge, except on the displayed session
   const unread = s.slug !== current() && s.unread;
+  // Launched by a session that is not right above it (other worktree or project, parent ended): link to that one
+  const parent = !nest && s.parent && sessions().find(x => x.slug === s.parent);
   return `<a class="sess ${s.slug === current() ? 'sel' : ''} ${s.blocked ? 'blocked' : ''} ${unread ? 'unread' : ''}" href="#${s.slug}" ${drag}${unread ? ` data-n="${unread > 99 ? '99+' : unread}" title="${t('tree.unreadTitle', { n: unread })}"` : ''}>
-    <div class="t">${s.driven ? `<span class="dot ${s.busy ? 'busy' : ''}" title="${t('tree.driven')}"></span>` : ''}${displayName(s)}</div>
+    ${parent ? `<span class="parent" data-parent="${esc(parent.slug)}" title="${t('tree.parentTitle')}">↖ ${t('tree.launchedBy', { name: displayName(parent) })}</span>` : ''}
+    <div class="t">${s.driven ? `<span class="dot ${s.busy ? 'busy' : ''}" title="${t('tree.driven')}"></span>` : ''}${displayName(s)}${kids ? `<span class="kids-count" title="${t('tree.kidsTitle', { n: kids })}">↳ ${kids}</span>` : ''}</div>
+    ${ticketTag(s)}
     ${s.description ? `<div class="d">${esc(s.description)}</div>` : ''}
-    ${s.blocked ? `<span class="pill p-blocked" title="${t('tree.blockedTitle')}">${s.blocked === 'permission' ? t('tree.blockedPermission') : s.blocked === 'plan' ? t('tree.blockedPlan') : t('tree.blockedQuestion')}</span>` : ''}
-    <span class="pill p-${esc(g)}">${g === 'waiting' ? '⏳ ' : g === 'done' ? '✓ ' : '⚙ '}${esc(s.statusSummary || s.step)}</span>
-    ${s.runningAgents ? `<span class="pill p-agents" title="${t('tree.runningAgents')}">🤖 ${s.runningAgents}</span>` : ''}
-    ${s.runningShells ? `<span class="pill p-agents" title="${t('tree.runningShells')}">🐚 ${s.runningShells}</span>` : ''}
+    ${statusPills(s)}
     <span class="m">${timeAgo(s.updatedAt)}</span>
   </a>`;
 }
@@ -108,7 +112,16 @@ function renderList() {
     const ord = orders()[key] || [];
     const rank = s => { const i = ord.indexOf(s.slug); return i < 0 ? -1 : i; };
     const active = sess.filter(s => s.status !== 'done').sort((a, b) => (rank(a) - rank(b)) || (createdAt(b) - createdAt(a)));
-    const rows = active.map(s => sessionRow(s, key)).join('');
+    // A session launched by another active one of this worktree goes under it, indented, in launch order
+    const bySlug = new Map(active.map(s => [s.slug, s]));
+    const isNested = s => s.parent && s.parent !== s.slug && bySlug.has(s.parent);
+    const kidsOf = slug => active.filter(s => s.parent === slug && isNested(s)).sort((a, b) => (rank(a) - rank(b)) || (createdAt(a) - createdAt(b)));
+    const withKids = (s, depth = 0) => {
+      const kids = depth < 8 ? kidsOf(s.slug) : []; // a loop between parents never runs forever
+      return sessionRow(s, key, { nest: isNested(s) ? s.parent : '', kids: kids.length })
+        + (kids.length ? `<div class="kids">${kids.map(k => withKids(k, depth + 1)).join('')}</div>` : '');
+    };
+    const rows = active.filter(s => !isNested(s)).map(s => withKids(s)).join('');
     if (!finished.length) return rows;
     const kt = `t:${key}`, show = q || folds[kt];
     return rows + `<div class="node nt" data-fold="${esc(kt)}"><span class="fl">${show ? '▾' : '▸'}</span>
@@ -172,6 +185,8 @@ function renderList() {
   $('#list').innerHTML = (html || `<p class="m">${t('tree.noSession')}</p>`)
     + `<div class="insertions"><button class="btn" id="add-project">${t('tree.addProject')}</button><button class="btn" id="add-group">${t('tree.addGroup')}</button></div>`;
   $('#list').querySelectorAll('[data-fold]').forEach(n => n.addEventListener('click', e => { if (!e.target.closest('.plus')) toggleFold(n.dataset.fold); }));
+  // "↖ launched by": opens the parent (the rest of the row opens the session itself)
+  $('#list').querySelectorAll('[data-parent]').forEach(x => x.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); location.hash = x.dataset.parent; }));
   $('#add-project').addEventListener('click', async () => {
     // In the app: native folder picker. In a remote browser: type the path (server side).
     const type = () => ask({ title: t('tree.newProject.title'), label: t('tree.newProject.label'), placeholder: t('tree.newProject.placeholder') });
@@ -223,21 +238,22 @@ function renderList() {
   let dragged = null;
   $('#list').querySelectorAll('[data-drag-session]').forEach(a => {
     a.addEventListener('dragstart', e => {
-      dragged = { slug: a.dataset.dragSession, wt: a.dataset.wt };
+      dragged = { slug: a.dataset.dragSession, wt: a.dataset.wt, nest: a.dataset.nest };
       e.dataTransfer.setData('text/x-session', dragged.slug);
       e.dataTransfer.effectAllowed = 'move';
       e.stopPropagation(); // not the drag of the parent project
     });
     a.addEventListener('dragend', () => { dragged = null; $('#list').querySelectorAll('.target-before, .target-after').forEach(x => x.classList.remove('target-before', 'target-after')); });
     a.addEventListener('dragover', e => {
-      if (!dragged || dragged.wt !== a.dataset.wt || dragged.slug === a.dataset.dragSession) return;
+      // Within the same level only: a launched session moves among its sisters, its parent takes it along
+      if (!dragged || dragged.wt !== a.dataset.wt || dragged.nest !== a.dataset.nest || dragged.slug === a.dataset.dragSession) return;
       e.preventDefault(); e.stopPropagation();
       const r = a.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
       a.classList.toggle('target-after', after); a.classList.toggle('target-before', !after);
     });
     a.addEventListener('dragleave', () => a.classList.remove('target-before', 'target-after'));
     a.addEventListener('drop', e => {
-      if (!dragged || dragged.wt !== a.dataset.wt) return;
+      if (!dragged || dragged.wt !== a.dataset.wt || dragged.nest !== a.dataset.nest) return;
       e.preventDefault(); e.stopPropagation();
       const after = a.classList.contains('target-after');
       a.classList.remove('target-before', 'target-after');

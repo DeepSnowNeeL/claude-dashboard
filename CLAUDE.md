@@ -42,7 +42,11 @@ and the design of what is about to be built in visual form, with all the availab
   (`dash-new-session-mode`, `dash-new-session-model` in `localStorage`); "In a new worktree" (unchecked by default) asks for a branch and creates the worktree next
   to the repo (`createWorktree` of `projects.mjs`, shared with `launch_session`). Within a worktree, the order never
   depends on the status: manual order, otherwise newest to oldest (creation date read from the slug).
-  Each session has a `ticket · quick-context` header and a one-sentence description; a dot marks the sessions driven
+  A session launched by another one (`parent` in its JSON) goes right under its parent, indented on a purple rail with
+  `↳ n` on the parent, when both are in the same worktree and the parent is not ended; otherwise its card starts with
+  `↖ launched by …` (click: the parent). Drag and drop moves a launched session among its sisters only.
+  Each session has its quick-context title, its ticket on a small grey line under it (`ticketTag()` of `core/dom.js`,
+  never in front of the title) and a one-sentence description; a dot marks the sessions driven
   by the page, a 🤖 pill the running subagents. A session stopped on a card (question or command to approve, `blocked`
   in the summary) has a red border and a blinking red pill (❓ question, 🔐 command to approve); collapsed, the node
   shows ❗ n in red. **Unread**: a blue dot in the corner counts the new items (Claude text block, agent or shell
@@ -267,7 +271,10 @@ and the design of what is about to be built in visual form, with all the availab
   that delivered, like the End button). The instructions make Claude use them instead of Orca. A message received from
   another session (Claude Code messaging, `<cross-session-message from-name=…>`, or `message_session`, wrapped in
   `<session-message from=… title=…>`) shows as a purple card on the left: sender (link if it is a dashboard
-  session), content only, collapsed beyond about ten lines.
+  session), content only, collapsed beyond about ten lines. `launch_session` keeps the parent in the new session's JSON
+  (`parent`, engine key) and sends its first message in that envelope; the parent's feed gets a `launched` event (rebuilt
+  from the tool result after a restart): a live purple card (`cards/launched.js`, status and unread read from the list,
+  where it runs: same folder, branch, other project), a click opens the session. Its header links to the parent.
 - **End, archive**: End stops the Claude process, the session goes into "ended" (a message resumes it). **Archive**
   (🗄 button, or automatically once ended for the delay set in ⚙ Options, 1 day by default, checked every hour;
   `archiveAfterDays` in `~/.claude-dashboard/options.json`) removes it from the tree: its JSON goes to

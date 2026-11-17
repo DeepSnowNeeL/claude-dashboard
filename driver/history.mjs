@@ -19,6 +19,7 @@ const OLD_TOOL_NAMES = {
   mcp__tableau__definir_suivi: 'mcp__dashboard__set_tracker',
 };
 const toolName = name => OLD_TOOL_NAMES[name] || name;
+const LAUNCH_TOOL = 'mcp__dashboard__launch_session';
 
 // Messages the dashboard sends to Claude start with "[Dashboard] " ("[Tableau de bord] " in the French build,
 // still recognised for backward compatibility).
@@ -69,7 +70,8 @@ export async function feedFromHistory(slug, sessionId, cwd) {
       const toAgent = clean.match(MESSAGE_TO_AGENT);
       if (toAgent) feed.push({ id: id(), t: 'auto', text: t('driver.feed.messageToSubagent', { name: toAgent[1] }) });
       else if (PREFIX.test(clean)) feed.push({ id: id(), t: 'auto', text: `🔔 ${clean.replace(PREFIX, '').replace(WAKE_UP_TAIL, '')}` }); // wake-up after agents
-      else if ((clean.trim() || attachments.length) && !clean.startsWith('<')) feed.push({ id: id(), t: 'user', text: clean, attachments });
+      // Tagged texts are Claude Code's own (commands, reminders), except the messages between sessions (shown as such)
+      else if ((clean.trim() || attachments.length) && (!clean.startsWith('<') || clean.startsWith('<session-message '))) feed.push({ id: id(), t: 'user', text: clean, attachments });
     } else if (m.type === 'assistant' && Array.isArray(content)) {
       for (const raw of content) {
         const b = raw.type === 'tool_use' && OLD_TOOL_NAMES[raw.name] ? { ...raw, name: toolName(raw.name) } : raw;
@@ -88,6 +90,12 @@ export async function feedFromHistory(slug, sessionId, cwd) {
         else if (b.type === 'tool_use') { const ev = toolEvent(id(), b); calls.set(b.id, ev); feed.push(ev); }
       }
     }
+  }
+  // Sessions launched by this one: their card after the tool line, slug read from its result ("Session n-… launched in …")
+  for (let i = feed.length - 1; i >= 0; i--) {
+    const ev = feed[i];
+    const created = ev.t === 'tool' && ev.name === LAUNCH_TOOL && !ev.error && String(ev.result || '').match(/^Session (\S+) (?:launched|lancée)/);
+    if (created) feed.splice(i + 1, 0, { id: `${ev.id}-launched`, t: 'launched', slug: created[1], from: cwd, newWorktree: !!ev.input?.worktree });
   }
   return feed;
 }

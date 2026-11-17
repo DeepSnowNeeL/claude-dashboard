@@ -89,3 +89,13 @@
 .sess.target-after { box-shadow: 0 3px 0 var(--link); }
 .np.target-before { box-shadow: 0 -3px 0 var(--link); }
 .np.target-after { box-shadow: 0 3px 0 var(--link); }
+
+/* Sessions launched by another one: under their parent (same worktree), on a purple rail; otherwise a link to it */
+.kids { margin: -2px 0 6px 10px; padding-left: 10px; border-left: 2px solid color-mix(in srgb, #a855f7 45%, var(--line-light)); }
+.kids .sess { position: relative; margin: 4px 0; }
+.kids .sess::before { content: ''; position: absolute; left: -12px; top: 16px; width: 10px; border-top: 2px solid color-mix(in srgb, #a855f7 45%, var(--line-light)); }
+.sess .kids-count { font-size: 10px; font-weight: 700; color: #a855f7; margin-left: 6px; }
+.sess .parent { display: block; font-size: 11px; color: #a855f7; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.sess .parent:hover { text-decoration: underline; }
+/* Ticket: discreet, under the title */
+.sess .tk, .card.launched .tk { font-size: 11px; color: var(--muted); margin-top: 1px; }

@@ -9,6 +9,9 @@ export default {
   blockedPlan: '📋 plan to approve',
   runningAgents: 'subagents running',
   runningShells: 'background shells running',
+  launchedBy: 'launched by {name}',
+  parentTitle: 'Open the session that launched it',
+  kidsTitle: { one: '{n} session launched by this one, right below', other: '{n} sessions launched by this one, right below' },
   counters: {
     unread: 'new items since your last visit',
     blocked: 'blocked on a question or a command to approve',

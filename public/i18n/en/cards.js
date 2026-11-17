@@ -52,6 +52,14 @@ export default {
     reply: 'Answer',
     empty: 'Pick an option or write a note.',
   },
+  launched: {
+    title: 'Session launched',
+    open: 'Open the session →',
+    sameFolder: 'same folder',
+    newWorktree: 'new worktree',
+    otherProject: 'other project: {name}',
+    gone: 'Session archived or removed.',
+  },
   sessionMessage: {
     unknown: 'unknown',
     from: 'Message from session {from}',
