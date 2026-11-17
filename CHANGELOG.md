@@ -9,6 +9,7 @@ What changed for people who use the dashboard, newest first. The commit history 
 - A session launched by another one goes right under it in the tree (same worktree), or shows a "launched by" link;
   the parent's conversation gets a live card for it. The ticket now sits on a small line under the session title.
 - Mockups: icon fonts (Font Awesome...) load again.
+- Modified files: a new file opens in a single plain editor instead of a diff against an empty file.
 
 ## 2026-11-16
 
