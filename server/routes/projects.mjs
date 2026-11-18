@@ -1,7 +1,7 @@
 // Projects, groups, session order, logos: the left tree.
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathKey, tree, projectLogo, readGroups, writeGroups, importOrca, writeProjectMeta, readOrders, writeOrder, addProject, removeProject } from '../../projects.mjs';
+import { pathKey, tree, projectLogo, readGroups, writeGroups, importOrca, writeProjectMeta, readOrders, writeOrder, readCategories, writeCategories, addProject, removeProject } from '../../projects.mjs';
 import { sendJson, readBody, WORKSPACE_DIR, SANDBOX_CSP } from '../../common.mjs';
 import { notifyChange, engine } from '../engine-client.mjs';
 import { knownProjects } from '../paths.mjs';
@@ -52,6 +52,15 @@ export default {
     writeProjectMeta(String(body.id), body);
     notifyChange();
     return sendJson(res, 200, { ok: true });
+  },
+  // Session categories (list and assignment), set from the tree's right click
+  '* /api/categories': async (req, res) => {
+    if (req.method === 'PUT') {
+      try { writeCategories(JSON.parse(await readBody(req))); } catch (e) { return sendJson(res, 400, { error: t('server.errors.invalidJsonDetail', { message: e.message }) }); }
+      notifyChange();
+      return sendJson(res, 200, { ok: true });
+    }
+    return sendJson(res, 200, readCategories());
   },
   '* /api/groups': async (req, res) => {
     if (req.method === 'PUT') {

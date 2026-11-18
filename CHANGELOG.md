@@ -2,6 +2,13 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-18
+
+- Session categories, like GitLab labels: right click on a session → Category to tick one or several, create one
+  (name, colour) or manage them. The chips show under the title and the first category colours the row. A category
+  can **compact** its sessions: a single line in the list (title, status, age), still red when blocked and with the
+  unread badge. The search also finds a session by its category names.
+
 ## 2026-11-17
 
 - New **Processes** tab in the right panel (on the PC): the dev servers, builds and other processes running on the

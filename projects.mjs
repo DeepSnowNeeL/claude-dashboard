@@ -58,6 +58,25 @@ export function writeOrder(worktreeId, slugs) {
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
 }
 
+// Session categories (labels, like GitLab's): { list: [{ id, name, color, compact }], sessions: { slug: [category ids] } }.
+// `compact`: the sessions that carry it take a single line in the tree.
+const CATEGORIES_FILE = path.join(DASH_DIR, 'categories.json');
+export function readCategories() {
+  try { const c = JSON.parse(fs.readFileSync(CATEGORIES_FILE, 'utf8')); return { list: c.list || [], sessions: c.sessions || {} }; } catch { return { list: [], sessions: {} }; }
+}
+export function writeCategories(c) {
+  const list = (Array.isArray(c?.list) ? c.list : []).filter(x => x && x.id && String(x.name || '').trim()).slice(0, 100)
+    .map(x => ({ id: String(x.id).slice(0, 40), name: String(x.name).trim().slice(0, 60), color: validColor(x.color) ? x.color : '#64748b', ...(x.compact ? { compact: true } : {}) }));
+  const ids = new Set(list.map(x => x.id));
+  const sessions = {};
+  for (const [slug, l] of Object.entries(c?.sessions || {})) {
+    const kept = (Array.isArray(l) ? l : []).map(String).filter(id => ids.has(id));
+    if (kept.length) sessions[String(slug).slice(0, 100)] = [...new Set(kept)];
+  }
+  fs.mkdirSync(path.dirname(CATEGORIES_FILE), { recursive: true });
+  fs.writeFileSync(CATEGORIES_FILE, JSON.stringify({ list, sessions }, null, 2));
+}
+
 // Customisation of a project in the tree: { id: { name, color, icon, ticketUrl } } (icon: an emoji; absent = project
 // logo; ticketUrl: link of a ticket, `{n}` replaced by its number, e.g. https://gitlab.example.com/team/app/-/issues/{n})
 const META_FILE = path.join(DASH_DIR, 'projects-meta.json');

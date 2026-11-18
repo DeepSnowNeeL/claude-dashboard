@@ -7,6 +7,7 @@ export const listLoaded = signal(false); // the list has been loaded once (the t
 export const projects = signal([]);   // tree projects, with their meta (name, color, icon, ticketUrl)
 export const groups = signal([]);
 export const orders = signal({});     // manual order of the sessions per worktree
+export const categories = signal({ list: [], sessions: {} }); // session categories and their assignment (slug → ids)
 export const current = signal(null);  // displayed slug
 export const detail = signal(null);   // JSON of the displayed session
 export const view = signal(null);     // null: main conversation; otherwise the key of the displayed subagent

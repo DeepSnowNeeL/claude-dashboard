@@ -1,35 +1,92 @@
 // Right click in the tree: menu of a session, a worktree or a project (same box as the path menu,
 // which closes it on a click elsewhere or Escape).
-import { sessions, projects, serverMode } from '../../core/state.js';
+import { sessions, projects, categories, serverMode } from '../../core/state.js';
 import { esc, ticketLink } from '../../core/dom.js';
 import { end, archive, rename } from '../../services/sessions.js';
 import { showInExplorer } from '../../services/desktop.js';
 import { removeWorktree } from '../../services/git.js';
-import { loadList, removeProject, pathKey } from '../../services/projects.js';
+import { loadList, removeProject, pathKey, saveCategories } from '../../services/projects.js';
 import { t } from '../../i18n/index.js';
 import { ask } from './modal.js';
+import { categoryDialog, manageCategories } from './category.js';
 
 const copy = text => navigator.clipboard?.writeText(text);
 const explore = path => (window.desktop ? window.desktop.showInExplorer(path) : showInExplorer(path).catch(e => alert(e.message)));
 const newSession = path => { location.hash = `new?cwd=${encodeURIComponent(path)}`; };
 
-/** Opens the menu: `entries` = [{ ic, label, run, danger }] or '-' (separator). */
+/**
+ * Opens the menu: `entries` = [{ ic, label, run, danger }] or '-' (separator). An entry with `sub(el)` instead of
+ * `run` opens a submenu beside it (hover or click), which `sub` fills; it stays inside the menu, so a click there
+ * does not close it.
+ */
 export function openMenu(title, entries, x, y) {
   document.querySelector('.path-menu')?.remove();
   const m = document.createElement('div');
   m.className = 'path-menu tree-menu';
   const active = entries.filter(Boolean);
   m.innerHTML = `<div class="m">${esc(title)}</div>` + active.map((e, i) => e === '-' ? '<hr>'
-    : `<button data-i="${i}" ${e.danger ? 'class="danger"' : ''}><span class="ic">${e.ic}</span>${esc(e.label)}</button>`).join('');
+    : `<button data-i="${i}" class="${e.danger ? 'danger' : ''} ${e.sub ? 'has-sub' : ''}"><span class="ic">${e.ic}</span>${esc(e.label)}</button>`).join('');
   document.body.append(m);
   m.style.left = `${Math.min(x, innerWidth - m.offsetWidth - 8)}px`;
   m.style.top = `${Math.max(8, Math.min(y, innerHeight - m.offsetHeight - 8))}px`;
+  const openSub = b => {
+    if (b.classList.contains('hl')) return;
+    closeSub();
+    b.classList.add('hl');
+    const s = document.createElement('div');
+    s.className = 'path-menu sub-menu';
+    m.append(s);
+    active[b.dataset.i].sub(s);
+    // On the right of the menu, on its left if there is no room; level with the entry, inside the window
+    const r = m.getBoundingClientRect();
+    s.style.left = r.right + s.offsetWidth + 4 > innerWidth ? `${-s.offsetWidth + 2}px` : `${r.width - 2}px`;
+    s.style.top = `${Math.max(8 - r.top, Math.min(b.offsetTop - 6, innerHeight - r.top - s.offsetHeight - 8))}px`;
+  };
+  const closeSub = () => { m.querySelector(':scope > .sub-menu')?.remove(); m.querySelector(':scope > button.hl')?.classList.remove('hl'); };
+  m.addEventListener('mouseover', e => {
+    const b = e.target.closest('button[data-i]');
+    if (!b || b.parentElement !== m) return;
+    if (active[b.dataset.i].sub) openSub(b); else closeSub();
+  });
   m.addEventListener('click', async e => {
     const b = e.target.closest('button[data-i]');
-    if (!b) return;
+    if (!b || b.parentElement !== m) return;
+    if (active[b.dataset.i].sub) { openSub(b); return; }
     m.remove();
     try { await active[b.dataset.i].run(); } catch (err) { alert(err.message); }
   });
+}
+
+/** Category submenu of a session: a click ticks or unticks (the menu stays open), then create and manage. */
+function categorySub(s) {
+  return el => {
+    const draw = () => {
+      const c = categories(), mine = c.sessions[s.slug] || [];
+      el.innerHTML = c.list.map(x => `<button data-cat="${esc(x.id)}"><span class="chk">${mine.includes(x.id) ? '✓' : ''}</span><span class="sw" style="--c:${esc(x.color)}"></span>${esc(x.name)}${x.compact ? `<span class="min">${t('tree.categories.compactTag')}</span>` : ''}</button>`).join('')
+        + (c.list.length ? '<hr>' : '')
+        + `<button data-act="new"><span class="ic">＋</span>${t('tree.categories.newEllipsis')}</button>`
+        + (c.list.length ? `<button data-act="manage"><span class="ic">⚙</span>${t('tree.categories.manageEllipsis')}</button>` : '');
+    };
+    const assign = async (id, on) => {
+      const c = categories(), mine = (c.sessions[s.slug] || []).filter(x => x !== id);
+      await saveCategories({ ...c, sessions: { ...c.sessions, [s.slug]: on ? [...mine, id] : mine } });
+    };
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.cat) {
+        const on = !(categories().sessions[s.slug] || []).includes(b.dataset.cat);
+        try { await assign(b.dataset.cat, on); } catch (err) { alert(err.message); }
+        draw();
+        return;
+      }
+      document.querySelector('.path-menu')?.remove();
+      if (b.dataset.act === 'new') categoryDialog(null, { onCreated: id => assign(id, true) });
+      else manageCategories();
+    });
+    draw();
+  };
 }
 
 function sessionMenu(s, x, y) {
@@ -44,6 +101,7 @@ function sessionMenu(s, x, y) {
       const title = await ask({ title: t('tree.menu.renameTitle'), label: t('tree.menu.renameLabel'), value: s.title || '' });
       if (title) { await rename(s.slug, title); await loadList(); }
     } },
+    { ic: '🏷️', label: t('tree.categories.menu'), sub: categorySub(s) },
     s.cwd && { ic: '＋', label: t('tree.menu.newSessionInFolder'), run: () => newSession(s.cwd) },
     '-',
     s.cwd && !serverMode() && { ic: '📂', label: t('tree.menu.showFolderInExplorer'), run: () => explore(s.cwd) },

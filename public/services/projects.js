@@ -1,13 +1,13 @@
 // Projects, groups, sessions and orders of the tree: loading, saving (groups, orders, metadata,
 // added projects), recent folders and history of a folder.
 import { batch } from '../core/signals.js';
-import { sessions, projects, groups, orders, listLoaded } from '../core/state.js';
+import { sessions, projects, groups, orders, categories, listLoaded } from '../core/state.js';
 import { api } from '../core/api.js';
 
 /** Loads the list; the projects come with their meta (name, color, icon, ticketUrl), read by core/dom.js ticketLink. */
 export async function loadList() {
-  const [list, pageProjects, pageGroups, pageOrders] = await Promise.all([api('/api/sessions'), api('/api/projects').catch(() => []), api('/api/groups').catch(() => []), api('/api/orders').catch(() => ({}))]);
-  batch(() => { sessions.set(list); projects.set(pageProjects); groups.set(pageGroups); orders.set(pageOrders); listLoaded.set(true); });
+  const [list, pageProjects, pageGroups, pageOrders, pageCategories] = await Promise.all([api('/api/sessions'), api('/api/projects').catch(() => []), api('/api/groups').catch(() => []), api('/api/orders').catch(() => ({})), api('/api/categories').catch(() => null)]);
+  batch(() => { sessions.set(list); projects.set(pageProjects); groups.set(pageGroups); orders.set(pageOrders); if (pageCategories) categories.set(pageCategories); listLoaded.set(true); });
 }
 
 /** Same path key as the server (projects.mjs): unified separators, no trailing slash, case-insensitive on Windows. */
@@ -18,6 +18,15 @@ export async function saveGroups(newGroups) {
   groups.set(newGroups);
   await fetch('/api/groups', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newGroups) });
 }
+
+/** Keeps the categories (list and assignment); throws the network error if any. */
+export async function saveCategories(next) {
+  categories.set(next);
+  const r = await fetch('/api/categories', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
+}
+/** Categories of a session, in list order. */
+export const categoriesOf = slug => { const c = categories(), ids = c.sessions[slug] || []; return c.list.filter(x => ids.includes(x.id)); };
 
 /** Adds a folder to the projects by hand. */
 export const addProject = path => api('/api/projects', { path });

@@ -99,3 +99,37 @@
 .sess .parent:hover { text-decoration: underline; }
 /* Ticket: discreet, under the title */
 .sess .tk, .card.launched .tk { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* Session categories (labels): solid chips, the first one colours the row (thick left edge, light tint) */
+.cat { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; line-height: 16px; padding: 0 7px; border-radius: 8px; background: var(--c); color: #fff; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.sess .cats { display: flex; gap: 4px; flex-wrap: wrap; margin: 3px 0 4px; }
+.sess.has-cat { border-left: 4px solid var(--c); padding-left: 7px; background: color-mix(in srgb, var(--c) 9%, var(--card)); }
+.sess.has-cat.sel { border-left: 4px solid var(--c); padding-left: 6px; }
+/* Compact category: one line (title, blocked, status icon, age) */
+.sess.compact { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 7px; font-size: 12px; border-color: color-mix(in srgb, var(--c) 40%, var(--line));
+  border-left: 5px solid var(--c); background: color-mix(in srgb, var(--c) 16%, var(--card)); }
+.sess.compact.sel { border: 2px solid var(--accent); border-left: 5px solid var(--c); padding: 2px 7px 2px 7px; }
+.sess.compact .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.sess.compact .st, .sess.compact .m, .sess.compact .kids-count { flex-shrink: 0; font-size: 11px; }
+.sess.compact .p-blocked { margin: 0; padding: 0 5px; }
+.sess.compact.blocked { border-left: 5px solid var(--red); background: var(--red-bg); }
+.kids .sess.compact::before { top: 11px; }
+
+/* Category submenu of the right click */
+.path-menu button.has-sub::after { content: '▸'; margin-left: auto; color: var(--muted); }
+.path-menu button.hl { background: color-mix(in srgb, var(--link) 18%, transparent); }
+.path-menu .sub-menu { position: absolute; min-width: 200px; max-height: 70vh; overflow-y: auto; }
+.sub-menu .chk { width: 14px; text-align: center; color: var(--link); font-weight: 700; flex-shrink: 0; }
+.sub-menu .sw { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+.sub-menu .min { margin-left: auto; padding-left: 8px; font-size: 10px; color: var(--muted); }
+
+/* Category window */
+.modal label.cat-compact { flex-direction: row; align-items: flex-start; gap: 8px; padding: 10px; border: 1px solid var(--line-light); border-radius: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+.cat-compact small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.cat-preview { display: flex; flex-direction: column; gap: 4px; }
+.cat-preview .sess { margin: 0; }
+.cat-list { display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow-y: auto; }
+.cat-row { display: flex; align-items: center; gap: 8px; font: inherit; text-align: left; background: none; border: 0; color: var(--text); padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.cat-row:hover { background: color-mix(in srgb, var(--link) 12%, transparent); }
+.cat-row .n { margin-left: auto; }
+.sess.has-cat.blocked { border-left-color: var(--red); background: var(--red-bg); }

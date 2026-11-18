@@ -64,8 +64,12 @@ and the design of what is about to be built in visual form, with all the availab
   `projects-meta.json`); "Remove from the tree" works for any project: refused while it has open sessions, its ended
   sessions are archived (otherwise it would come back), it comes back if a session opens in it. The sessions of a
   worktree are reordered by drag and drop (`orders.json`; new ones go on top).
-  **Right click** (`tree/menu.js`, same box as the path menu): on a session (open, show the parent session, open the
-  ticket, rename, new session in its folder,
+  **Categories** (labels, like GitLab's; `tree/category.js`, `~/.claude-dashboard/categories.json`
+  `{ list: [{ id, name, color, compact }], sessions: { slug: [ids] } }`, route `/api/categories`): several per
+  session, solid chips under the title, the first one colours the row (thick left edge, tint); a `compact` category
+  reduces its sessions to one line (title, blocked pill, status icon, age, unread badge). The search matches their names.
+  **Right click** (`tree/menu.js`, same box as the path menu; an entry with `sub` opens a submenu): on a session (open,
+  show the parent session, open the ticket, rename, **category** (tick, new, manage), new session in its folder,
   explorer, copy the path, the `claude -r` command or the link, end, archive), on a worktree (new session, explorer,
   copy path and branch, **remove the worktree**: `POST /api/worktree/remove`, PC only, never the main one, refused if
   it has open sessions, one more confirmation if it has uncommitted changes, branch kept, ended sessions archived), on

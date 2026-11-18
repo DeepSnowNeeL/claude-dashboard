@@ -1,10 +1,10 @@
 // Left tree: groups → projects → worktrees → sessions, each level collapsible (the state is kept in the
 // browser). An effect redraws it when the sessions, projects, groups, orders, the displayed session or the folds change.
 import { signal, effect } from '../../core/signals.js';
-import { sessions, projects, groups, orders, current, listLoaded, serverMode } from '../../core/state.js';
+import { sessions, projects, groups, orders, categories, current, listLoaded, serverMode } from '../../core/state.js';
 import { $, esc, timeAgo, displayName, ticketTag, statusPills } from '../../core/dom.js';
 import { read, write } from '../../core/storage.js';
-import { pathKey, saveGroups as storeGroups, loadList, addProject, saveProjectMeta, removeProject, saveOrder, projectLogoUrl } from '../../services/projects.js';
+import { pathKey, saveGroups as storeGroups, loadList, addProject, saveProjectMeta, removeProject, saveOrder, projectLogoUrl, categoriesOf } from '../../services/projects.js';
 import { t } from '../../i18n/index.js';
 import { ask } from './modal.js';
 import { edit } from './edit.js';
@@ -68,10 +68,27 @@ function sessionRow(s, worktree, { nest = '', kids = 0 } = {}) {
   const unread = s.slug !== current() && s.unread;
   // Launched by a session that is not right above it (other worktree or project, parent ended): link to that one
   const parent = !nest && s.parent && sessions().find(x => x.slug === s.parent);
-  return `<a class="sess ${s.slug === current() ? 'sel' : ''} ${s.blocked ? 'blocked' : ''} ${unread ? 'unread' : ''}" href="#${s.slug}" ${drag}${unread ? ` data-n="${unread > 99 ? '99+' : unread}" title="${t('tree.unreadTitle', { n: unread })}"` : ''}>
+  // Categories: the first one colours the row; one marked "compact" reduces it to a single line
+  const cats = categoriesOf(s.slug);
+  const color = cats[0] ? ` style="--c:${esc(cats[0].color)}"` : '';
+  const cls = `${s.slug === current() ? 'sel' : ''} ${s.blocked ? 'blocked' : ''} ${unread ? 'unread' : ''}`;
+  const badge = `${drag}${unread ? ` data-n="${unread > 99 ? '99+' : unread}" title="${t('tree.unreadTitle', { n: unread })}"` : ''}`;
+  if (cats.some(c => c.compact)) {
+    // Only what calls for attention stays: blocked (icon), status (icon, summary in the tooltip), unread badge
+    const g = s.status || 'working';
+    const blocked = s.blocked ? t(s.blocked === 'permission' ? 'tree.blockedPermission' : s.blocked === 'plan' ? 'tree.blockedPlan' : 'tree.blockedQuestion') : '';
+    return `<a class="sess compact ${cls}" href="#${s.slug}" ${badge}${color}>
+      ${s.driven ? `<span class="dot ${s.busy ? 'busy' : ''}" title="${t('tree.driven')}"></span>` : ''}<span class="t" title="${esc([s.title || s.slug, ...cats.map(c => c.name)].join(' · '))}">${displayName(s)}</span>${kids ? `<span class="kids-count" title="${t('tree.kidsTitle', { n: kids })}">↳ ${kids}</span>` : ''}
+      ${blocked ? `<span class="pill p-blocked" title="${esc(blocked)}">${esc(blocked.split(' ')[0])}</span>` : ''}
+      <span class="st" title="${esc(s.statusSummary || s.step || '')}">${g === 'waiting' ? '⏳' : g === 'done' ? '✓' : '⚙'}</span>
+      <span class="m">${timeAgo(s.updatedAt)}</span>
+    </a>`;
+  }
+  return `<a class="sess ${cls} ${cats.length ? 'has-cat' : ''}" href="#${s.slug}" ${badge}${color}>
     ${parent ? `<span class="parent" data-parent="${esc(parent.slug)}" title="${t('tree.parentTitle')}">↖ ${t('tree.launchedBy', { name: displayName(parent) })}</span>` : ''}
     <div class="t">${s.driven ? `<span class="dot ${s.busy ? 'busy' : ''}" title="${t('tree.driven')}"></span>` : ''}${displayName(s)}${kids ? `<span class="kids-count" title="${t('tree.kidsTitle', { n: kids })}">↳ ${kids}</span>` : ''}</div>
     ${ticketTag(s)}
+    ${cats.length ? `<div class="cats">${cats.map(c => `<span class="cat" style="--c:${esc(c.color)}">${esc(c.name)}</span>`).join('')}</div>` : ''}
     ${s.description ? `<div class="d">${esc(s.description)}</div>` : ''}
     ${statusPills(s)}
     <span class="m">${timeAgo(s.updatedAt)}</span>
@@ -89,7 +106,7 @@ function counters(sess) {
 
 function renderList() {
   const q = $('#search').value.trim().toLowerCase();
-  const vis = sessions().filter(s => !q || [s.slug, s.title, s.description, s.ticket, s.project].join(' ').toLowerCase().includes(q));
+  const vis = sessions().filter(s => !q || [s.slug, s.title, s.description, s.ticket, s.project, ...categoriesOf(s.slug).map(c => c.name)].join(' ').toLowerCase().includes(q));
   const folds = readFolds();
   const open = k => q || !folds[k]; // a search unfolds everything
 
@@ -325,7 +342,7 @@ export function mountTree(el) {
     document.title = n ? `(${n}) ${t('tree.windowTitle')}` : t('tree.windowTitle');
   });
   // Nothing before the first list load (otherwise "No sessions." would flash for a moment)
-  effect(() => { if (!listLoaded()) return; sessions(); projects(); groups(); orders(); current(); foldsChanged(); renderList(); });
+  effect(() => { if (!listLoaded()) return; sessions(); projects(); groups(); orders(); categories(); current(); foldsChanged(); renderList(); });
   $('#search').addEventListener('input', renderList);
   mountTreeMenu(el); // right click on a session, a project or a worktree
   for (const ev of ['wheel', 'touchstart', 'pointerdown', 'keydown']) el.addEventListener(ev, dropAim, { passive: true });
