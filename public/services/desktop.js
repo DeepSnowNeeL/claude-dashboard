@@ -15,3 +15,5 @@ export const openInVsCode = (path, line) => api('/api/vscode', { path, line });
 export const readUpdates = () => api('/api/updates');
 /** Restarts what is behind: the engine as soon as its sessions are idle (`{ running }`), the page right away. */
 export const restartOutdated = what => api('/api/updates/restart', what);
+/** `{ running: [{ slug, title, what }] }`: what keeps the engine from stopping (turn, agents, background shells, command). */
+export const readEngineWork = () => api('/api/state');
