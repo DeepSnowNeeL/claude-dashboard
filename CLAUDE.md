@@ -116,8 +116,9 @@ and the design of what is about to be built in visual form, with all the availab
   folder tree (⋯ menu). A click opens the file in **Monaco** (loaded from the CDN): diff with the last commit, or for a
   commit's file the diff of that time (before / after this commit), side by side or inline, unchanged parts folded,
   Alt+← / Alt+→ from one file to the next. The menu of a path clicked in the chat also offers "View in the editor"
-  (diff if modified, otherwise read only) and "Open in VS Code" (`POST /api/vscode`, PC only: in the window of its git
-  repo). A right click on a modified or commit file opens this same menu.
+  (diff if modified, otherwise read only), "Open in browser (file://)" (`POST /api/explorer` with `browser`, PC only:
+  the default web browser read in the registry, where a page's `localStorage` works, unlike the sandboxed preview) and
+  "Open in VS Code" (`POST /api/vscode`, PC only: in the window of its git repo). A right click on a modified or commit file opens this same menu.
   Accessible files (`isPathAllowed`): from the PC, any; from the wifi or the internet, only the projects and
   `~/.claude-dashboard`; everywhere, never the sensitive files (Claude credentials, `access.json`, `.ssh`, `.env`,
   keys, names containing token / secret / password / credential; `*.local` only outside the PC).

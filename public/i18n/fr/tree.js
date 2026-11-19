@@ -128,7 +128,8 @@ export default {
   pathMenu: {
     sensitive: '🔒 fichier sensible (identifiants, clés) : le tableau de bord ne l’ouvre pas',
     missing: 'introuvable (ou hors des projets du tableau de bord)',
-    openInBrowser: 'Ouvrir dans le navigateur',
+    openInBrowser: 'Ouvrir dans le navigateur (serveur web)',
+    openFileInBrowser: 'Ouvrir dans le navigateur (file://)',
     viewInEditor: 'Voir dans l\'éditeur (diff si modifié)',
     openWithDefault: 'Ouvrir avec l\'application par défaut',
     openInVsCode: 'Ouvrir dans VS Code',

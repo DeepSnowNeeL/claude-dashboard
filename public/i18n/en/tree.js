@@ -128,7 +128,8 @@ export default {
   pathMenu: {
     sensitive: '🔒 sensitive file (credentials, keys): the dashboard does not open it',
     missing: 'not found (or outside the dashboard projects)',
-    openInBrowser: 'Open in browser',
+    openInBrowser: 'Open in browser (web server)',
+    openFileInBrowser: 'Open in browser (file://)',
     viewInEditor: 'View in editor (diff if modified)',
     openWithDefault: 'Open with default app',
     openInVsCode: 'Open in VS Code',

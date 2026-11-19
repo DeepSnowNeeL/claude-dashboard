@@ -3,7 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn } from 'node:child_process';
+import { spawn, execFile } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { sendJson, readBody, SERVER_MODE } from '../../common.mjs';
 import { isPathAllowed, isSensitive } from '../paths.mjs';
 import { git } from '../git.mjs';
@@ -22,6 +23,24 @@ import { t } from '../../public/i18n/index.js';
  */
 export const OPENABLE = /\.(pdf|png|jpe?g|gif|webp|bmp|ico|svg|txt|md|csv|tsv|json|log|xml|ya?ml|html?|docx|xlsx|pptx|odt|ods|odp|rtf|mp4|mov|avi|mkv|webm|mp3|wav|ogg|flac|m4a)$/i;
 const UNC = /^[\\/]{2}/;
+/** "Open in the browser (file://)": what a browser displays by itself (same list as public/components/path-menu.js). */
+const BROWSABLE = /\.(html?|svg|pdf|png|jpe?g|gif|webp|txt|json|xml)$/i;
+
+const regValue = (key, value) => new Promise(resolve => execFile('reg', ['query', key, ...(value ? ['/v', value] : ['/ve'])], { windowsHide: true },
+  (err, out) => resolve(err ? null : (out.match(/REG_(?:EXPAND_)?SZ\s+(.+)/) || [])[1]?.trim() || null)));
+
+/**
+ * Command of the default web browser on Windows (the http handler chosen by the user), `{ exe, args }` with `%1` in
+ * args, or null. Opening the file through its own association could pick an editor instead of the browser.
+ */
+async function defaultBrowser() {
+  const progId = await regValue('HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice', 'ProgId');
+  const command = progId && await regValue(`HKCR\\${progId}\\shell\\open\\command`);
+  const m = command?.match(/^"([^"]+)"\s*(.*)$/) || command?.match(/^(\S+)\s*(.*)$/);
+  if (!m) return null;
+  const args = m[2].split(/\s+/).filter(Boolean);
+  return { exe: m[1], args: args.includes('%1') ? args : [...args, '%1'] };
+}
 
 /** VS Code's `code`: user install, then machine install, else the one from the PATH. */
 function vsCodeCommand() {
@@ -168,6 +187,15 @@ export default {
     // Sensitive file: only show it selected in its folder (nothing is read or opened)
     const showOnly = !isDir && !body.open && isSensitive(file, req);
     if (!showOnly && !(await isPathAllowed(file, req))) return sendJson(res, 403, { error: refusal(file, req) });
+    // { browser: true }: the file:// URL in the default web browser (a page cannot open file:// itself)
+    if (body.browser) {
+      if (isDir || !BROWSABLE.test(file)) return sendJson(res, 403, { error: t('server.errors.executableRefused') });
+      const url = pathToFileURL(file).href;
+      const browser = process.platform === 'win32' ? await defaultBrowser() : null;
+      if (browser) spawn(browser.exe, browser.args.map(a => (a === '%1' ? url : a)), { detached: true, stdio: 'ignore' }).unref();
+      else spawn(process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer.exe' : 'xdg-open', [url], { detached: true, stdio: 'ignore' }).unref();
+      return sendJson(res, 200, { ok: true });
+    }
     // { open: true }: with the default application (explorer.exe <file>), documents and media only
     if (body.open && !isDir && !OPENABLE.test(file)) return sendJson(res, 403, { error: t('server.errors.executableRefused') });
     spawn('explorer.exe', [isDir || body.open ? `"${file}"` : `/select,"${file}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();

@@ -1,12 +1,14 @@
 // Menu of a path clicked in the conversation (or right click in the explorer and the modified files): editor, tab,
 // VS Code, Windows explorer, copy.
 import { esc } from '../core/dom.js';
-import { localFileUrl, pathExists, showInExplorer, openWithDefault, openInVsCode } from '../services/desktop.js';
+import { localFileUrl, pathExists, showInExplorer, openWithDefault, openInVsCode, openFileInBrowser } from '../services/desktop.js';
 import { openViewer } from './editor/viewer.js';
 import { serverMode } from '../core/state.js';
 import { t } from '../i18n/index.js';
 
 const VIEWABLE = /\.(html?|pdf|png|jpe?g|gif|webp|svg|txt|md|log|json|jsonl|css|js|mjs|ts|java|scss|xml|ya?ml|sql|csv|properties|gradle|sh|ps1|py|vm)$/i;
+// What a browser displays by itself, opened from the disk (same list as server/routes/desktop.mjs)
+const BROWSABLE = /\.(html?|svg|pdf|png|jpe?g|gif|webp|txt|json|xml)$/i;
 // What Windows would run instead of opening it: no "Open with default app" (same list as server/routes/desktop.mjs)
 const EXECUTABLES = /\.(exe|com|bat|cmd|ps1|psm1|vbs|vbe|js|jse|wsf|wsh|msi|msp|scr|hta|lnk|pif|cpl|reg|jar|appref-ms)$/i;
 
@@ -39,6 +41,7 @@ export async function pathMenu(a, x, y) {
     ${sensitive ? `<div class="m missing">${t('tree.pathMenu.sensitive')}</div>`
       : !exists ? `<div class="m missing">${t('tree.pathMenu.missing')}</div>` : ''}
     ${exists && !isDir && VIEWABLE.test(path) ? `<button data-act="tab"><span class="ic">↗</span>${t('tree.pathMenu.openInBrowser')}</button>` : ''}
+    ${desktop && exists && !isDir && !sensitive && BROWSABLE.test(path) ? `<button data-act="file"><span class="ic">↗</span>${t('tree.pathMenu.openFileInBrowser')}</button>` : ''}
     ${exists && !isDir ? `<button data-act="editor"><span class="ic">🔍</span>${t('tree.pathMenu.viewInEditor')}</button>` : ''}
     ${desktop && exists && !isDir && !EXECUTABLES.test(path) ? `<button data-act="default"><span class="ic">🗔</span>${t('tree.pathMenu.openWithDefault')}</button>` : ''}
     ${desktop && exists && !sensitive ? `<button data-act="vscode"><span class="ic">⌨</span>${t('tree.pathMenu.openInVsCode')}</button>` : ''}
@@ -53,6 +56,8 @@ export async function pathMenu(a, x, y) {
     else if (act === 'tab') {
       if (window.desktop) window.desktop.openExternal(location.origin + localFileUrl(path));
       else window.open(localFileUrl(path), '_blank');
+    } else if (act === 'file') {
+      await openFileInBrowser(path).catch(err => alert(err.message));
     } else if (act === 'explorer') {
       if (window.desktop) window.desktop.showInExplorer(path);
       else await showInExplorer(path).catch(err => alert(err.message));

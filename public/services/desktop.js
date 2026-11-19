@@ -9,6 +9,8 @@ export const pathExists = c => fetch(`/api/exists?path=${encodeURIComponent(c)}`
 export const showInExplorer = path => api('/api/explorer', { path });
 /** Opens the path with the default application (server). */
 export const openWithDefault = path => api('/api/explorer', { path, open: true });
+/** Opens the file:// URL of the path in the default web browser (server). */
+export const openFileInBrowser = path => api('/api/explorer', { path, browser: true });
 /** Opens the path in VS Code, in the window of its repository (server). */
 export const openInVsCode = (path, line) => api('/api/vscode', { path, line });
 /** `{ engine, page }`: true when that process runs older code than the files on disk (PC only: fails elsewhere). */

@@ -2,6 +2,12 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-19
+
+- The menu of a file path has a second browser entry, **Open in browser (file://)** (on the PC): the page opens from
+  the disk in your default browser, where its saved data (localStorage) works. The existing entry, now "Open in
+  browser (web server)", keeps the protected preview.
+
 ## 2026-11-18
 
 - Session categories, like GitLab labels: right click on a session → Category to tick one or several, create one
