@@ -34,7 +34,9 @@ const regValue = (key, value) => new Promise(resolve => execFile('reg', ['query'
  * args, or null. Opening the file through its own association could pick an editor instead of the browser.
  */
 async function defaultBrowser() {
-  const progId = await regValue('HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice', 'ProgId');
+  // Recent Windows 11 keeps the choice in UserChoiceLatest; the older UserChoice can stay on a stale value (Edge)
+  const key = 'HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http';
+  const progId = await regValue(`${key}\\UserChoiceLatest\\ProgId`, 'ProgId') || await regValue(`${key}\\UserChoice`, 'ProgId');
   const command = progId && await regValue(`HKCR\\${progId}\\shell\\open\\command`);
   const m = command?.match(/^"([^"]+)"\s*(.*)$/) || command?.match(/^(\S+)\s*(.*)$/);
   if (!m) return null;
