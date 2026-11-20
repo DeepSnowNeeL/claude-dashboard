@@ -2,6 +2,11 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-20
+
+- In the session list, the purple line linking launched sessions to their parent now stops at the last one instead of
+  running to the bottom of the group.
+
 ## 2026-11-19
 
 - The menu of a file path has a second browser entry, **Open in browser (file://)** (on the PC): the page opens from
