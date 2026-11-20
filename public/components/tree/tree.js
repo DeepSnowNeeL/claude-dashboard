@@ -136,7 +136,7 @@ function renderList() {
     const withKids = (s, depth = 0) => {
       const kids = depth < 8 ? kidsOf(s.slug) : []; // a loop between parents never runs forever
       return sessionRow(s, key, { nest: isNested(s) ? s.parent : '', kids: kids.length })
-        + (kids.length ? `<div class="kids">${kids.map(k => withKids(k, depth + 1)).join('')}</div>` : '');
+        + (kids.length ? `<div class="kids">${kids.map(k => `<div class="kid">${withKids(k, depth + 1)}</div>`).join('')}</div>` : '');
     };
     const rows = active.filter(s => !isNested(s)).map(s => withKids(s)).join('');
     if (!finished.length) return rows;
