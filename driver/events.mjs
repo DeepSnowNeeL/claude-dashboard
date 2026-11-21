@@ -177,7 +177,7 @@ export function attachEvents(ctx) {
       const e = m.event;
       if (m.parent_tool_use_id) return; // subagents: only their tools
       trackActivity(e);
-      if (e.type === 'content_block_start' && e.content_block?.type === 'text') { text = { id: newId(), t: 'text', text: '' }; count({ newItems: 1 }); }
+      if (e.type === 'content_block_start' && e.content_block?.type === 'text') { text = { id: newId(), t: 'text', text: '', at: Date.now() }; count({ newItems: 1 }); }
       else if (e.type === 'content_block_delta' && e.delta?.type === 'text_delta' && text) { text.text += e.delta.text; pushEvent({ ...text }); }
       else if (e.type === 'content_block_stop') { if (text?.text.includes(EM_DASH)) achievements.record('em-dash', 1); text = null; }
     } else if (m.type === 'assistant') {
@@ -196,7 +196,7 @@ export function attachEvents(ctx) {
         }
       }
       for (const b of m.message.content) {
-        if (parent && b.type === 'text' && b.text.trim()) push({ id: newId(), t: 'text', text: b.text });
+        if (parent && b.type === 'text' && b.text.trim()) push({ id: newId(), t: 'text', text: b.text, at: Date.now() });
         if (!parent && b.type === 'tool_use') {
           turnTools++;
           achievements.record('toolbox', achievements.stat('tools'));

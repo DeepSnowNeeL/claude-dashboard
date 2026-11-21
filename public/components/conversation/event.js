@@ -11,7 +11,7 @@ import { planCard, attachPlan } from '../cards/plan.js';
 import { agentCard, attachAgent } from '../cards/agent.js';
 import { fillLaunched } from '../cards/launched.js';
 import { parseSessionMessage, fillSessionMessage } from '../cards/session-message.js';
-import { t } from '../../i18n/index.js';
+import { t, locale } from '../../i18n/index.js';
 
 /** Attachments of a message: image thumbnails (click = full size), a link for the others. */
 function messageAttachments(attachments) {
@@ -19,6 +19,15 @@ function messageAttachments(attachments) {
   return `<div class="attachments-msg">${attachments.map(p => p.url && p.type?.startsWith('image/')
     ? `<a href="${esc(p.url)}" target="_blank" title="${esc(p.name)}"><img src="${esc(p.url)}" alt="${esc(p.name)}"></a>`
     : `<a class="attachment-doc" ${p.url ? `href="${esc(p.url)}" target="_blank"` : ''}>📄 ${esc(p.name)}</a>`).join('')}</div>`;
+}
+
+/** Discreet time of a message: hour and minute, the date too if it is not today; the full date on hover. */
+function stamp(at) {
+  if (!at) return '';
+  const d = new Date(at);
+  const time = d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+  const shown = d.toDateString() === new Date().toDateString() ? time : `${d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit' })} ${time}`;
+  return `<time class="stamp" datetime="${d.toISOString()}" title="${esc(d.toLocaleString(locale(), { dateStyle: 'full', timeStyle: 'medium' }))}">${shown}</time>`;
 }
 
 /** Copies to the clipboard; outside a secure context (wifi over http), through a hidden text area. */
@@ -39,18 +48,18 @@ export function eventHtml(ev, activeDecisionsId) {
   el.dataset.id = ev.id;
   const peer = ev.t === 'user' && parseSessionMessage(ev.text);
   if (peer) fillSessionMessage(el, ev, peer);
-  else if (ev.t === 'user' && ev.fromParent) { el.className = 'msg instruction md'; el.innerHTML = `<div class="m">${t('conversation.event.fromParent')}</div>${markdown(ev.text)}`; }
+  else if (ev.t === 'user' && ev.fromParent) { el.className = 'msg instruction md'; el.innerHTML = `<div class="m">${t('conversation.event.fromParent')}</div>${markdown(ev.text)}${stamp(ev.at)}`; }
   else if (ev.t === 'user') {
     if (ev.recalled) { el.hidden = true; return el; } // put back in the input to be edited
     el.className = `msg user md${ev.queued ? ' queued' : ''}${ev.withdrawn ? ' withdrawn' : ''}`;
     el.innerHTML = markdown(ev.text) + messageAttachments(ev.attachments) + (ev.queued ? `<div class="queue-state m">${t('conversation.event.queued')} · <button class="link" data-edit>${t('conversation.event.edit')}</button></div>`
-      : ev.withdrawn ? `<div class="queue-state m">${t('conversation.event.withdrawn')}</div>` : '');
+      : ev.withdrawn ? `<div class="queue-state m">${t('conversation.event.withdrawn')}</div>` : stamp(ev.at));
     // Like the up arrow: the message leaves the queue and comes back into the input
     el.querySelector('[data-edit]')?.addEventListener('click', e => { e.currentTarget.dispatchEvent(new CustomEvent('recall-queue', { bubbles: true })); $('#input')?.focus(); });
   }
   else if (ev.t === 'text') {
     el.className = 'msg claude answer md';
-    el.innerHTML = `<button class="copy" title="${t('conversation.event.copyAnswer')}">⧉</button>${markdown(ev.text)}`;
+    el.innerHTML = `<button class="copy" title="${t('conversation.event.copyAnswer')}">⧉</button>${markdown(ev.text)}${stamp(ev.at)}`;
     el.querySelector('.copy').addEventListener('click', e => copy(ev.text, e.currentTarget));
   }
   else if (ev.t === 'agent') {

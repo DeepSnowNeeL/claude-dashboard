@@ -20,6 +20,7 @@ const OLD_TOOL_NAMES = {
 };
 const toolName = name => OLD_TOOL_NAMES[name] || name;
 const LAUNCH_TOOL = 'mcp__dashboard__launch_session';
+const ts = m => (m?.timestamp ? Date.parse(m.timestamp) : undefined); // time of a transcript message
 
 // Messages the dashboard sends to Claude start with "[Dashboard] " ("[Tableau de bord] " in the French build,
 // still recognised for backward compatibility).
@@ -71,11 +72,11 @@ export async function feedFromHistory(slug, sessionId, cwd) {
       if (toAgent) feed.push({ id: id(), t: 'auto', text: t('driver.feed.messageToSubagent', { name: toAgent[1] }) });
       else if (PREFIX.test(clean)) feed.push({ id: id(), t: 'auto', text: `🔔 ${clean.replace(PREFIX, '').replace(WAKE_UP_TAIL, '')}` }); // wake-up after agents
       // Tagged texts are Claude Code's own (commands, reminders), except the messages between sessions (shown as such)
-      else if ((clean.trim() || attachments.length) && (!clean.startsWith('<') || clean.startsWith('<session-message '))) feed.push({ id: id(), t: 'user', text: clean, attachments });
+      else if ((clean.trim() || attachments.length) && (!clean.startsWith('<') || clean.startsWith('<session-message '))) feed.push({ id: id(), t: 'user', text: clean, attachments, at: ts(m) });
     } else if (m.type === 'assistant' && Array.isArray(content)) {
       for (const raw of content) {
         const b = raw.type === 'tool_use' && OLD_TOOL_NAMES[raw.name] ? { ...raw, name: toolName(raw.name) } : raw;
-        if (b.type === 'text' && !m.parent_tool_use_id && b.text.trim()) feed.push({ id: id(), t: 'text', text: b.text });
+        if (b.type === 'text' && !m.parent_tool_use_id && b.text.trim()) feed.push({ id: id(), t: 'text', text: b.text, at: ts(m) });
         else if (b.type === 'tool_use' && b.name === BOARD_TOOL) {
           const decisions = decisionsOf(b.input);
           if (decisions?.length) feed.push({ id: id(), t: 'decisions', decisions });
@@ -133,16 +134,15 @@ async function agentsFromHistory(slug, sessionId) {
       if (m.type === 'assistant' && m.message?.model && m.message.model !== '<synthetic>') model = m.message.model;
       if (m.type === 'assistant') contextMax = Math.max(contextMax, contextOf(m.message?.usage));
       if (m.type === 'assistant' && m.message?.usage) consumption = addCall(usages, m.message.id, m.message.model || model, m.message.usage);
-      if (m.type === 'user' && typeof c === 'string' && !feed.length) feed.push({ id: `${slug}-ha${++n}`, t: 'user', text: c, fromParent: true });
+      if (m.type === 'user' && typeof c === 'string' && !feed.length) feed.push({ id: `${slug}-ha${++n}`, t: 'user', text: c, fromParent: true, at: ts(m) });
       else if (m.type === 'assistant' && Array.isArray(c)) for (const raw of c) {
         const b = raw.type === 'tool_use' && OLD_TOOL_NAMES[raw.name] ? { ...raw, name: toolName(raw.name) } : raw;
-        if (b.type === 'text' && b.text.trim()) { feed.push({ id: `${slug}-ha${++n}`, t: 'text', text: b.text }); summary = b.text; }
+        if (b.type === 'text' && b.text.trim()) { feed.push({ id: `${slug}-ha${++n}`, t: 'text', text: b.text, at: ts(m) }); summary = b.text; }
         else if (b.type === 'tool_use') { tools++; const ev = toolEvent(`${slug}-ha${++n}`, b); calls.set(b.id, ev); feed.push(ev); }
       }
     }
     const last = msgs.at(-1);
     const finished = last?.type === 'assistant' && !(last.message?.content || []).some(b => b.type === 'tool_use');
-    const ts = m => (m?.timestamp ? Date.parse(m.timestamp) : undefined);
     agents.set(key, { key, agentId, feed, tools, summary: finished ? summary : '', state: finished ? 'completed' : 'stopped', start: ts(msgs[0]), end: ts(last), model, contextMax, consumption, window: windowOf(model), calls: usages });
   }
   agentsCache.set(sessionId, agents);

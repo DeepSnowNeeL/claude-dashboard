@@ -243,3 +243,7 @@ a.card.launched:hover { border-color: color-mix(in srgb, #a855f7 60%, var(--line
 /* Header of a launched session: link to its parent */
 .head .parent { font-size: 12px; font-weight: 400; color: #a855f7; text-decoration: none; margin-left: 8px; }
 .head .parent:hover { text-decoration: underline; }
+/* Time of a message: very discreet, a little more visible on hover; never part of a copied selection */
+.msg .stamp { display: block; text-align: right; font-size: 10px; line-height: 1; margin-top: 3px; color: var(--muted); opacity: .45; user-select: none; }
+.msg:hover .stamp { opacity: .9; }
+.msg.claude .stamp { text-align: left; }

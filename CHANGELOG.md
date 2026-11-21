@@ -2,6 +2,11 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-21
+
+- Your messages and Claude's answers now show the time they were sent, very discreetly under each one (the date too
+  when it is not today, the full date on hover). Past conversations get it from their history.
+
 ## 2026-11-20
 
 - In the session list, the purple line linking launched sessions to their parent now stops at the last one instead of

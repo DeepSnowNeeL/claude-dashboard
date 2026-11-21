@@ -3,7 +3,7 @@
 // end up in an e-mail or a document.
 const KEPT_ATTRIBUTES = new Set(['href', 'colspan', 'rowspan', 'start']);
 // Page buttons, checkboxes and menus: they have nothing to do in the copied text
-const REMOVED = 'button, input, select, textarea, svg, .copy, .pencil';
+const REMOVED = 'button, input, select, textarea, svg, .copy, .pencil, .stamp';
 
 function clean(root) {
   root.querySelectorAll(REMOVED).forEach(el => el.remove());

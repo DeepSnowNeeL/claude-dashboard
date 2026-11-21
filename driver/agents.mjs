@@ -59,7 +59,7 @@ export function attachAgents(ctx) {
     s.agents.set(a.key, a);
     ctx.achievements.xp(5);
     ctx.achievements.record('swarm', s.runningAgents()); // subagents running at the same time
-    a.feed.push({ id: newId(), t: 'user', text: b.input?.prompt || '', fromParent: true });
+    a.feed.push({ id: newId(), t: 'user', text: b.input?.prompt || '', fromParent: true, at: Date.now() });
     updateAgent(a, {});
     notifyChange();
   }
@@ -143,7 +143,7 @@ export function attachAgents(ctx) {
       try { await s.q.backgroundTasks(a.key); a.background = true; } catch { /* stays in the foreground: passed on at its end */ }
     }
     a.devMessage = text; // shown right away; the resume by SendMessage does not repeat it
-    pushAgentEvent(a, { id: newId(), t: 'user', text });
+    pushAgentEvent(a, { id: newId(), t: 'user', text, at: Date.now() });
     pushEvent({ id: newId(), t: 'auto', text: t('driver.feed.messageToSubagent', { name: a.description || a.type }) });
     const instruction = `[Dashboard] Developer message for subagent "${a.description || a.type}" (id ${id}). `
       + `Pass it on as is with SendMessage (to: "${id}"), without doing anything else or waiting for its answer, then resume where you were.

@@ -62,7 +62,7 @@ export function attachInput(ctx) {
   function flushQueue() {
     if (!queue.length) return;
     const evs = queue.splice(0);
-    for (const { toSend, ...ev } of evs) pushEvent({ ...ev, queued: false });
+    for (const { toSend, ...ev } of evs) pushEvent({ ...ev, queued: false, at: Date.now() });
     dispatch(evs.map(ev => ev.text).join('\n\n'), evs.flatMap(ev => ev.toSend || []));
   }
 
@@ -75,7 +75,7 @@ export function attachInput(ctx) {
   s.send = (text, when = 'now', attachments = []) => {
     const shown = attachments.map(({ name, type, url }) => ({ name, type, url })); // what the page displays
     if (!s.busy || when === 'now') {
-      pushEvent({ id: newId(), t: 'user', text, attachments: shown });
+      pushEvent({ id: newId(), t: 'user', text, attachments: shown, at: Date.now() });
       return dispatch(text, attachments);
     }
     // Already a queued message: the new one is added to it (a single block, which will leave at once)
@@ -126,7 +126,7 @@ export function attachInput(ctx) {
     if (!queue.length) return false;
     if (when === 'stop' || !s.busy) { if (s.busy) s.interrupt(); else flushQueue(); return true; }
     const evs = queue.splice(0);
-    for (const { toSend, ...ev } of evs) pushEvent({ ...ev, queued: false });
+    for (const { toSend, ...ev } of evs) pushEvent({ ...ev, queued: false, at: Date.now() });
     const attachments = evs.flatMap(ev => ev.toSend || []);
     const full = evs.map(ev => ev.text).join('\n\n') + attachments.map(attachmentLine).join('');
     count({ exchanges: 1 });
