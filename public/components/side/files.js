@@ -8,12 +8,17 @@ import { pathMenu } from '../path-menu.js';
 import { filesLayout, filesHtml } from '../git-files.js';
 import { t } from '../../i18n/index.js';
 
+// Icons of the two layouts: a flat list, a list holding an indented one (no emoji draws it)
+const ICON = (d) => `<svg class="layout-ic" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">${d}</svg>`;
+const LIST_ICON = ICON('<path d="M2 3.5h12M2 8h12M2 12.5h12"/>');
+const TREE_ICON = ICON('<path d="M2 3.5h12M4 3.5v9M4 8h2.5M4 12.5h2.5M8.5 8H14M8.5 12.5H14"/>');
+
 function layoutMenu() {
   return `<span class="layout-menu">
     <button class="plus menu" data-layout-menu title="${t('side.files.layoutTitle')}">⋯</button>
     <span class="layout-choice" hidden>
-      <button data-layout="list" class="${filesLayout() === 'list' ? 'on' : ''}">${t('side.files.list')}</button>
-      <button data-layout="tree" class="${filesLayout() === 'tree' ? 'on' : ''}">${t('side.files.tree')}</button>
+      <button data-layout="list" class="${filesLayout() === 'list' ? 'on' : ''}">${LIST_ICON} ${t('side.files.list')}</button>
+      <button data-layout="tree" class="${filesLayout() === 'tree' ? 'on' : ''}">${TREE_ICON} ${t('side.files.tree')}</button>
     </span></span>`;
 }
 

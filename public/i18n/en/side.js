@@ -10,8 +10,8 @@ export default {
   },
   files: {
     layoutTitle: 'File display',
-    list: '☰ List',
-    tree: '🌳 Tree',
+    list: 'List',
+    tree: 'Tree',
     revertFailed: 'Could not revert: {message}',
     notGit: 'This folder is not a git repository.',
     summary: { one: '{n} file modified since the last commit', other: '{n} files modified since the last commit' },

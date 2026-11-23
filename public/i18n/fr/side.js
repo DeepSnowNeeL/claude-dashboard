@@ -10,8 +10,8 @@ export default {
   },
   files: {
     layoutTitle: 'Affichage des fichiers',
-    list: '☰ Liste',
-    tree: '🌳 Arbre',
+    list: 'Liste',
+    tree: 'Arbre',
     revertFailed: 'Annulation impossible : {message}',
     notGit: "Ce dossier n'est pas un dépôt git.",
     summary: { one: '{n} fichier modifié depuis le dernier commit', other: '{n} fichiers modifiés depuis le dernier commit' },

@@ -8,6 +8,7 @@ What changed for people who use the dashboard, newest first. The commit history 
   delete it in one go (click twice). The files git ignores stay.
 - A file with staged changes and other changes on top gets a ↩ icon: it discards only the changes not staged, back
   to the version of the index (click twice). ↶ still goes back to the last commit.
+- The List / Tree choice of the file display has clearer icons: a flat list, and a list holding an indented one.
 
 ## 2026-11-21
 
