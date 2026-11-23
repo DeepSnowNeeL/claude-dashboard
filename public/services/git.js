@@ -12,8 +12,11 @@ export const GIT_STATES = Object.defineProperties({}, {
 /** git state of the folder: { notGit } or { branch, root, files }. */
 export const readGitStatus = dir => api(`/api/git/status?dir=${encodeURIComponent(dir)}`);
 
-/** Brings a file back to the last commit (a new file is deleted). */
-export const revertFile = file => api('/api/git/revert', { file });
+/**
+ * Brings a file back to the last commit (a new file is deleted), or to the index (`kind` 'index'); 'folder' deletes
+ * a folder whose files are all new.
+ */
+export const revertFile = (file, kind) => api('/api/git/revert', { file, ...(kind === 'index' ? { to: 'index' } : {}), ...(kind === 'folder' ? { folder: true } : {}) });
 
 /** Commits of the current branch, `n` from `skip`. */
 export const readCommits = (dir, n, skip) => api(`/api/git/commits?dir=${encodeURIComponent(dir)}&n=${n}&skip=${skip}`);

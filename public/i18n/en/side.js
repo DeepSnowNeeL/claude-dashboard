@@ -18,11 +18,15 @@ export default {
     nothing: 'Nothing modified since the last commit.',
     clickAgainDelete: 'Click again to delete',
     clickAgainRevert: 'Click again to go back to the last commit',
+    clickAgainIndex: 'Click again to go back to the version of the index',
+    clickAgainFolder: 'Click again to delete the folder',
   },
   gitFiles: {
     binary: 'binary',
     deleteTitle: 'Delete this file, click twice',
     revertTitle: 'Discard the changes (back to the last commit), click twice',
+    indexTitle: 'Discard the changes not staged (back to the version of the index), click twice',
+    deleteFolderTitle: 'Delete this folder (all its files are new), click twice',
   },
   commits: {
     title: 'Commits',

@@ -48,11 +48,12 @@
 #commits-zone .commit-list { overflow-y: auto; max-height: 152px; } /* ~5 rows */
 #commits-zone.expanded .commit-list { max-height: 45vh; } /* an expanded commit: more room for its files */
 .more-commits { text-align: center; margin: 4px 0; }
-.git-file .git-revert { flex-shrink: 0; font-size: 12px; padding: 0 4px; border-radius: 4px; opacity: 0; filter: grayscale(1); }
-.git-file:hover .git-revert, .git-file .git-revert.armed { opacity: .7; }
-.git-file .git-revert:hover { opacity: 1; filter: none; }
-.git-file .git-revert.armed { opacity: 1; filter: none; background: color-mix(in srgb, var(--red) 30%, transparent); outline: 1px solid var(--red); }
-@media (hover: none) { .git-file .git-revert { opacity: .7; } }
+.git-revert { flex-shrink: 0; font-size: 12px; padding: 0 4px; border-radius: 4px; opacity: 0; filter: grayscale(1); }
+.git-file:hover .git-revert, .git-folder > summary:hover > .git-revert, .git-revert.armed { opacity: .7; }
+.git-revert:hover { opacity: 1; filter: none; }
+.git-revert.armed { opacity: 1; filter: none; background: color-mix(in srgb, var(--red) 30%, transparent); outline: 1px solid var(--red); }
+@media (hover: none) { .git-revert { opacity: .7; } }
+.git-folder > summary > .git-revert { float: right; }
 
 /* Processes tab (components/side/processes.js) */
 .right-tabs { flex-wrap: wrap; }

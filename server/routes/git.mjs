@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sendJson, readBody } from '../../common.mjs';
 import { isPathAllowed } from '../paths.mjs';
-import { gitStatus, gitCommits, gitCommit, fileVersions, revertChanges } from '../git.mjs';
+import { gitStatus, gitCommits, gitCommit, fileVersions, revertChanges, deleteNewFolder } from '../git.mjs';
 import { t } from '../../public/i18n/index.js';
 
 /** Commits of the branch ("Commits" tab): the list, or the detail of a commit. */
@@ -29,13 +29,17 @@ export default {
     if (!(await isPathAllowed(file, req))) return sendJson(res, 403, { error: t('server.errors.fileOutsideProjects') });
     try { return sendJson(res, 200, await fileVersions(file, url.searchParams.get('commit') || null)); } catch (e) { return sendJson(res, 400, { error: e.message }); }
   },
-  // Brings a file back to the last commit, or deletes a new file (↶ / 🗑 buttons of the "Modified files" tab)
+  // Brings a file back to the last commit or to the index, deletes a new file or a folder of new files
+  // (↶ / ↩ / 🗑 buttons of the "Modified files" tab)
   'POST /api/git/revert': async (req, res) => {
     let body;
     try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, { error: t('server.errors.invalidJson') }); }
     const file = path.resolve(String(body.file || ''));
     if (!body.file || !(await isPathAllowed(file, req))) return sendJson(res, 403, { error: t('server.errors.fileOutsideProjects') });
-    try { await revertChanges(file); return sendJson(res, 200, { ok: true }); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+    try {
+      await (body.folder ? deleteNewFolder(file) : revertChanges(file, { toIndex: body.to === 'index' }));
+      return sendJson(res, 200, { ok: true });
+    } catch (e) { return sendJson(res, 400, { error: e.message }); }
   },
   // Commit tracking: the latest of the branch, then the detail of a commit ("Commits" tab)
   '* /api/git/commits': commits(false),

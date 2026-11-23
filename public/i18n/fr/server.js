@@ -30,6 +30,7 @@ export default {
   git: {
     outsideRepo: 'fichier hors du dépôt',
     nothingToRevert: 'rien à annuler sur ce fichier',
+    folderNotNew: 'ce dossier contient des fichiers du dernier commit, seul un dossier de fichiers nouveaux se supprime',
     invalidCommit: 'identifiant de commit invalide',
     tooLargeForEditor: "fichier trop gros pour l'éditeur (2 Mo max)",
   },

@@ -18,11 +18,15 @@ export default {
     nothing: 'Rien de modifié depuis le dernier commit.',
     clickAgainDelete: 'Cliquer encore pour supprimer',
     clickAgainRevert: 'Cliquer encore pour revenir au dernier commit',
+    clickAgainIndex: "Cliquer encore pour revenir à la version de l'index",
+    clickAgainFolder: 'Cliquer encore pour supprimer le dossier',
   },
   gitFiles: {
     binary: 'binaire',
     deleteTitle: 'Supprimer ce fichier, cliquer deux fois',
     revertTitle: 'Annuler les modifications (revenir au dernier commit), cliquer deux fois',
+    indexTitle: "Annuler les modifications non indexées (revenir à la version de l'index), cliquer deux fois",
+    deleteFolderTitle: 'Supprimer ce dossier (tous ses fichiers sont nouveaux), cliquer deux fois',
   },
   commits: {
     title: 'Commits',

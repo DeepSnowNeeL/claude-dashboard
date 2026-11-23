@@ -35,7 +35,9 @@ export async function gitStatus(dir) {
     const state = code === '??' ? 'untracked' : code.includes('D') ? 'deleted' : code.includes('A') ? 'added' : code.includes('R') ? 'renamed' : 'modified';
     // A folder: nested repository not added ("?? sub/", even with --untracked-files=all) or submodule (" M sub")
     const dir = entry.endsWith('/') || (state !== 'untracked' && state !== 'deleted' && !!fs.statSync(path.join(root, rel), { throwIfNoEntry: false })?.isDirectory());
-    files.push({ rel, path: path.join(root, rel), state, ...(dir ? { dir: true } : {}) });
+    // Staged changes with others on top, not staged: the file can go back to its version of the index
+    const partial = code !== '??' && code[0] !== ' ' && code[1] !== ' ';
+    files.push({ rel, path: path.join(root, rel), state, ...(dir ? { dir: true } : {}), ...(partial ? { partial: true } : {}) });
   }
   // Lines added / removed per file, compared with the last commit
   const counts = new Map();
@@ -44,29 +46,36 @@ export async function gitStatus(dir) {
     if (rel) counts.set(rel.trim(), { insertions: Number(plus) || 0, deletions: Number(minus) || 0, binary: plus === '-' });
   }
   for (const f of files) Object.assign(f, counts.get(f.rel) || {});
+  // New files in folders absent from the last commit: `newDir`, the highest of them ("a/b/"), lets the page offer
+  // to delete such a folder
+  if (files.some(f => (f.state === 'untracked' || f.state === 'added') && f.rel.includes('/'))) {
+    const headDirs = new Set((await git(root, ['ls-tree', '-r', '-d', '-z', '--name-only', 'HEAD']).catch(() => '')).split('\0'));
+    for (const f of files.filter(x => x.state === 'untracked' || x.state === 'added')) {
+      const parts = f.rel.split('/').slice(0, -1);
+      for (let k = 1; k <= parts.length; k++) {
+        const d = parts.slice(0, k).join('/');
+        if (!headDirs.has(d)) { f.newDir = `${d}/`; break; }
+      }
+    }
+  }
   return { root: path.normalize(root), branch, files };
 }
 
 /**
  * Brings a file back to its state of the last commit: a new file (tracked or not) is deleted, a modified or deleted
  * file is restored, a rename undone (old name restored, new one removed). The state is read again from git, never
- * taken from the page; a file without changes is refused.
+ * taken from the page; a file without changes is refused. `toIndex`: only the changes not staged are discarded.
  */
-export async function revertChanges(file) {
-  // The file (or its whole folder) may have been deleted: git starts from the first folder that exists
-  let dir = path.dirname(file);
-  while (!fs.existsSync(dir) && path.dirname(dir) !== dir) dir = path.dirname(dir);
-  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
-  const rel = path.relative(root, file).split(path.sep).join('/');
-  if (!rel || rel.startsWith('..')) throw new Error(t('server.git.outsideRepo'));
-  // Full status (a path filter would break rename detection)
-  const lines = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])).split('\0').filter(Boolean);
-  let code = null, old = null;
-  for (let i = 0; i < lines.length; i++) {
-    const c = lines[i].slice(0, 2), r = lines[i].slice(3), before = c[0] === 'R' || c[0] === 'C' ? lines[++i] : null;
-    if (r === rel) { code = c; old = before; break; }
-  }
+export async function revertChanges(file, { toIndex = false } = {}) {
+  const { root, rel, entries } = await statusOf(file);
+  if (!rel) throw new Error(t('server.git.outsideRepo'));
+  const { code, old } = entries.find(e => e.rel === rel) || {};
   if (!code) throw new Error(t('server.git.nothingToRevert'));
+  if (toIndex) {
+    // Back to the version of the index: only the changes not staged go away
+    if (code === '??' || code[1] === ' ') throw new Error(t('server.git.nothingToRevert'));
+    return void await git(root, ['restore', '--worktree', '--', rel]);
+  }
   if (code === '??') {
     if (!fs.statSync(file, { throwIfNoEntry: false })?.isFile()) throw new Error(t('server.errors.fileNotFound'));
     return fs.unlinkSync(file);
@@ -75,6 +84,49 @@ export async function revertChanges(file) {
   if (!inHead) await git(root, ['rm', '-f', '-q', '--', rel]); // added since the last commit (or new name)
   else await git(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', rel]);
   if (code[0] === 'R' && old) await git(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', old]);
+}
+
+/**
+ * Deletes a folder whose files are all new (not tracked, or only added to the index since the last commit): each
+ * one is deleted, then the folders left empty. Refused as soon as one of them is in the last commit or is a nested
+ * repository; the files git ignores stay, and with them their folder.
+ */
+export async function deleteNewFolder(folder) {
+  const { root, rel, entries } = await statusOf(folder);
+  if (!rel) throw new Error(t('server.git.outsideRepo'));
+  const inside = entries.filter(e => e.rel.startsWith(`${rel}/`));
+  if (!inside.length) throw new Error(t('server.git.nothingToRevert'));
+  if (inside.some(e => e.rel.endsWith('/') || (e.code !== '??' && e.code[0] !== 'A'))) throw new Error(t('server.git.folderNotNew'));
+  const added = inside.filter(e => e.code !== '??').map(e => e.rel);
+  // Unchanged files are not in the status: the folder must be absent from the last commit, the index hold only the added ones
+  const inHead = (await git(root, ['ls-tree', '--name-only', 'HEAD', '--', rel]).catch(() => '')).trim();
+  const indexed = (await git(root, ['ls-files', '-z', '--', rel])).split('\0').filter(Boolean);
+  if (inHead || indexed.some(f => !added.includes(f))) throw new Error(t('server.git.folderNotNew'));
+  if (added.length) await git(root, ['rm', '-f', '-q', '--', ...added]);
+  for (const e of inside.filter(x => x.code === '??')) fs.rmSync(path.join(root, e.rel), { force: true });
+  // Folders left empty, deepest first
+  const removeEmpty = dir => {
+    for (const d of fs.readdirSync(dir, { withFileTypes: true })) if (d.isDirectory()) removeEmpty(path.join(dir, d.name));
+    if (!fs.readdirSync(dir).length) fs.rmdirSync(dir);
+  };
+  if (fs.existsSync(folder)) removeEmpty(folder);
+}
+
+/** Repository of a path (which may no longer exist), its path relative to it (null outside) and the full status. */
+async function statusOf(file) {
+  // The file (or its whole folder) may have been deleted: git starts from the first folder that exists
+  let dir = path.dirname(file);
+  while (!fs.existsSync(dir) && path.dirname(dir) !== dir) dir = path.dirname(dir);
+  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
+  const rel = path.relative(root, file).split(path.sep).join('/');
+  // Full status (a path filter would break rename detection)
+  const lines = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])).split('\0').filter(Boolean);
+  const entries = [];
+  for (let i = 0; i < lines.length; i++) {
+    const code = lines[i].slice(0, 2), r = lines[i].slice(3), old = code[0] === 'R' || code[0] === 'C' ? lines[++i] : null;
+    entries.push({ code, rel: r, old });
+  }
+  return { root, rel: rel && !rel.startsWith('..') ? rel : null, entries };
 }
 
 /** Latest commits of the branch, marking those not pushed yet. */

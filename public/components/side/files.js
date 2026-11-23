@@ -17,19 +17,25 @@ function layoutMenu() {
     </span></span>`;
 }
 
-// Reverting a file (🗑 deletes a new one, ↶ goes back to the last commit): a 1st click arms it for a few
-// seconds, the 2nd acts. The arming survives
-// the 10 s repaint.
+// Reverting a file (🗑 deletes a new one or a folder of new ones, ↶ goes back to the last commit, ↩ to the
+// index): a 1st click arms it for a few seconds, the 2nd acts. The arming (key: kind and path) survives the 10 s
+// repaint.
 let armed = null, armedTimer = null;
-function arm(path) {
-  armed = path;
-  clearTimeout(armedTimer);
-  armedTimer = setTimeout(() => { armed = null; $('#right .git-revert.armed')?.classList.remove('armed'); }, 4000);
-}
-async function revert(d, path) {
+const CLICK_AGAIN = { delete: 'clickAgainDelete', head: 'clickAgainRevert', index: 'clickAgainIndex', folder: 'clickAgainFolder' };
+async function revertClick(d, span, path) {
+  const kind = span.dataset.cancel, key = `${kind}:${path}`;
+  if (armed !== key) {
+    $('#right .git-revert.armed')?.classList.remove('armed');
+    armed = key;
+    clearTimeout(armedTimer);
+    armedTimer = setTimeout(() => { armed = null; $('#right .git-revert.armed')?.classList.remove('armed'); }, 4000);
+    span.classList.add('armed');
+    span.title = t(`side.files.${CLICK_AGAIN[kind]}`);
+    return;
+  }
   armed = null;
   clearTimeout(armedTimer);
-  try { await revertFile(path); } catch (e) { alert(t('side.files.revertFailed', { message: e.message })); }
+  try { await revertFile(path, kind); } catch (e) { alert(t('side.files.revertFailed', { message: e.message })); }
   try { gitStatus.set({ dir: d.cwd, ...(await readGitStatus(d.cwd)) }); } catch { /* next reading */ }
 }
 
@@ -72,19 +78,20 @@ export function paintFiles(d, bar, commitsZone) {
     if (f.dir) return pathMenu({ dataset: { path }, textContent: '' }, e.clientX, e.clientY);
     const files = list.filter(x => !x.dir);
     if (!del) return openViewer(path, files.map(x => x.path), files.indexOf(f), { files });
-    if (armed !== path) {
-      $('#right .git-revert.armed')?.classList.remove('armed');
-      arm(path);
-      del.classList.add('armed');
-      del.title = del.textContent === '🗑' ? t('side.files.clickAgainDelete') : t('side.files.clickAgainRevert');
-    } else revert(d, path);
+    revertClick(d, del, path);
+  }));
+  // 🗑 of a folder of new files (tree layout): in its summary, without folding it
+  $('#right').querySelectorAll('.git-folder > summary [data-cancel="folder"]').forEach(s => s.addEventListener('click', e => {
+    e.preventDefault();
+    revertClick(d, s, s.dataset.path);
   }));
   // Right click: the chat path menu (browser, VS Code, Windows explorer…)
   $('#right').querySelectorAll('.git-file:not([data-commit])').forEach(b => b.addEventListener('contextmenu', e => {
     e.preventDefault();
     pathMenu({ dataset: { path: list[+b.dataset.i].path }, textContent: '' }, e.clientX, e.clientY);
   }));
-  if (armed) $('#right').querySelectorAll('.git-file:not([data-commit])').forEach(b => {
-    if (list[+b.dataset.i]?.path === armed) b.querySelector('[data-cancel]')?.classList.add('armed');
+  if (armed) $('#right').querySelectorAll('.git-top [data-cancel]').forEach(s => {
+    const path = s.dataset.path || list[+s.closest('.git-file')?.dataset.i]?.path;
+    if (`${s.dataset.cancel}:${path}` === armed) s.classList.add('armed');
   });
 }

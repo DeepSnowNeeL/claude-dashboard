@@ -2,6 +2,13 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-23
+
+- **Modified files** tab, folder tree view: a folder that only holds new files (not in the last commit) gets a 🗑 to
+  delete it in one go (click twice). The files git ignores stay.
+- A file with staged changes and other changes on top gets a ↩ icon: it discards only the changes not staged, back
+  to the version of the index (click twice). ↶ still goes back to the last commit.
+
 ## 2026-11-21
 
 - Your messages and Claude's answers now show the time they were sent, very discreetly under each one (the date too

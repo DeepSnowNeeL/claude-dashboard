@@ -30,6 +30,7 @@ export default {
   git: {
     outsideRepo: 'file outside the repository',
     nothingToRevert: 'nothing to revert in this file',
+    folderNotNew: 'this folder holds files from the last commit, only a folder of new files can be deleted',
     invalidCommit: 'invalid commit id',
     tooLargeForEditor: 'file too large for the editor (2 MB max)',
   },
