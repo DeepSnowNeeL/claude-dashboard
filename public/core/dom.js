@@ -239,6 +239,13 @@ export function shortDuration(ms) {
   if (m < 60) return `${m} min ${String(s % 60).padStart(2, '0')}`;
   return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
 }
+/** Full duration down to the second: `43 s`, `8 min 43 s`, `1 h 02 min 05 s`. */
+export function hmsDuration(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, pad = (n) => String(n).padStart(2, '0');
+  if (h) return `${h} h ${pad(m)} min ${pad(s % 60)} s`;
+  return m ? `${m} min ${pad(s % 60)} s` : `${s} s`;
+}
 /** Duration of an agent or a shell: frozen once finished, otherwise a counter that `tickChronos` advances every second. */
 export const chrono = (start, end, durationMs) => !start ? ''
   : end || durationMs != null ? `<span class="chrono">${shortDuration(durationMs ?? end - start)}</span>`

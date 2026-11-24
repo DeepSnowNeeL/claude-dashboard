@@ -1,6 +1,6 @@
 // Rendering of a feed event (message, Claude text, card, command, end of turn, error…) and of a tool line.
 // What touches the input goes through DOM events it listens to (input-changed, recall-queue).
-import { $, esc, markdown, pathLinks, toast } from '../../core/dom.js';
+import { $, esc, hmsDuration, markdown, pathLinks, toast } from '../../core/dom.js';
 import { current, detail } from '../../core/state.js';
 import { send, release } from '../../services/sessions.js';
 import { syncDraft } from '../../services/draft.js';
@@ -86,7 +86,7 @@ export function eventHtml(ev, activeDecisionsId) {
   } else if (ev.t === 'question') { el.className = 'msg claude'; el.innerHTML = questionCard(ev); attachQuestion(el, ev); }
   else if (ev.t === 'permission') { el.className = 'msg claude'; el.innerHTML = permissionCard(ev); attachPermission(el, ev); }
   else if (ev.t === 'plan') { el.className = 'msg claude'; el.innerHTML = planCard(ev); attachPlan(el, ev); }
-  else if (ev.t === 'end') { el.className = 'end m'; el.textContent = `${ev.ok ? t('conversation.event.turnDone') : t('conversation.event.turnInterrupted')}${ev.duration ? ` · ${Math.round(ev.duration / 1000)} s` : ''}${ev.cost ? ` · ~${ev.cost.toFixed(2)} $ ${t('conversation.event.estimate')}` : ''}`; }
+  else if (ev.t === 'end') { el.className = 'end m'; el.textContent = `${ev.ok ? t('conversation.event.turnDone') : t('conversation.event.turnInterrupted')}${ev.duration ? ` · ${hmsDuration(ev.duration)}` : ''}${ev.cost ? ` · ~${ev.cost.toFixed(2)} $ ${t('conversation.event.estimate')}` : ''}`; }
   else if (ev.t === 'error') {
     el.className = 'msg err';
     el.textContent = `⚠ ${ev.text}`;
