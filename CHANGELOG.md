@@ -2,6 +2,11 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-24
+
+- The end-of-turn line gives its duration in hours, minutes and seconds (`8 min 43 s`) instead of a raw number of
+  seconds.
+
 ## 2026-11-23
 
 - **Modified files** tab, folder tree view: a folder that only holds new files (not in the last commit) gets a 🗑 to
