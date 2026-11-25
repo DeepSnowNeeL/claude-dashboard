@@ -23,7 +23,7 @@ import { mountUpstreamUpdate } from './components/upstream-update.js';
 import { loadProgress } from './services/progress.js';
 import { mountMobile } from './components/mobile.js';
 import { mountPushBanner } from './components/push-banner.js';
-import { watchPcActivity } from './services/push.js';
+import { watchPcActivity, closeHandledNotifications } from './services/push.js';
 import { show, refresh, mountConversation, markNewsRead } from './components/conversation/conversation.js';
 import { mountHeader } from './components/conversation/header.js';
 import { mountFeed, addEvent } from './components/conversation/feed.js';
@@ -55,6 +55,7 @@ mountCopy(); // Ctrl+C: the formatting without the colors of the application
 mountTree($('#list'));
 mountMobile();
 mountPushBanner(); // phone: offers the notifications of the blocked sessions, once
+closeHandledNotifications(); // phone: a card answered elsewhere takes its notification away
 watchPcActivity(); // PC without the app: its keyboard and mouse delay the phone notifications
 mountOptions();
 mountUpdateBanner(); // engine or page behind the code on disk (git pull): banner with a Restart button

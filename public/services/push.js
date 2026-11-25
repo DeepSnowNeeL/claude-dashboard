@@ -1,6 +1,8 @@
 // Phone notifications (Web Push): subscription of this device, its settings (on/off, PC idle delay), test, and the
 // activity of the PC when the page is open there without the app (the app reports the idle time of the whole PC).
 import { api } from '../core/api.js';
+import { effect } from '../core/signals.js';
+import { sessions } from '../core/state.js';
 
 /** Why this device cannot receive notifications: 'http' (no HTTPS), 'install' (iPhone: add to home screen), 'browser', or null. */
 export function pushBlocker() {
@@ -57,4 +59,18 @@ export function watchPcActivity() {
     api('/api/presence', { idleMs: 0 }).catch(() => {});
   };
   ['mousemove', 'keydown', 'wheel', 'pointerdown'].forEach(type => addEventListener(type, report, { passive: true, capture: true }));
+}
+
+/** Notifications of sessions that no longer wait for anything are closed as soon as the page knows it (needed on the
+ * iPhone, which gets no close push, see engine/push.mjs). */
+export function closeHandledNotifications() {
+  if (pushBlocker() || !('getNotifications' in ServiceWorkerRegistration.prototype)) return;
+  effect(() => {
+    const list = sessions();
+    if (!list.length) return; // not loaded yet
+    const blocked = new Set(list.filter(s => s.blocked).map(s => s.slug));
+    registration().then(reg => reg.getNotifications()).then(shown => {
+      for (const n of shown) if (n.data?.slug && !blocked.has(n.data.slug)) n.close();
+    }).catch(() => {});
+  });
 }

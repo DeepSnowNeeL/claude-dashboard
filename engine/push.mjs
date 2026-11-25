@@ -126,7 +126,10 @@ export function notePresence(idleMs) {
 }
 
 // --- Watching the blocked sessions --------------------------------------------------------------------------------
-const notified = new Set(); // `${card id} ${endpoint}`: one notification per card and device
+const notified = new Map(); // `${card id} ${endpoint}` → slug: one notification per card and device
+// Apple's push service wants each push to show a notification (a few silent ones and the subscription is revoked):
+// no close push there, the page closes them when opened (closeHandledNotifications of public/services/push.js).
+const canClose = endpoint => !/\.push\.apple\.com\//.test(endpoint);
 
 function message(slug, card) {
   const { title, ticket } = sessions.get(slug)?.data || {};
@@ -150,12 +153,23 @@ async function check() {
     for (const card of p.feed || []) if (card.state === 'pending' && CARDS.includes(card.t)) pending.push([slug, card]);
   }
   const live = new Set(pending.map(([, c]) => c.id));
-  for (const k of notified) if (!live.has(k.split(' ')[0])) notified.delete(k);
+  const blocked = new Set(pending.map(([slug]) => slug));
+  const close = new Set(); // `${slug} ${endpoint}`: notification of a session that no longer waits for anything
+  for (const [k, slug] of notified) {
+    if (live.has(k.split(' ')[0])) continue;
+    notified.delete(k);
+    if (!blocked.has(slug)) close.add(`${slug} ${k.slice(k.indexOf(' ') + 1)}`);
+  }
+  for (const k of close) {
+    const [slug, endpoint] = [k.slice(0, k.indexOf(' ')), k.slice(k.indexOf(' ') + 1)];
+    const sub = subs.find(s => s.endpoint === endpoint);
+    if (sub && canClose(endpoint)) sendPush(sub, { close: slug }).catch(e => console.warn(`Push close failed: ${e.message}`));
+  }
   for (const [slug, card] of pending) {
     for (const sub of subs) {
       const key = `${card.id} ${sub.endpoint}`;
       if (notified.has(key) || idleMs < (sub.idleMinutes ?? DEFAULT_IDLE_MINUTES) * 60_000) continue;
-      notified.add(key);
+      notified.set(key, slug);
       sendPush(sub, message(slug, card)).catch(e => console.warn(`Push failed: ${e.message}`));
     }
   }

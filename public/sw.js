@@ -76,9 +76,14 @@ self.addEventListener('fetch', e => {
 });
 
 // Phone notification (engine/push.mjs): { title, body, tag, slug }. A click opens the session, in the app if it is open.
+// { close: slug }: the session no longer waits (card answered elsewhere), its notification goes away.
 self.addEventListener('push', e => {
   let m = {};
   try { m = e.data?.json() || {}; } catch { m = { title: e.data?.text() }; }
+  if (m.close) {
+    e.waitUntil(self.registration.getNotifications({ tag: m.close }).then(list => list.forEach(n => n.close())));
+    return;
+  }
   e.waitUntil(self.registration.showNotification(m.title || 'Claude', {
     body: m.body || '', tag: m.tag, renotify: true, icon: '/icon-512.png', badge: '/favicon.png', data: { slug: m.slug },
   }));

@@ -162,7 +162,10 @@ and the design of what is about to be built in visual form, with all the availab
 - **Phone notifications** (Web Push, `engine/push.mjs`, no library: VAPID JWT ES256 and RFC 8291 aes128gcm with
   `node:crypto`): when a session has a pending card (permission, plan, question) and the PC has been idle (no keyboard
   or mouse) for the delay of the device (10 min by default, 0 = always), the engine (check every 20 s) notifies each
-  subscribed device once per card. PC activity: the app posts `powerMonitor.getSystemIdleTime()` at each poll (5 s),
+  subscribed device once per card. Once the session no longer waits (card answered on the PC or elsewhere), the engine
+  sends a `{ close: slug }` push and `sw.js` closes the notification (tag = slug); not to Apple endpoints, which revoke
+  a subscription after a few silent pushes: there `closeHandledNotifications()` of `services/push.js` closes them when
+  the page opens. PC activity: the app posts `powerMonitor.getSystemIdleTime()` at each poll (5 s),
   a browser on the PC posts its interactions (`watchPcActivity()` of `services/push.js`, once a minute) to
   `POST /api/presence` (PC only). Keys and subscriptions (one per device, by endpoint, with `enabled`, `idleMinutes`)
   in `~/.claude-dashboard/push.json`; a subscription answered 404 / 410 is dropped. Phone: banner shown once

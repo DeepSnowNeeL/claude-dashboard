@@ -2,6 +2,11 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-25
+
+- A phone notification disappears once the session no longer waits for you (question or command answered on the PC
+  or elsewhere). On iPhone, it goes away when you open the dashboard.
+
 ## 2026-11-24
 
 - The end-of-turn line gives its duration in hours, minutes and seconds (`8 min 43 s`) instead of a raw number of
