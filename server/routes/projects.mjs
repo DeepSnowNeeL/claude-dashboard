@@ -1,10 +1,10 @@
 // Projects, groups, session order, logos: the left tree.
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathKey, tree, projectLogo, readGroups, writeGroups, importOrca, writeProjectMeta, readOrders, writeOrder, readCategories, writeCategories, addProject, removeProject } from '../../projects.mjs';
+import { pathKey, tree, branches, projectLogo, readGroups, writeGroups, importOrca, writeProjectMeta, readOrders, writeOrder, readCategories, writeCategories, addProject, removeProject } from '../../projects.mjs';
 import { sendJson, readBody, WORKSPACE_DIR, SANDBOX_CSP } from '../../common.mjs';
 import { notifyChange, engine } from '../engine-client.mjs';
-import { knownProjects } from '../paths.mjs';
+import { knownProjects, isPathAllowed } from '../paths.mjs';
 import { t } from '../../public/i18n/index.js';
 
 export default {
@@ -18,6 +18,13 @@ export default {
       .map(e => ({ name: e.name, path: path.join(WORKSPACE_DIR, e.name), git: fs.existsSync(path.join(WORKSPACE_DIR, e.name, '.git')) }))
       .sort((a, b) => (b.git - a.git) || a.name.localeCompare(b.name));
     return sendJson(res, 200, { dir: WORKSPACE_DIR, folders });
+  },
+  // Branches of a folder's repo, for "New session" (start from a branch); empty outside git
+  'GET /api/branches': async (req, res, { url }) => {
+    const dir = url.searchParams.get('dir') || '';
+    if (!dir || !fs.existsSync(dir)) return sendJson(res, 400, { error: t('server.errors.folderNotFound', { path: dir }) });
+    if (!(await isPathAllowed(path.resolve(dir), req))) return sendJson(res, 403, { error: t('server.errors.folderOutsideProjects') });
+    return sendJson(res, 200, await branches(dir).catch(() => []));
   },
   // Logo of a project: only the one of a project known to the tree (not a free path)
   '* /api/projects/logo': async (req, res, { url }) => {

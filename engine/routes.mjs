@@ -72,9 +72,9 @@ async function create(req, res) {
   try { body = JSON.parse(await readBody(req)); } catch (e) { return sendJson(res, 400, err('invalidJsonDetail', { message: e.message })); }
   let cwd = String(body.cwd || '').trim();
   if (!cwd || !fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) return sendJson(res, 400, err('folderNotFound', { path: cwd }));
-  // "In a new worktree" ticked: it is created next to the repo and the session opens in it
+  // Started from a branch: the worktree is created next to the repo (from `base` for a new branch) and the session opens in it
   if (body.branch) {
-    try { cwd = await createWorktree(cwd, body.branch); } catch (e) { return sendJson(res, 400, err('worktreeNotCreated', { message: e.message })); }
+    try { cwd = await createWorktree(cwd, body.branch, body.base ? String(body.base) : undefined); } catch (e) { return sendJson(res, 400, err('worktreeNotCreated', { message: e.message })); }
     onWorktree('created');
   }
   // Without text: the session is created empty, ready, and the first message is typed in its own input
