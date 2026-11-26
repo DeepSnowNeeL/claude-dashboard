@@ -2,6 +2,12 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-26
+
+- When a background subagent or command finishes, the session wakes up once: Claude Code now starts that turn by
+  itself, so the dashboard no longer sends its own wake-up on top (Claude used to answer twice, the second time to
+  say nothing changed). The session also shows as working during that turn.
+
 ## 2026-11-25
 
 - **Reload** a session (⋯ menu next to End, or right click in the tree): Claude Code restarts on the same
