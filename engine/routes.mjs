@@ -16,7 +16,7 @@ import { SESSIONS_DIR, updateBoard, count, markSeen } from './board.mjs';
 import { ARCHIVE_DIR, readOptions, OPTIONS_FILE, archiveSession, archiveOf, autoArchive } from './archives.mjs';
 import { isAllowed } from './guard.mjs';
 import { isSensitive } from '../server/sensitive.mjs';
-import { createWorktree, tree } from '../projects.mjs';
+import { createWorktree, switchBranch, tree } from '../projects.mjs';
 
 import { readProcesses, killProcess } from './processes.mjs';
 import { progressView, markAchievementsSeen, announcementsSince } from './progress.mjs';
@@ -72,8 +72,11 @@ async function create(req, res) {
   try { body = JSON.parse(await readBody(req)); } catch (e) { return sendJson(res, 400, err('invalidJsonDetail', { message: e.message })); }
   let cwd = String(body.cwd || '').trim();
   if (!cwd || !fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) return sendJson(res, 400, err('folderNotFound', { path: cwd }));
-  // Started from a branch: the worktree is created next to the repo (from `base` for a new branch) and the session opens in it
-  if (body.branch) {
+  // Existing branch checked out in the folder itself (git switch) rather than in a worktree
+  if (body.branch && body.switch) {
+    try { await switchBranch(cwd, body.branch, body.base ? String(body.base) : undefined); } catch (e) { return sendJson(res, 400, err('branchNotSwitched', { message: e.message })); }
+  } else if (body.branch) {
+    // Started from a branch: the worktree is created next to the repo (from `base` for a new branch) and the session opens in it
     try { cwd = await createWorktree(cwd, body.branch, body.base ? String(body.base) : undefined); } catch (e) { return sendJson(res, 400, err('worktreeNotCreated', { message: e.message })); }
     onWorktree('created');
   }

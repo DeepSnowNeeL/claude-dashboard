@@ -4,10 +4,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-26
 
-- "New session" can start from a branch: the "Starting branch" field suggests develop, main, epic/* and release/*
-  first, then the local and remote branches. "Work on it" opens the session in the worktree that already has it (or a
-  new one), "New branch from it" creates a branch and its worktree from it. It replaces the "In a new worktree" box;
-  a name that matches no branch still creates it from the main worktree.
+- "New session" has a **Branch** choice in git folders: the folder as is (default), an existing branch (opened in
+  its worktree, or a new one, or checked out in the folder itself with `git switch`, with a warning when other
+  sessions run there), or a new branch with its own worktree, from develop, main or any branch you pick. Branches are
+  suggested as you type, main ones first. It replaces the "In a new worktree" box.
 - In the list, a project with many worktrees is easier to read: ⌂ marks the main one, ⎇ a worktree on a branch
   (with the ticket read from its name) and ⊘ a detached HEAD, shown with its short commit and its folder. Only the
   main worktree and those with a session open or ended in the last 7 days stay in view; the others fold under

@@ -214,6 +214,22 @@ export async function createWorktree(dir, branch, base) {
   return target;
 }
 
+/**
+ * Checks `branch` out in the folder `dir` itself (git switch), instead of a worktree. A branch that only exists on a
+ * remote is created from `base` (origin/x) and tracks it. Refused when the folder has uncommitted changes: they would
+ * follow the switch silently.
+ */
+export async function switchBranch(dir, branch, base) {
+  branch = String(branch || '').trim();
+  if (!branch) throw new Error(t('server.worktree.emptyBranch'));
+  const dirty = await runGit(['-C', dir, 'status', '--porcelain', '--untracked-files=no']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
+  if (dirty) throw new Error(t('server.worktree.uncommittedSwitch', { path: dir }));
+  const exists = await runGit(['-C', dir, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
+  await runGit(['-C', dir, 'switch', ...(exists || !base ? [branch] : ['-c', branch, '--track', base])]);
+  forgetWorktrees();
+  return dir;
+}
+
 const cache = new Map(); // pathKey(dir) → { at, worktrees }
 /** Forgets the cached worktrees (after a removal: the tree sees it at once). */
 export const forgetWorktrees = () => cache.clear();

@@ -49,8 +49,8 @@ export const removeSession = slug => fetch(`/api/sessions/${slug}`, { method: 'D
 export const readMcp = slug => api(`/api/sessions/${slug}/mcp`);
 export const mcpAction = (slug, action, name, active) => api(`/api/sessions/${slug}/mcp/${action}`, { name, active });
 
-/** Creates an empty session in a folder; returns { slug }. */
-export const create = (cwd, mode, branch, model, text, base) => api('/api/sessions', { cwd, mode, ...(branch ? { branch } : {}), ...(base ? { base } : {}), ...(model ? { model } : {}), ...(text ? { text } : {}) });
+/** Creates an empty session in a folder (`branch`: new worktree, or `git switch` in the folder with `switchHere`); returns { slug }. */
+export const create = (cwd, mode, branch, model, text, base, switchHere) => api('/api/sessions', { cwd, mode, ...(branch ? { branch } : {}), ...(base ? { base } : {}), ...(switchHere ? { switch: true } : {}), ...(model ? { model } : {}), ...(text ? { text } : {}) });
 /** Models offered for a new session (`{ models: [{ value, displayName, description }] }`). */
 export const readAvailableModels = () => api('/api/models');
 /** Resumes a conversation from the history of the folder; `h` = { sessionId, cwd, title, firstPrompt }. */

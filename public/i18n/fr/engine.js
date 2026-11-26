@@ -28,6 +28,7 @@ export default {
     sessionIdCwdRequired: 'sessionId et cwd existant obligatoires',
     folderNotFound: 'dossier introuvable : {path}',
     worktreeNotCreated: 'worktree non créé : {message}',
+    branchNotSwitched: 'changement de branche impossible : {message}',
     unknownSubagent: 'sous-agent inconnu',
     agentGone: 'agent déjà terminé ou inconnu',
     unknownShell: 'shell inconnu (la session a redémarré ?)',

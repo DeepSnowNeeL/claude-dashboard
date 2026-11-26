@@ -46,7 +46,8 @@ export default {
     emptyBranch: 'empty branch name',
     notInRepo: '{path} is not in a git repository',
     folderExists: 'the folder {path} already exists',
-    branchExists: 'the branch {branch} already exists: choose "Work on" or another name',
+    branchExists: 'the branch {branch} already exists: pick it under "Existing branch" or choose another name',
+    uncommittedSwitch: '{path} has uncommitted changes: commit them, or open the branch in a worktree',
   },
   projects: {
     orcaImportFailed: 'Orca import failed: {message}',

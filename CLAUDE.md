@@ -43,13 +43,15 @@ and the design of what is about to be built in visual form, with all the availab
   resumes an old one. The folder is set by default (the "+" one, otherwise the one of the last displayed session),
   "change" opens the input; the permission mode and the **model** (list of `supportedModels()` read through the usage probe, engine route
   `GET /api/models`; "Default" passes none) are those of the last session started from this browser
-  (`dash-new-session-mode`, `dash-new-session-model` in `localStorage`); **Starting branch** (empty by default: the folder as
-  it is; branches of the repo from `GET /api/branches`, `branches()` of `projects.mjs`, suggested main ones first:
-  main, master, develop, dev, trunk, then epic/* and release/*, then local and remote ones) offers "Work on it" (the
-  worktree that has it checked out, otherwise a new worktree; a remote branch gets its local tracking branch) or "New
-  branch from it" (`base` of `POST /api/sessions`); a name that matches no branch is created from the HEAD of the
-  main worktree. The worktree goes next to the repo (`createWorktree` of `projects.mjs`, shared with
-  `launch_session`; a `base` given for an existing branch is refused). Within a worktree, the order never
+  (`dash-new-session-mode`, `dash-new-session-model` in `localStorage`); **Branch** (git folders only, three choices,
+  back to the first at each opening): "Folder as is", "Existing branch" (its worktree, otherwise a new worktree, a
+  remote branch getting its local tracking one, or with the box `git switch` in the folder itself: `switch` of
+  `POST /api/sessions`, `switchBranch()` of `projects.mjs`, refused with uncommitted changes, the open sessions of the
+  folder announced), "New branch" (name and base, default develop, otherwise main, master…: `base`). Branches from
+  `GET /api/branches` (`branches()` of `projects.mjs`), suggested main ones first (main, master, develop, dev, trunk,
+  epic/*, release/*), then local and remote; a line under the choice says where the session opens. The worktree goes
+  next to the repo (`createWorktree` of `projects.mjs`, shared with `launch_session`; a `base` given for an existing
+  branch is refused). Within a worktree, the order never
   depends on the status: manual order, otherwise newest to oldest (creation date read from the slug).
   A session launched by another one (`parent` in its JSON) goes right under its parent, indented on a purple rail with
   `↳ n` on the parent, when both are in the same worktree and the parent is not ended; otherwise its card starts with
