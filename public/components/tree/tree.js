@@ -114,9 +114,13 @@ function renderList() {
   const allWt = projects().flatMap(p => p.worktrees);
   const byWt = new Map(allWt.map(w => [w.id, []]));
   const orphans = [];
+  // A worktree removed since (merged branch): its folder `<repo>-<branch>` (createWorktree, Orca) no longer shows in
+  // `git worktree list`; its sessions go back to the main worktree of the repo instead of "Terminal sessions"
+  const mains = allWt.filter(w => w.main);
   for (const s of vis) {
     const c = pathKey(s.cwd);
-    const w = c && allWt.filter(w => c === w.id || c.startsWith(w.id + '/')).sort((a, b) => b.id.length - a.id.length)[0];
+    const longest = l => l.sort((a, b) => b.id.length - a.id.length)[0];
+    const w = c && (longest(allWt.filter(w => c === w.id || c.startsWith(w.id + '/'))) || longest(mains.filter(w => c.startsWith(w.id + '-'))));
     if (w) byWt.get(w.id).push(s); else orphans.push(s);
   }
 

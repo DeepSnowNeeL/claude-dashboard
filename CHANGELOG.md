@@ -7,6 +7,8 @@ What changed for people who use the dashboard, newest first. The commit history 
 - When a background subagent or command finishes, the session wakes up once: Claude Code now starts that turn by
   itself, so the dashboard no longer sends its own wake-up on top (Claude used to answer twice, the second time to
   say nothing changed). The session also shows as working during that turn.
+- Sessions of a worktree that has since been removed (merged branch) stay in their project, under its ended
+  sessions, instead of landing in "Terminal sessions".
 
 ## 2026-11-25
 
