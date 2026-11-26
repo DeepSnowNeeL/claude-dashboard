@@ -2,6 +2,7 @@
 // activity indicator.
 import { BOARD_TOOL } from './mcp-tools.mjs';
 import { addCall } from './pricing.mjs';
+import { WORKFLOW_TOOL, workflowDir } from './workflows.mjs';
 import { t, locale } from '../public/i18n/index.js';
 
 export const AGENT_TOOLS = new Set(['Agent', 'Task']); // the tool that launches a subagent (renamed Task → Agent depending on versions)
@@ -224,6 +225,7 @@ export function attachEvents(ctx) {
         // Result of a tool: it completes its line (expandable in the page)
         const call = calls.get(b.tool_use_id);
         if (call) { calls.delete(b.tool_use_id); call.push({ ...call.ev, result: resultText(b), error: !!b.is_error }); }
+        if (call?.ev.name === WORKFLOW_TOOL && !b.is_error) ctx.startWorkflow(b.tool_use_id, workflowDir(resultText(b, Infinity)));
         // Background shell: the tool result gives the file where its output is written
         if (shellCalls.has(b.tool_use_id)) {
           const file = resultText(b, Infinity).match(/Output is being written to: ?(\S[^\r\n]*?)(?:\.\s|\s*$|\n)/m)?.[1]?.trim();
@@ -238,6 +240,8 @@ export function attachEvents(ctx) {
         const out = resultText(b, Infinity);
         ctx.updateAgent(a, { state: b.is_error ? 'failed' : 'completed', end: Date.now(), summary: out.replace(/\n*agentId:[\s\S]*$/, '').trim() || a.summary });
       }
+    } else if (m.type === 'system' && ['task_started', 'task_updated', 'task_notification'].includes(m.subtype) && ctx.isWorkflowTask(m)) {
+      ctx.trackWorkflow(m); // agents read in its transcript folder (workflows.mjs)
     } else if (m.type === 'system' && ['task_started', 'task_updated', 'task_notification'].includes(m.subtype) && (s.shells.has(m.task_id) || ['local_bash', 'monitor'].includes(m.task_type) || m.patch?.is_backgrounded)) {
       ctx.trackTask(m);
       const sh = s.shells.get(m.task_id), file = sh && shellCalls.get(`file:${sh.toolKey}`);

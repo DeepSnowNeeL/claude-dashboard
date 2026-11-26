@@ -16,6 +16,7 @@ export default {
   },
   errors: {
     unknownSubagent: 'sous-agent inconnu, ou sans identifiant pour lui écrire',
+    workflowAgent: 'un agent de workflow ne peut pas recevoir de message',
     unknownModel: 'modèle inconnu : {model}',
   },
   planWindow: {

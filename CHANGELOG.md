@@ -12,6 +12,8 @@ What changed for people who use the dashboard, newest first. The commit history 
   (with the ticket read from its name) and ⊘ a detached HEAD, shown with its short commit and its folder. Only the
   main worktree and those with a session open or ended in the last 7 days stay in view; the others fold under
   "N other worktrees".
+- The agents of a **workflow** (Workflow tool) now show like the other subagents: one card and one tab each, with
+  what they are doing, their conversation, context and cost, live and after a restart.
 - When a background subagent or command finishes, the session wakes up once: Claude Code now starts that turn by
   itself, so the dashboard no longer sends its own wake-up on top (Claude used to answer twice, the second time to
   say nothing changed). The session also shows as working during that turn.

@@ -12,6 +12,7 @@ import { inputQueue, attachInput } from './input.mjs';
 import { attachEvents } from './events.mjs';
 import { attachPermissions } from './permissions.mjs';
 import { attachAgents } from './agents.mjs';
+import { attachWorkflows } from './workflows.mjs';
 import { attachMcpTools, DASHBOARD_TOOLS } from './mcp-tools.mjs';
 import { MODES, modeKey } from './modes.mjs';
 
@@ -117,6 +118,7 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, model, updateB
   });
 
   Object.assign(ctx, attachAgents(ctx)); // creates ctx.shellCalls, read by the events
+  Object.assign(ctx, attachWorkflows(ctx));
   Object.assign(ctx, attachEvents(ctx));
   Object.assign(ctx, attachInput(ctx));
   const { handleMessage, stopActivity } = ctx;
@@ -194,6 +196,7 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, model, updateB
   /** Stops the Claude process of the session (running turn interrupted). Resuming stays possible through its id. */
   s.close = async () => {
     s.closed = true;
+    s.stopWorkflows();
     if (s.busy) await s.q.interrupt().catch(() => {});
     input.close();
   };

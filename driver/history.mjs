@@ -3,6 +3,7 @@ import { listSessions, getSessionMessages, listSubagents, getSubagentMessages } 
 import { toolEvent, resultText, AGENT_TOOLS, contextOf, windowOf } from './events.mjs';
 import { BOARD_TOOL } from './mcp-tools.mjs';
 import { addCall } from './pricing.mjs';
+import { WORKFLOW_TOOL, workflowDir, workflowAgentsFromDir } from './workflows.mjs';
 import { extractAttachments, attachmentUrl } from './attachments.mjs';
 import { migrateSession } from '../migration.mjs';
 import { t } from '../public/i18n/index.js';
@@ -97,6 +98,16 @@ export async function feedFromHistory(slug, sessionId, cwd) {
     const ev = feed[i];
     const created = ev.t === 'tool' && ev.name === LAUNCH_TOOL && !ev.error && String(ev.result || '').match(/^Session (\S+) (?:launched|lancée)/);
     if (created) feed.splice(i + 1, 0, { id: `${ev.id}-launched`, t: 'launched', slug: created[1], from: cwd, newWorktree: !!ev.input?.worktree });
+    // Workflow: its agents, read in the transcript folder given by its result, as cards after the tool line
+    const dir = ev.t === 'tool' && ev.name === WORKFLOW_TOOL && !ev.error && workflowDir(ev.result);
+    if (dir) {
+      const found = workflowAgentsFromDir(dir, ev.toolId || ev.id, slug);
+      for (const a of found.values()) agents.set(a.key, a);
+      feed.splice(i + 1, 0, ...[...found.values()].map(a => ({
+        id: `ag-${a.key}`, t: 'agent', key: a.key, type: a.type, description: a.description, state: a.state, tools: a.tools, summary: a.summary || '',
+        start: a.start, end: a.end, durationMs: a.start && a.end ? a.end - a.start : undefined, model: a.model, contextMax: a.contextMax, window: a.window, consumption: a.consumption, fromHistory: true,
+      })));
+    }
   }
   return feed;
 }

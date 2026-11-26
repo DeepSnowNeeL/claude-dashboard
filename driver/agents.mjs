@@ -141,6 +141,7 @@ export function attachAgents(ctx) {
    */
   s.sendToAgent = async (key, text) => {
     const a = s.agents.get(key), id = a && (a.agentId || a.taskId);
+    if (a?.workflow) return t('driver.errors.workflowAgent');
     if (!id) return t('driver.errors.unknownSubagent');
     if (a.state === 'working' && !a.background) {
       try { await s.q.backgroundTasks(a.key); a.background = true; } catch { /* stays in the foreground: passed on at its end */ }

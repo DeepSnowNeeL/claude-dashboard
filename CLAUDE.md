@@ -302,6 +302,12 @@ and the design of what is about to be built in visual form, with all the availab
   model, one count per message id; tokens per category in the tooltip) and, while it runs, the tool in progress with its argument and its last sentence (no AI
   summary: `agentProgressSummaries` stays off). Kept in memory only: after a restart, the history only shows the tool
   call (model and highest context are read again from the subagent transcripts).
+  **Workflow agents** (`driver/workflows.mjs`, SDK task `local_workflow`): Claude Code streams none of their messages,
+  so the driver reads the transcript folder given by the Workflow result (`Transcript dir:`), every 2 s while it runs:
+  `journal.jsonl` (`started` with label and phase, `result`, `failed`) and one `agent-<id>.jsonl` per agent. Each one
+  is a subagent card and tab (key `wf-<agentId>`, type = workflow name), counted as running (so `restart-engine`
+  waits for them); Stop stops the whole workflow, they cannot receive messages. After a restart, rebuilt from the same
+  folder by the history.
 - **Background shells** (Bash `run_in_background`, Monitor: SDK tasks `local_bash` / `monitor`): one 🐚 tab per running
   shell next to the subagents' (🐚 pill in the list); a click opens its output, read every 2 s from the file given by
   the tool result (tail, 64 KB), with "Stop" (`stopTask`). A shell that finishes while the session is idle starts a
