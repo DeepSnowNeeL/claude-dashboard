@@ -4,6 +4,9 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-25
 
+- **Reload** a session (⋯ menu next to End, or right click in the tree): Claude Code restarts on the same
+  conversation, so MCP servers, settings, skills and CLAUDE.md are read again, as quitting the terminal and running
+  `claude -r`. Archive moved into the same menu.
 - A phone notification disappears once the session no longer waits for you (question or command answered on the PC
   or elsewhere). On iPhone, it goes away when you open the dashboard.
 

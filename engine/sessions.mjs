@@ -72,6 +72,31 @@ export async function endSession(slug) {
 }
 
 /**
+ * Reload (⋯ menu of the header): stops the Claude process and starts it again on the same conversation, as quitting the
+ * terminal and `claude -r`: MCP servers, settings, skills, plugins and CLAUDE.md are read again. The displayed feed is
+ * kept (permission cards and turn ends included), a line marks the reload. Returns null, or the error.
+ */
+export async function reloadSession(slug) {
+  if (!sessions.has(slug)) return t('engine.errors.unknownSessionSlug', { slug });
+  const { data } = sessions.get(slug);
+  if (!drivers.has(slug) && !resumable(data)) return t('engine.errors.notDriven', { slug });
+  const old = drivers.get(slug);
+  drivers.delete(slug);
+  if (old) {
+    await old.close();
+    // Same conversation resumed right after: wait for the old process to leave it (10 s at most)
+    await Promise.race([old.finished, new Promise(ok => setTimeout(ok, 10_000))]);
+  }
+  const feed = old ? old.feed.filter(ev => !(ev.t === 'user' && ev.queued)) : null; // queued messages were not sent
+  const s = await resume(slug, feed);
+  s.feed.push({ id: `${slug}-reload-${Date.now().toString(36)}`, t: 'reloaded', at: new Date().toISOString() });
+  broadcastFeed(slug, s.feed.at(-1));
+  if (data.status === 'done') updateBoard(slug, { status: 'waiting', statusSummary: null, endedAt: null });
+  else broadcast(slug);
+  return null;
+}
+
+/**
  * New driven session in `cwd`, with its first message. Returns its slug. `parent`: slug of the session that launched it
  * (launch_session), kept in its JSON (card in the parent's feed, place in the tree); its first message then goes in the
  * envelope of the messages between sessions, so the page shows who wrote it.
@@ -90,11 +115,11 @@ export function newSession(cwd, text, mode = 'all', prePlan, model, parent) {
   return slug;
 }
 
-/** Restarts the query of a resumable session, with the feed rebuilt from its history. */
-export async function resume(slug) {
+/** Restarts the query of a resumable session, with the feed rebuilt from its history (or the one given, reload). */
+export async function resume(slug, feed) {
   if (drivers.has(slug)) return drivers.get(slug);
   const { data } = sessions.get(slug);
-  const initialFeed = data.sessionId ? await feedFromHistory(slug, data.sessionId, data.cwd) : [];
+  const initialFeed = feed || (data.sessionId ? await feedFromHistory(slug, data.sessionId, data.cwd) : []);
   if (drivers.has(slug)) return drivers.get(slug); // concurrent resume while reading the history
   const s = createSession({ slug, cwd: data.cwd, mode: data.mode || 'all', prePlan: data.prePlanMode || undefined, model: data.modelChoice || undefined, resume: data.sessionId, initialFeed, ...callbacks(slug) });
   drivers.set(slug, s);

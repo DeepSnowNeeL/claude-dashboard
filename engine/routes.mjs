@@ -10,7 +10,7 @@ import { feedFromHistory, agentFeedFromHistory, MODES, FILES_DIR, attachmentUrl 
 import { sendJson, readBody, readBinary, serveFile, applyLanguage, norm } from '../common.mjs';
 import { t, LANGUAGES } from '../public/i18n/index.js';
 import * as trackers from '../trackers.mjs';
-import { sessions, drivers, resumable, newSession, resume, endSession, summarize, workInProgress } from './sessions.mjs';
+import { sessions, drivers, resumable, newSession, resume, endSession, reloadSession, summarize, workInProgress } from './sessions.mjs';
 import { sseClients, broadcast, broadcastRestarting } from './broadcast.mjs';
 import { SESSIONS_DIR, updateBoard, count, markSeen } from './board.mjs';
 import { ARCHIVE_DIR, readOptions, OPTIONS_FILE, archiveSession, archiveOf, autoArchive } from './archives.mjs';
@@ -291,6 +291,11 @@ async function end(req, res, { params: { slug } }) {
   const error = await endSession(slug);
   return error ? sendJson(res, 404, { error }) : sendJson(res, 200, { ok: true });
 }
+// Reload: Claude process restarted on the same conversation (MCP servers, settings, skills read again)
+async function reload(req, res, { params: { slug } }) {
+  const error = await reloadSession(slug);
+  return error ? sendJson(res, 404, { error }) : sendJson(res, 200, { ok: true });
+}
 async function archive(req, res, { params: { slug } }) {
   const error = await archiveSession(slug);
   return error ? sendJson(res, 404, { error }) : sendJson(res, 200, { ok: true });
@@ -519,6 +524,7 @@ export default {
   'POST /api/sessions/:slug/schema-error': valid(schemaError),
   'POST /api/sessions/:slug/release': valid(release),
   'POST /api/sessions/:slug/end': valid(end),
+  'POST /api/sessions/:slug/reload': valid(reload),
   'POST /api/sessions/:slug/archive': valid(archive),
   'GET /api/options': options,
   'GET /api/push': pushRoute,

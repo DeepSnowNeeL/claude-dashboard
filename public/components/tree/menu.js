@@ -2,7 +2,7 @@
 // which closes it on a click elsewhere or Escape).
 import { sessions, projects, categories, serverMode } from '../../core/state.js';
 import { esc, ticketLink } from '../../core/dom.js';
-import { end, archive, rename } from '../../services/sessions.js';
+import { end, reload, archive, rename } from '../../services/sessions.js';
 import { showInExplorer } from '../../services/desktop.js';
 import { removeWorktree } from '../../services/git.js';
 import { loadList, removeProject, pathKey, saveCategories } from '../../services/projects.js';
@@ -110,6 +110,10 @@ function sessionMenu(s, x, y) {
     { ic: '⧉', label: t('tree.menu.copyLink'), run: () => copy(`${location.origin}/#${s.slug}`) },
     s.driven && '-',
     s.driven && !finished && { ic: '⏹', label: t('tree.menu.end'), run: async () => { if (confirm(t('tree.menu.endConfirm'))) { await end(s.slug); await loadList(); } } },
+    s.driven && { ic: '🔄', label: t('tree.menu.reload'), run: async () => {
+      if ((s.busy || s.runningAgents || s.runningShells) && !confirm(t('conversation.header.confirmReload'))) return;
+      await reload(s.slug); await loadList();
+    } },
     s.driven && { ic: '🗄', label: t('tree.menu.archive'), run: async () => { if (confirm(t('tree.menu.archiveConfirm'))) { await archive(s.slug); await loadList(); } } },
   ], x, y);
 }

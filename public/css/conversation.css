@@ -8,6 +8,9 @@
 .head .desc { font-size: 13px; }
 .head-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .commands { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+/* ⋯ (Reload, Archive): discreet, no frame until hovered */
+.commands .btn.more { border-color: transparent; background: none; color: var(--muted); padding: 2px 6px; letter-spacing: 1px; }
+.commands .btn.more:hover { border-color: var(--line); color: var(--text); }
 .commands select, .new-session-form select { font: inherit; font-size: 12px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
 .btn.stop { border-color: var(--red); color: var(--red); }
 .feed { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }

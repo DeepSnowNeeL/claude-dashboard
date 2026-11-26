@@ -307,8 +307,12 @@ and the design of what is about to be built in visual form, with all the availab
   (`parent`, engine key) and sends its first message in that envelope; the parent's feed gets a `launched` event (rebuilt
   from the tool result after a restart): a live purple card (`cards/launched.js`, status and unread read from the list,
   where it runs: same folder, branch, other project), a click opens the session. Its header links to the parent.
-- **End, archive**: End stops the Claude process, the session goes into "ended" (a message resumes it). **Archive**
-  (🗄 button, or automatically once ended for the delay set in ⚙ Options, 1 day by default, checked every hour;
+- **End, reload, archive**: End stops the Claude process, the session goes into "ended" (a message resumes it).
+  **Reload** (⋯ menu of the header, next to End, or right click in the tree; `reloadSession` of `engine/sessions.mjs`,
+  `POST /api/sessions/:slug/reload`) closes the Claude process, waits for its loop to end (`s.finished`, 10 s max) and
+  resumes the same conversation with the feed kept as is plus a 🔄 line: MCP servers, settings, skills and CLAUDE.md
+  are read again, as `claude -r` in the terminal. **Archive**
+  (🗄 in the ⋯ menu, or automatically once ended for the delay set in ⚙ Options, 1 day by default, checked every hour;
   `archiveAfterDays` in `~/.claude-dashboard/options.json`) removes it from the tree: its JSON goes to
   `sessions/archive/<slug>.json`, its mockups are copied there. "Resume" a conversation in the folder history (📋 if
   its panel is archived) brings it back with its panel.

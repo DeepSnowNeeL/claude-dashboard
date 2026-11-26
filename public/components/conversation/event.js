@@ -105,6 +105,7 @@ export function eventHtml(ev, activeDecisionsId) {
     }
   }
   else if (ev.t === 'auto') { el.className = `end m auto${ev.level ? ` alert-${ev.level}` : ''}`; el.textContent = ev.text; } // level: plan alert (orange, red)
+  else if (ev.t === 'reloaded') { el.className = 'end m'; el.textContent = t('conversation.event.reloaded'); }
   else if (ev.t === 'cleared') { el.className = 'end m cleared'; el.textContent = `🧹 ${ev.text}`; }
   else return null;
   return el;

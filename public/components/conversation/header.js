@@ -1,9 +1,9 @@
-// Conversation header: title (renamable), counters, ticket, steps, permission mode, End and Archive.
+// Conversation header: title (renamable), counters, ticket, steps, permission mode, End, ⋯ menu (Reload, Archive).
 // An effect rerenders it when the session detail changes.
 import { effect } from '../../core/signals.js';
 import { $, esc, rich, toast, ticketLink, displayName, kTokens, modelLabel } from '../../core/dom.js';
 import { current, detail, projects, sessions } from '../../core/state.js';
-import { setMode, setModel, readModels, end, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
+import { setMode, setModel, readModels, end, reload, archive, rename, sendActive as postActive, sendActiveFinal } from '../../services/sessions.js';
 import { loadList, pathKey } from '../../services/projects.js';
 import { trackerProfile } from '../tracker/renderers.js';
 import { modeOptions } from '../../core/modes.js';
@@ -48,7 +48,7 @@ export function renderHeader(d) {
           : d.paused ? `<span class="m" title="${t('conversation.header.pausedTitle')}">${t('conversation.header.paused')}</span>` : ''}
         ${d.busy ? `<span class="m">${t('conversation.header.busy')}</span>` : ''}
         ${d.status !== 'done' ? `<button class="btn" id="end" title="${t('conversation.header.endTitle')}">${t('conversation.header.end')}</button>` : ''}
-        <button class="btn" id="archive" title="${esc(t('conversation.header.archiveTitle'))}">${t('conversation.header.archive')}</button>
+        <button class="btn more" id="more" title="${t('conversation.header.moreTitle')}">⋯</button>
       </div>` : ''}
     </div>`;
   $('#model')?.addEventListener('click', e => modelMenu(d, e.currentTarget));
@@ -87,13 +87,28 @@ export function renderHeader(d) {
     location.hash = ''; // the session leaves the screen; it stays in "ended" and a message resumes it
     toast(t('conversation.header.ended', { title: d.title || d.slug }));
   });
-  $('#archive')?.addEventListener('click', async () => {
-    if (d.busy && !confirm(t('conversation.header.confirmArchive'))) return;
-    try { await archive(d.slug); } catch (err) { return alert(err.message); }
-    location.hash = '';
-    toast(t('conversation.header.archived', { title: d.title || d.slug }));
-  });
+  $('#more')?.addEventListener('click', e => moreMenu(d, e.currentTarget));
   renderStats();
+}
+
+// ⋯ menu: the less frequent actions. Reload restarts Claude Code on the same conversation (MCP servers, settings,
+// skills, CLAUDE.md read again), as quitting the terminal and `claude -r`.
+function moreMenu(d, el) {
+  const r = el.getBoundingClientRect();
+  openMenu(t('conversation.header.moreMenu'), [
+    { ic: '🔄', label: t('conversation.header.reload'), run: async () => {
+      const sum = sessions().find(x => x.slug === d.slug); // running subagents and shells are counted in the list
+      if ((d.busy || sum?.runningAgents || sum?.runningShells) && !confirm(t('conversation.header.confirmReload'))) return;
+      await reload(d.slug);
+      toast(t('conversation.header.reloaded'));
+    } },
+    { ic: '🗄', label: t('conversation.header.archive'), run: async () => {
+      if (d.busy && !confirm(t('conversation.header.confirmArchive'))) return;
+      await archive(d.slug);
+      location.hash = '';
+      toast(t('conversation.header.archived', { title: d.title || d.slug }));
+    } },
+  ], r.right - 220, r.bottom + 4);
 }
 
 // Model pill: the model of the last call, or before the first message the one chosen (otherwise "Default"),

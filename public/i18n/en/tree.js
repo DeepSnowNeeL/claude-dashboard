@@ -111,6 +111,7 @@ export default {
     copyLink: 'Copy session link',
     end: 'End',
     endConfirm: 'End this session? A message resumes it.',
+    reload: 'Reload (MCP, settings, skills)',
     archive: 'Archive',
     archiveConfirm: 'Archive this session? "Resume" in the folder history brings it back.',
     newSessionHere: 'New session here',

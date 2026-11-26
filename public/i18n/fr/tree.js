@@ -111,6 +111,7 @@ export default {
     copyLink: 'Copier le lien de la session',
     end: 'Terminer',
     endConfirm: 'Terminer cette session ? Un message la reprend.',
+    reload: 'Recharger (MCP, réglages, skills)',
     archive: 'Archiver',
     archiveConfirm: 'Archiver cette session ? « Reprendre » dans l\'historique du dossier la remet.',
     newSessionHere: 'Nouvelle session ici',

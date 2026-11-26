@@ -121,8 +121,9 @@ export function createSession({ slug, cwd, mode = 'all', prePlan, model, updateB
   Object.assign(ctx, attachInput(ctx));
   const { handleMessage, stopActivity } = ctx;
 
-  // Reading the stream: each SDK message is translated into feed events (events.mjs).
-  (async () => {
+  // Reading the stream: each SDK message is translated into feed events (events.mjs). `s.finished`: the loop is over
+  // (Claude process gone), awaited by a reload before resuming the same conversation.
+  s.finished = (async () => {
     try {
       for await (const m of s.q) handleMessage(m);
     } catch (e) {

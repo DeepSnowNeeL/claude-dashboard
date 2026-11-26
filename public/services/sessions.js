@@ -14,6 +14,8 @@ export const setMode = (slug, mode) => api(`/api/sessions/${slug}/mode`, { mode 
 export const readModels = slug => api(`/api/sessions/${slug}/models`);
 export const setModel = (slug, model) => api(`/api/sessions/${slug}/model`, { model });
 export const end = slug => api(`/api/sessions/${slug}/end`, {});
+/** Restarts the Claude process on the same conversation: MCP servers, settings, skills and CLAUDE.md read again. */
+export const reload = slug => api(`/api/sessions/${slug}/reload`, {});
 export const archive = slug => api(`/api/sessions/${slug}/archive`, {});
 export const rename = (slug, title) => api(`/api/sessions/${slug}/rename`, { title });
 /** Mermaid schema of the panel that failed to render: the engine sends it back to Claude (once per version of the schema). */
