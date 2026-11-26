@@ -100,12 +100,12 @@ export function renderNewSession(initialCwd) {
         <div class="branch-list" id="branch-list" hidden></div>
         <div class="branch-modes" id="branch-modes" hidden>
           <label class="check"><input type="radio" name="branch-mode" value="on"> <span id="mode-on-label"></span></label>
-          <span class="m target" id="target-on"></span>
+          <span class="m branch-target" id="target-on"></span>
           <label class="check"><input type="radio" name="branch-mode" value="new"> <span id="mode-new-label"></span></label>
           <input id="new-branch" placeholder="${t('newSession.branchPlaceholder')}" autocomplete="off" spellcheck="false" hidden>
-          <span class="m target" id="target-new"></span>
+          <span class="m branch-target" id="target-new"></span>
         </div>
-        <span class="m target" id="branch-hint"></span>
+        <span class="m branch-target" id="branch-hint"></span>
       </div>
       <label>${t('newSession.permissions')}
         <select id="new-session-mode">${modeOptions(lastMode())}</select></label>

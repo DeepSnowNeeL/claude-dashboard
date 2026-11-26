@@ -76,7 +76,7 @@ button.link { background: none; border: 0; padding: 0; color: var(--link); curso
 .new-session-form .branch-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .new-session-form .branch-list .w { margin-left: auto; color: var(--muted); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
 .new-session-form .branch-modes { display: flex; flex-direction: column; gap: 4px; padding-left: 4px; }
-.new-session-form .branch-modes .target, .new-session-form .start-branch > .target { font-size: 12px; padding-left: 22px; }
+.new-session-form .branch-target { font-size: 12px; padding-left: 22px; }
 .new-session-form .branch-modes #new-branch { margin-left: 22px; }
 .new-session-form [hidden] { display: none; }
 .new-session-form label .m { font-weight: 400; }
