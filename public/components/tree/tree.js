@@ -98,7 +98,7 @@ function sessionRow(s, worktree, { nest = '', kids = 0 } = {}) {
   </a>`;
 }
 
-/** Ticket read in a branch name: `KCYBER-31` in task/KCYBER-31-policy, or the leading number of 2680-export. */
+/** Ticket read in a branch name: `PROJ-31` in feat/PROJ-31-login, or the leading number of 2680-export. */
 const branchTicket = b => String(b || '').match(/\b[A-Z][A-Z0-9]+-\d+\b/)?.[0] || String(b || '').match(/(?:^|\/)(\d{3,})(?=[-_]|$)/)?.[1] || '';
 const RECENT_DAYS = 7;
 /** A worktree stays in view when it is the main one or has a session still open, or ended less than a week ago. */
