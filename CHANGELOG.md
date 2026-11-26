@@ -4,6 +4,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-26
 
+- "New session" can start from a branch: the "Starting branch" field suggests develop, main, epic/* and release/*
+  first, then the local and remote branches. "Work on it" opens the session in the worktree that already has it (or a
+  new one), "New branch from it" creates a branch and its worktree from it. It replaces the "In a new worktree" box;
+  a name that matches no branch still creates it from the main worktree.
 - In the list, a project with many worktrees is easier to read: ⌂ marks the main one, ⎇ a worktree on a branch
   (with the ticket read from its name) and ⊘ a detached HEAD, shown with its short commit and its folder. Only the
   main worktree and those with a session open or ended in the last 7 days stay in view; the others fold under

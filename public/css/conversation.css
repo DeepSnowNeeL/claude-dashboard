@@ -64,6 +64,20 @@ button.link { background: none; border: 0; padding: 0; color: var(--link); curso
 .new-session-form .workspace-folders { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
 .new-session-form .workspace-folders .lbl { font-weight: 700; }
 .new-session-form label.check { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; }
+/* Starting branch: input with its suggestion list (groups, worktree or age on the right), then the two choices */
+.new-session-form .start-branch { display: flex; flex-direction: column; gap: 4px; position: relative; }
+.new-session-form .start-branch > label { flex-direction: row; gap: 6px; align-items: baseline; }
+.new-session-form .start-branch .m { font-weight: 400; }
+.new-session-form .branch-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; max-height: 320px; overflow: auto; margin-top: -4px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); font-size: 13px; }
+.new-session-form .branch-list .g { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 10px 2px; }
+.new-session-form .branch-list .o { display: flex; gap: 8px; padding: 4px 10px; cursor: pointer; }
+.new-session-form .branch-list .o:hover, .new-session-form .branch-list .o.on { background: color-mix(in srgb, var(--link) 15%, transparent); }
+.new-session-form .branch-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.new-session-form .branch-list .w { margin-left: auto; color: var(--muted); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+.new-session-form .branch-modes { display: flex; flex-direction: column; gap: 4px; padding-left: 4px; }
+.new-session-form .branch-modes .target, .new-session-form .start-branch > .target { font-size: 12px; padding-left: 22px; }
+.new-session-form .branch-modes #new-branch { margin-left: 22px; }
 .new-session-form [hidden] { display: none; }
 .new-session-form label .m { font-weight: 400; }
 .new-session-form .bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
