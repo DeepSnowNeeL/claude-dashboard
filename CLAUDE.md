@@ -34,7 +34,11 @@ and the design of what is about to be built in visual form, with all the availab
 
 - **On the left** (a handle between the list and the chat widens it, like the right panel's): a tree projects (git
   repos) → worktrees → sessions, as in Orca. Each level collapses (state kept in the browser); collapsed, it shows its
-  counters (⏳ waiting for your answer, ⚙ Claude working). A "+" on each worktree opens the "New session" page of the
+  counters (⏳ waiting for your answer, ⚙ Claude working). A worktree row says what it is: ⌂ main, ⎇ on a branch (plus
+  the ticket read from the branch name, `branchTicket()`), ⊘ detached HEAD (short commit `head`, folder name, and its
+  parent folder when it is not next to the repo). Only the main worktree and those with a session open or ended less
+  than 7 days ago stay in view; the others fold under "N other worktrees" (key `o:<project>`, closed by default),
+  branches first, detached ones after; a search shows the matching ones directly. A "+" on each worktree opens the "New session" page of the
   folder: ▶ New session starts it in one click, empty (the first message is typed in its input), or the folder history
   resumes an old one. The folder is set by default (the "+" one, otherwise the one of the last displayed session),
   "change" opens the input; the permission mode and the **model** (list of `supportedModels()` read through the usage probe, engine route

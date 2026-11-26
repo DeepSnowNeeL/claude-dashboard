@@ -18,7 +18,7 @@ function folder(d) {
   if (!d.cwd) return esc(d.project || '');
   const c = pathKey(d.cwd);
   const w = projects().flatMap(p => p.worktrees).filter(x => c === x.id || c.startsWith(x.id + '/')).sort((a, b) => b.id.length - a.id.length)[0];
-  return `<a class="path cwd" data-path="${esc(d.cwd)}" title="${esc(t('conversation.header.folderTitle', { path: d.cwd }))}">📁 ${esc(d.cwd)}</a>${w?.branch ? ` <span title="${t('conversation.header.branchTitle')}">⎇ ${esc(w.branch)}</span>` : ''}`;
+  return `<a class="path cwd" data-path="${esc(d.cwd)}" title="${esc(t('conversation.header.folderTitle', { path: d.cwd }))}">📁 ${esc(d.cwd)}</a>${w?.branch ? ` <span title="${t('conversation.header.branchTitle')}">⎇ ${esc(w.branch)}</span>` : w?.detached && w.head ? ` <span title="${esc(t('tree.worktree.detached'))}">⊘ ${esc(w.head)}</span>` : ''}`;
 }
 
 /** Session launched by another one: link to it, next to the title. */

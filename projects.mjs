@@ -196,8 +196,11 @@ function worktrees(dir) {
         for (const block of stdout.split(/\r?\n\r?\n/)) {
           const wtPath = block.match(/^worktree (.+)$/m)?.[1];
           if (!wtPath || /^prunable/m.test(block)) continue;
-          const branch = block.match(/^branch refs\/heads\/(.+)$/m)?.[1] || (/^detached/m.test(block) ? t('server.worktree.detachedHead') : null);
-          l.push({ path: path.normalize(wtPath), branch });
+          // Detached HEAD: no branch, its short commit tells it apart from the others
+          const branch = block.match(/^branch refs\/heads\/(.+)$/m)?.[1] || null;
+          const detached = /^detached/m.test(block);
+          const head = block.match(/^HEAD ([0-9a-f]+)$/m)?.[1]?.slice(0, 7) || null;
+          l.push({ path: path.normalize(wtPath), branch, detached, head });
         }
         if (!l.length) l = null;
       }
@@ -210,7 +213,7 @@ function worktrees(dir) {
 /**
  * Projects to show: those of the given session folders and those added by hand.
  * @param {string[]} dirs cwd of the sessions
- * @returns {Promise<{id, name, path, added, ticketUrl, worktrees: {id, path, branch, main}[]}[]>}
+ * @returns {Promise<{id, name, path, added, ticketUrl, worktrees: {id, path, branch, detached, head, main}[]}[]>}
  */
 export async function tree(dirs) {
   const added = new Set(addedProjects().map(pathKey));
@@ -231,7 +234,7 @@ export async function tree(dirs) {
       id, name: meta[id]?.name || path.basename(list[0].path), dirName: path.basename(list[0].path), path: list[0].path,
       added: added.has(id), logo: logos.has(id), color: meta[id]?.color || null, icon: meta[id]?.icon || null,
       ticketUrl: meta[id]?.ticketUrl || null,
-      worktrees: list.map((w, i) => ({ id: pathKey(w.path), path: w.path, branch: w.branch, main: i === 0 })),
+      worktrees: list.map((w, i) => ({ id: pathKey(w.path), path: w.path, branch: w.branch, detached: !!w.detached, head: w.head || null, main: i === 0 })),
     });
   }
   return [...projects.values()].sort((a, b) => a.name.localeCompare(b.name));

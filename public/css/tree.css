@@ -43,8 +43,14 @@
 .node .count.waiting { background: var(--yellow-pill); color: var(--yellow-txt); }
 .node .count.blocked { background: var(--red); color: #fff; }
 .node .count.working { background: var(--blue-pill); color: var(--blue-txt); }
-.node .count + .plus, .node .nm + .plus { margin-left: auto; }
-.node .nm + .count { margin-left: auto; }
+/* Worktree row: kind icon (⌂ main, ⎇ branch, ⊘ detached), name, folder when it says more, ticket of the branch */
+.node .ic { width: 14px; text-align: center; flex-shrink: 0; }
+.node .sub { font-size: 11px; opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex-shrink: 2; }
+.node .wt-tk { font-size: 10px; padding: 0 5px; border-radius: 4px; background: var(--chip); flex-shrink: 0; }
+.node.det .nm { font-family: ui-monospace, monospace; }
+.node.no .nm { font-style: italic; }
+.node .count + .plus, .node .nm + .plus, .node .sub + .plus, .node .wt-tk + .plus { margin-left: auto; }
+.node .nm + .count, .node .sub + .count, .node .wt-tk + .count { margin-left: auto; }
 .project > .children { padding-left: 10px; }
 .wt > .children { padding-left: 14px; border-left: 1px solid var(--line-light); margin-left: 8px; }
 .children .sess { margin-top: 4px; }

@@ -4,6 +4,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-26
 
+- In the list, a project with many worktrees is easier to read: ⌂ marks the main one, ⎇ a worktree on a branch
+  (with the ticket read from its name) and ⊘ a detached HEAD, shown with its short commit and its folder. Only the
+  main worktree and those with a session open or ended in the last 7 days stay in view; the others fold under
+  "N other worktrees".
 - When a background subagent or command finishes, the session wakes up once: Claude Code now starts that turn by
   itself, so the dashboard no longer sends its own wake-up on top (Claude used to answer twice, the second time to
   say nothing changed). The session also shows as working during that turn.

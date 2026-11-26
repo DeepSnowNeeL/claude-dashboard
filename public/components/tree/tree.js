@@ -34,7 +34,10 @@ export function revealInTree(s) {
     delete f[`w:${wt.id}`];
     const g = groups().find(x => x.projects.includes(project.id));
     if (g) delete f[`g:${g.id}`];
-    if (s.status === 'done') f[`t:${wt.id}`] = 1; // the "done" row opens when its key is present
+    if (s.status === 'done') {
+      f[`t:${wt.id}`] = 1; // the "done" row opens when its key is present
+      if (!wt.main) f[`o:${project.id}`] = 1; // its worktree may sit under "other worktrees" (same rule)
+    }
   } else {
     delete f['p:others'];
     if (s.status === 'done') f['t:others'] = 1;
@@ -94,6 +97,14 @@ function sessionRow(s, worktree, { nest = '', kids = 0 } = {}) {
     <span class="m">${timeAgo(s.updatedAt)}</span>
   </a>`;
 }
+
+/** Ticket read in a branch name: `KCYBER-31` in task/KCYBER-31-policy, or the leading number of 2680-export. */
+const branchTicket = b => String(b || '').match(/\b[A-Z][A-Z0-9]+-\d+\b/)?.[0] || String(b || '').match(/(?:^|\/)(\d{3,})(?=[-_]|$)/)?.[1] || '';
+const RECENT_DAYS = 7;
+/** A worktree stays in view when it is the main one or has a session still open, or ended less than a week ago. */
+const inView = (w, sess) => w.main || sess.some(s => s.status !== 'done' || Date.now() - Date.parse(s.updatedAt) < RECENT_DAYS * 86_400_000);
+const baseName = p => p.split(/[\\/]/).pop();
+const parentDir = p => p.replace(/[\\/][^\\/]*$/, '');
 
 /** Summary of a collapsed node: unseen new items, blocked sessions, sessions waiting for an answer, running ones. */
 function counters(sess) {
@@ -157,17 +168,37 @@ function renderList() {
     if (q && !sessP.length) return '';
     const kp = `p:${p.id}`;
     const single = p.worktrees.length === 1;
-    const wts = p.worktrees.map(w => {
+    // Main worktree (⌂), on a branch (⎇) or detached (⊘: short commit and folder, nothing else tells them apart)
+    const mainParent = pathKey(parentDir(p.path));
+    const wtNode = w => {
       const sess = byWt.get(w.id).sort(byStatus);
       if (q && !sess.length) return '';
-      if (single) return sessionRows(sess, w.id);
       const kw = `w:${w.id}`;
+      const ic = w.main ? '⌂' : w.detached ? '⊘' : '⎇';
+      const icTitle = t(w.main ? 'tree.worktree.main' : w.detached ? 'tree.worktree.detached' : 'tree.worktree.branch');
+      const name = w.branch || (w.detached && w.head) || baseName(w.path);
+      const where = w.branch ? '' : baseName(w.path) + (pathKey(parentDir(w.path)) !== mainParent ? ` · ${parentDir(w.path)}` : '');
+      const tk = branchTicket(w.branch);
       return `<div class="wt">
-        <div class="node" data-fold="${esc(kw)}" data-wt-path="${esc(w.path)}" title="${esc(t('tree.worktreeTitle', { path: w.path }))}"><span class="fl">${open(kw) ? '▾' : '▸'}</span>
-          <span class="nm">⎇ ${esc(w.branch || w.path.split(/[\\/]/).pop())}</span>${open(kw) ? '' : counters(sess)}${newSession(w)}</div>
+        <div class="node ${w.detached ? 'det' : ''}" data-fold="${esc(kw)}" data-wt-path="${esc(w.path)}" title="${esc(t('tree.worktreeTitle', { path: w.path }))}"><span class="fl">${open(kw) ? '▾' : '▸'}</span>
+          <span class="ic" title="${esc(icTitle)}">${ic}</span><span class="nm">${esc(name)}</span>${where ? `<span class="sub">${esc(where)}</span>` : ''}${tk ? `<span class="wt-tk">${esc(tk)}</span>` : ''}${open(kw) ? '' : counters(sess)}${newSession(w)}</div>
         ${open(kw) ? `<div class="children">${sessionRows(sess, w.id)}</div>` : ''}
       </div>`;
-    }).join('');
+    };
+    let wts;
+    if (single) wts = q && !byWt.get(p.worktrees[0].id).length ? '' : sessionRows(byWt.get(p.worktrees[0].id).sort(byStatus), p.worktrees[0].id);
+    else {
+      // The worktrees without recent work fold under one row (closed by default: its key in the folds means open),
+      // those on a branch first, the detached ones after. A search shows the matching ones directly.
+      const shown = q ? p.worktrees : p.worktrees.filter(w => inView(w, byWt.get(w.id)));
+      const rest = q ? [] : p.worktrees.filter(w => !shown.includes(w)).sort((a, b) => a.detached - b.detached);
+      const ko = `o:${p.id}`, detached = rest.filter(w => w.detached).length;
+      wts = shown.map(wtNode).join('') + (rest.length ? `<div class="wt others">
+        <div class="node no" data-fold="${esc(ko)}"><span class="fl">${folds[ko] ? '▾' : '▸'}</span>
+          <span class="nm">${t('tree.otherWorktrees', { n: rest.length })}</span>${detached ? `<span class="count" title="${esc(t('tree.worktree.detached'))}">${t('tree.detachedCount', { n: detached })}</span>` : ''}</div>
+        ${folds[ko] ? `<div class="children">${rest.map(wtNode).join('')}</div>` : ''}
+      </div>` : '');
+    }
     return `<div class="project">
       <div class="node np" data-fold="${esc(kp)}" draggable="true" data-project="${esc(p.id)}" title="${esc(t('tree.projectTitle', { path: p.path }))}"><span class="fl">${open(kp) ? '▾' : '▸'}</span>
         ${p.icon ? `<span class="project-icon">${esc(p.icon)}</span>` : p.logo ? `<img class="project-logo" src="${projectLogoUrl(p.id)}" alt="">` : ''}<span class="nm" ${p.color ? `style="color:${esc(p.color)}"` : ''}>${esc(p.name)}</span>${open(kp) ? '' : counters(sessP)}${single ? newSession(p.worktrees[0]) : ''}<button class="plus menu" data-edit-project="${esc(p.id)}" title="${t('tree.editProject')}">⋯</button></div>
