@@ -35,15 +35,18 @@ export function attachAgents(ctx) {
     if (before === 'working' && a.state !== 'working' && a.background && !a.parent) agentDone(a);
   }
 
-  // A background agent that finishes while the session is idle starts a new turn, as in the terminal
-  // (the SDK keeps the notification for the next message). Close endings are grouped.
-  let done = [], agentsWakeUp = null;
+  // A background agent that finishes while the session is idle starts a new turn, as in the terminal. Recent
+  // Claude Code versions start that turn themselves from the task notification: the wake-up is then only a fallback,
+  // sent if no turn started since the first ending (otherwise Claude got the notification twice). Close endings are grouped.
+  let done = [], agentsWakeUp = null, firstDoneAt = 0;
   function agentDone(a) {
+    if (!done.length) firstDoneAt = Date.now();
     done.push(a);
     clearTimeout(agentsWakeUp);
     agentsWakeUp = setTimeout(() => {
       const list = done.splice(0);
-      if (s.busy || s.closed || !list.length) return; // in the middle of a turn: Claude receives the notification in that turn
+      // In the middle of a turn, or a turn started since: Claude receives (or received) the notification there
+      if (s.busy || s.closed || !list.length || (s.turnStartedAt || 0) >= firstDoneAt) return;
       // Subagents and background shells (pipeline watch, server…): same wake-up
       const shown = list.map(x => t(x.shell ? 'driver.feed.doneCommand' : 'driver.feed.doneSubagent', { name: x.description })).join(', ');
       const names = list.map(x => `${x.shell ? 'the command' : 'the subagent'} "${x.description}"`).join(', ');

@@ -176,6 +176,8 @@ export function attachEvents(ctx) {
     } else if (m.type === 'stream_event') {
       const e = m.event;
       if (m.parent_tool_use_id) return; // subagents: only their tools
+      // Turn started by Claude Code itself (task notification of a background agent or shell while idle): working
+      if (!s.busy && e.type === 'message_start') { s.busy = true; s.turnStartedAt = Date.now(); startActivity(); setStatus('working'); }
       trackActivity(e);
       if (e.type === 'content_block_start' && e.content_block?.type === 'text') { text = { id: newId(), t: 'text', text: '', at: Date.now() }; count({ newItems: 1 }); }
       else if (e.type === 'content_block_delta' && e.delta?.type === 'text_delta' && text) { text.text += e.delta.text; pushEvent({ ...text }); }

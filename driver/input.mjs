@@ -52,6 +52,7 @@ export function attachInput(ctx) {
     s.devTurn = false;
     ctx.startActivity();
     s.busy = true;
+    s.turnStartedAt = Date.now();
     setStatus('working');
     // Each attachment is cited by its path (Claude can read it again, the page finds it in the history);
     // images and PDFs are also sent as blocks, so that Claude sees them directly.
