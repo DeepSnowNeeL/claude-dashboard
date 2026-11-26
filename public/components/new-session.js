@@ -1,7 +1,7 @@
 // "New session" page: folder choice, one-click start, folder history to resume.
-import { $, esc, skeleton, sessionSkeleton, modelLabel } from '../core/dom.js';
+import { $, esc, skeleton, sessionSkeleton, modelLabel, timeAgo } from '../core/dom.js';
 import { create, resume, readAvailableModels } from '../services/sessions.js';
-import { readHistory, readFolders } from '../services/projects.js';
+import { readHistory, readFolders, readBranches } from '../services/projects.js';
 import { projects, relativeDir, serverMode } from '../core/state.js';
 import { readWorkspace } from '../services/options.js';
 import { modeOptions, MODE_KEYS } from '../core/modes.js';
@@ -94,9 +94,19 @@ export function renderNewSession(initialCwd) {
       <label id="cwd-input" ${cwd0 ? 'hidden' : ''}>${t('newSession.projectFolder')}<input id="cwd" list="folders" required placeholder="${esc(t('newSession.folderPlaceholder'))}" autocomplete="off" value="${esc(cwd0)}"></label>
       <div class="workspace-folders" id="workspace-folders" hidden></div>
       <datalist id="folders">${treeFolders.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
-      <label class="check"><input type="checkbox" id="with-worktree"> ${t('newSession.inNewWorktree')}</label>
-      <label id="worktree-input" hidden>${t('newSession.branch')}<input id="new-branch" placeholder="${t('newSession.branchPlaceholder')}" autocomplete="off">
-        <span class="m" id="worktree-target"></span></label>
+      <div class="start-branch" id="start-branch-zone" hidden>
+        <label for="start-branch">${t('newSession.startBranch')} <span class="m">${t('newSession.startBranchOptional')}</span></label>
+        <input id="start-branch" placeholder="${esc(t('newSession.startBranchPlaceholder'))}" autocomplete="off" spellcheck="false">
+        <div class="branch-list" id="branch-list" hidden></div>
+        <div class="branch-modes" id="branch-modes" hidden>
+          <label class="check"><input type="radio" name="branch-mode" value="on"> <span id="mode-on-label"></span></label>
+          <span class="m target" id="target-on"></span>
+          <label class="check"><input type="radio" name="branch-mode" value="new"> <span id="mode-new-label"></span></label>
+          <input id="new-branch" placeholder="${t('newSession.branchPlaceholder')}" autocomplete="off" spellcheck="false" hidden>
+          <span class="m target" id="target-new"></span>
+        </div>
+        <span class="m target" id="branch-hint"></span>
+      </div>
       <label>${t('newSession.permissions')}
         <select id="new-session-mode">${modeOptions(lastMode())}</select></label>
       <label>${t('newSession.model')}
@@ -112,7 +122,7 @@ export function renderNewSession(initialCwd) {
     $('#cwd').value = dir;
     $('#cwd-text').textContent = `📁 ${dir}`;
     $('.fixed-folder').hidden = false; $('#cwd-input').hidden = true;
-    loadHistory(dir); updateTarget();
+    loadHistory(dir); loadBranches(dir);
     $('#new-session-form button[type=submit]').focus();
   };
   if (serverMode()) readWorkspace().then(ws => {
@@ -143,19 +153,83 @@ export function renderNewSession(initialCwd) {
     $('#cwd').select(); $('#cwd').focus(); loadRecent();
   });
   let pending = null;
-  $('#cwd').addEventListener('input', () => { clearTimeout(pending); pending = setTimeout(() => loadHistory($('#cwd').value), 500); updateTarget(); });
+  $('#cwd').addEventListener('input', () => { clearTimeout(pending); pending = setTimeout(() => { loadHistory($('#cwd').value); loadBranches($('#cwd').value); }, 500); });
 
-  // New worktree (unchecked by default): branch name, and the folder that will be created next to the repository
-  const updateTarget = () => {
-    const b = $('#new-branch').value.trim(), p = mainOf($('#cwd').value);
-    $('#worktree-target').textContent = b && p ? t('newSession.createdIn', { path: `${p}-${b.replace(/[\\/:*?"<>|\s]+/g, '-')}` }) : '';
+  // Starting branch (empty by default: the session opens in the folder as it is). A known branch offers "Work on it"
+  // (the worktree that has it checked out, otherwise a new one) or "New branch from it" (new worktree); a name that
+  // matches no branch creates it from the HEAD of the main worktree, as before.
+  let branchList = [], chosen = null, active = -1;
+  const loadBranches = dir => {
+    branchList = []; chosen = null;
+    $('#start-branch-zone').hidden = true;
+    if (!dir?.trim()) return;
+    readBranches(dir).then(l => {
+      if (pathKey($('#cwd')?.value) !== pathKey(dir)) return; // folder changed meanwhile
+      branchList = l; $('#start-branch-zone').hidden = !l.length; updateTarget();
+    }).catch(() => {});
   };
-  $('#with-worktree').addEventListener('change', e => {
-    $('#worktree-input').hidden = !e.target.checked;
-    $('#new-branch').required = e.target.checked;
-    if (e.target.checked) $('#new-branch').focus();
+  const targetOf = b => { const p = mainOf($('#cwd').value); return b && p ? `${p}-${b.replace(/[\\/:*?"<>|\s]+/g, '-')}` : ''; };
+  const branchMode = () => document.querySelector('input[name=branch-mode]:checked')?.value || 'on';
+  const updateTarget = () => {
+    const typed = $('#start-branch').value.trim();
+    chosen = branchList.find(b => b.name === typed) || null;
+    $('#branch-modes').hidden = !chosen;
+    const unknown = typed && !chosen;
+    $('#branch-hint').textContent = unknown ? t('newSession.newBranchFromHead', { branch: typed, path: targetOf(typed) }) : '';
+    $('#new-branch').required = !!chosen && branchMode() === 'new';
+    $('#new-branch').hidden = !chosen || branchMode() !== 'new';
+    if (!chosen) return;
+    $('#mode-on-label').innerHTML = t('newSession.workOn', { branch: `<b>${esc(chosen.local)}</b>` });
+    $('#mode-new-label').innerHTML = t('newSession.newBranchFrom', { branch: `<b>${esc(chosen.name)}</b>` });
+    $('#target-on').textContent = chosen.worktree ? t('newSession.existingWorktree', { path: chosen.worktree }) : t('newSession.createdIn', { path: targetOf(chosen.local) });
+    const nb = $('#new-branch').value.trim();
+    $('#target-new').textContent = branchMode() === 'new' && nb ? t('newSession.createdIn', { path: targetOf(nb) }) : '';
+  };
+  // Suggestions: main, master, develop… first, then epic/* and release/* (main ones), local, remote; filtered as typed
+  const FIRST = ['main', 'master', 'develop', 'dev', 'trunk'];
+  const firstRank = b => { const i = FIRST.indexOf(b.local); return i < 0 ? FIRST.length : i; };
+  let shown = [];
+  const renderBranchList = () => {
+    const q = $('#start-branch').value.trim().toLowerCase();
+    const hit = branchList.filter(b => !q || b.name.toLowerCase().includes(q));
+    const groupsOf = [
+      ['main', hit.filter(b => b.main).sort((a, b) => firstRank(a) - firstRank(b) || b.date - a.date).slice(0, 15)],
+      ['local', hit.filter(b => !b.main && !b.remote).slice(0, 30)],
+      ['remote', hit.filter(b => !b.main && b.remote).slice(0, 20)],
+    ].filter(([, l]) => l.length);
+    shown = groupsOf.flatMap(([, l]) => l);
+    active = Math.min(active, shown.length - 1);
+    const z = $('#branch-list');
+    z.hidden = !shown.length;
+    let i = 0;
+    z.innerHTML = groupsOf.map(([g, l]) => `<div class="g">${t(`newSession.branchGroups.${g}`)}</div>`
+      + l.map(b => `<div class="o ${i === active ? 'on' : ''}" data-i="${i++}"><span class="nm">${esc(b.name)}</span>`
+        + `<span class="w">${b.worktree ? `⎇ ${esc(b.worktree.split(/[\\/]/).pop())}` : esc(timeAgo(new Date(b.date).toISOString()))}</span></div>`).join('')).join('');
+    z.querySelectorAll('[data-i]').forEach(o => o.addEventListener('mousedown', e => { e.preventDefault(); pick(shown[+o.dataset.i]); }));
+  };
+  const pick = b => {
+    $('#start-branch').value = b.name;
+    $('#branch-list').hidden = true; active = -1;
+    // A starting branch (develop, epic/…) usually gets a new branch; any other one is worked on
+    document.querySelector(`input[name=branch-mode][value=${b.main ? 'new' : 'on'}]`).checked = true;
+    updateTarget();
+    if (b.main) $('#new-branch').focus();
+  };
+  $('#start-branch').addEventListener('focus', renderBranchList);
+  $('#start-branch').addEventListener('blur', () => { $('#branch-list').hidden = true; active = -1; });
+  $('#start-branch').addEventListener('input', () => { active = -1; renderBranchList(); updateTarget(); });
+  $('#start-branch').addEventListener('keydown', e => {
+    if ($('#branch-list').hidden) { if (e.key === 'ArrowDown') renderBranchList(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length;
+      renderBranchList();
+    } else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(shown[active]); }
+    else if (e.key === 'Escape') { $('#branch-list').hidden = true; active = -1; }
   });
+  document.querySelectorAll('input[name=branch-mode]').forEach(r => r.addEventListener('change', () => { updateTarget(); if (branchMode() === 'new') $('#new-branch').focus(); }));
   $('#new-branch').addEventListener('input', updateTarget);
+  loadBranches(cwd0);
   // Models of the SDK, read in the background: the form is usable (default model) while they load
   readAvailableModels().then(({ models }) => {
     const sel = $('#new-session-model'), last = read(MODEL_KEY, 'default');
@@ -165,15 +239,22 @@ export function renderNewSession(initialCwd) {
 
   $('#new-session-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const cwd = $('#cwd').value, mode = $('#new-session-mode').value, before = location.hash;
+    let cwd = $('#cwd').value;
+    const mode = $('#new-session-mode').value, before = location.hash;
     write(MODE_KEY, mode);
     const model = $('#new-session-model')?.value || 'default';
     write(MODEL_KEY, model);
-    const branch = $('#with-worktree').checked ? $('#new-branch').value.trim() : '';
+    // Starting branch: worktree that already has it, new worktree on it, or new branch from it (`base`)
+    const typed = $('#start-branch').value.trim();
+    let branch = '', base = '';
+    if (typed && !chosen) branch = typed;
+    else if (chosen && branchMode() === 'new') { branch = $('#new-branch').value.trim(); base = chosen.name; }
+    else if (chosen?.worktree) cwd = chosen.worktree;
+    else if (chosen) { branch = chosen.local; base = chosen.remote ? chosen.name : ''; }
     showLoading(t('newSession.title'));
     try {
       // No first message: it opens ready, cursor in its input
-      const { slug } = await create(cwd, mode, branch, model);
+      const { slug } = await create(cwd, mode, branch, model, '', base);
       if (location.hash === before) location.hash = slug;
     } catch (err) { alert(err.message); if (location.hash === before) renderNewSession(cwd); }
   });

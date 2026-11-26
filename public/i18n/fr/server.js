@@ -44,6 +44,7 @@ export default {
     notInRepo: "{path} n'est pas dans un dépôt git",
     folderExists: 'le dossier {path} existe déjà',
     detachedHead: 'HEAD détachée',
+    branchExists: 'la branche {branch} existe déjà : choisis « Travailler sur » ou un autre nom',
   },
   projects: {
     orcaImportFailed: 'import Orca impossible : {message}',

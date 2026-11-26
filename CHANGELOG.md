@@ -4,6 +4,10 @@ What changed for people who use the dashboard, newest first. The commit history 
 
 ## 2026-11-26
 
+- "New session" can start from a branch: the "Starting branch" field suggests develop, main, epic/* and release/*
+  first, then the local and remote branches. "Work on it" opens the session in the worktree that already has it (or a
+  new one), "New branch from it" creates a branch and its worktree from it. It replaces the "In a new worktree" box;
+  a name that matches no branch still creates it from the main worktree.
 - When a background subagent or command finishes, the session wakes up once: Claude Code now starts that turn by
   itself, so the dashboard no longer sends its own wake-up on top (Claude used to answer twice, the second time to
   say nothing changed). The session also shows as working during that turn.

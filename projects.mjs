@@ -160,14 +160,47 @@ export async function folderHistory(dir, limit = 300) {
   }));
 }
 
+/** Runs git, resolves its trimmed output, rejects with its message. */
+const runGit = (args, timeout = 60_000) => new Promise((ok, ko) => execFile('git', args, { windowsHide: true, timeout, maxBuffer: 16 * 1024 * 1024 },
+  (err, stdout, stderr) => (err ? ko(new Error((stderr || err.message).trim())) : ok(stdout.trim()))));
+
+/** Branches that serve as a starting point: offered first when a session starts from a branch. */
+const MAIN_BRANCH = /^(main|master|develop|dev|trunk|(epic|release)\/.+)$/;
+/**
+ * Branches of the repo of `dir` to start a session from, most recently committed first: the local ones (with the
+ * worktree that has each checked out, if any), then the remote ones that have no local branch of the same name.
+ * `main` marks main, master, develop, epic/*, release/*.
+ * @returns {Promise<{ name, local, remote, date, worktree, main }[]>} `local`: name of the local branch to work on
+ */
+export async function branches(dir) {
+  const out = await runGit(['-C', dir, 'for-each-ref', '--sort=-committerdate', '--format=%(refname)%09%(committerdate:unix)', 'refs/heads', 'refs/remotes'], 10_000);
+  const checkedOut = new Map((await worktrees(dir) || []).filter(w => w.branch).map(w => [w.branch, w.path]));
+  const locals = [], remotes = [];
+  for (const line of out.split(/\r?\n/).filter(Boolean)) {
+    const [ref, date] = line.split('\t');
+    const at = Number(date) * 1000 || 0;
+    if (ref.startsWith('refs/heads/')) {
+      const name = ref.slice(11);
+      locals.push({ name, local: name, remote: false, date: at, worktree: checkedOut.get(name) || null, main: MAIN_BRANCH.test(name) });
+    } else {
+      const name = ref.slice(13); // origin/feature
+      const local = name.slice(name.indexOf('/') + 1);
+      if (local === 'HEAD' || !name.includes('/')) continue;
+      remotes.push({ name, local, remote: true, date: at, worktree: null, main: MAIN_BRANCH.test(local) });
+    }
+  }
+  const known = new Set(locals.map(b => b.name));
+  return [...locals, ...remotes.filter(b => !known.has(b.local))];
+}
+
 /**
  * Creates a git worktree for `branch` next to the main worktree of the repo of `dir`
  * (D:\code\App + 1234-export → D:\code\App-1234-export), as done by hand. Returns its path.
  * Existing branch: the worktree takes it; otherwise it is created from `base` (default: HEAD of the main worktree).
+ * A `base` given for a branch that already exists is refused: the worktree would silently ignore it.
  */
 export async function createWorktree(dir, branch, base) {
-  const git = args => new Promise((ok, ko) => execFile('git', args, { windowsHide: true, timeout: 60_000 },
-    (err, stdout, stderr) => (err ? ko(new Error((stderr || err.message).trim())) : ok(stdout.trim()))));
+  const git = runGit;
   branch = String(branch || '').trim();
   if (!branch) throw new Error(t('server.worktree.emptyBranch'));
   const list = await git(['-C', dir, 'worktree', 'list', '--porcelain']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
@@ -175,6 +208,7 @@ export async function createWorktree(dir, branch, base) {
   const target = path.join(path.dirname(main), `${path.basename(main)}-${branch.replace(/[\\/:*?"<>|\s]+/g, '-')}`);
   if (fs.existsSync(target)) throw new Error(t('server.worktree.folderExists', { path: target }));
   const exists = await git(['-C', main, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
+  if (exists && base) throw new Error(t('server.worktree.branchExists', { branch }));
   await git(['-C', main, ...(exists ? ['worktree', 'add', target, branch] : ['worktree', 'add', '-b', branch, target, ...(base ? [base] : [])])]);
   forgetWorktrees();
   return target;

@@ -45,3 +45,5 @@ export const projectLogoUrl = id => `/api/projects/logo?id=${encodeURIComponent(
 export const readHistory = dir => api(`/api/history?dir=${encodeURIComponent(dir.trim())}`);
 /** Folders offered for a new session. */
 export const readFolders = () => api('/api/folders');
+/** Branches of the repo of a folder ("New session", start from a branch); [] outside git. */
+export const readBranches = dir => api(`/api/branches?dir=${encodeURIComponent(dir.trim())}`);
