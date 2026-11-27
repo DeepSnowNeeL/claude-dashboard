@@ -1,20 +1,22 @@
 // Git: modified files, commits, versions of a file, ignored files.
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, execFile } from 'node:child_process';
+import { execGit, spawnGit, fromGit } from '../git-exec.mjs';
 import { t } from '../public/i18n/index.js';
 
 // --- Git: modified files and versions of a file ------------------------------------------------
 
-export const git = (dir, args, { raw = false } = {}) => new Promise((ok, ko) => execFile('git', ['-C', dir, ...args],
-  { windowsHide: true, timeout: 15_000, maxBuffer: 20 * 1024 * 1024, encoding: raw ? 'buffer' : 'utf8' },
-  (err, stdout, stderr) => (err ? ko(new Error(String(stderr || err.message).trim())) : ok(stdout))));
+/** git in `dir` (the distribution's git for a WSL folder: git-exec.mjs). */
+export const git = (dir, args, { raw = false } = {}) => execGit(dir, args, { timeout: 15_000, maxBuffer: 20 * 1024 * 1024, encoding: raw ? 'buffer' : 'utf8' });
+
+/** Root of the repo of `dir`, as seen from here (a WSL repo's Linux path translated). */
+export const topLevel = async dir => fromGit(dir, (await git(dir, ['rev-parse', '--show-toplevel'])).trim());
 
 /** Among these relative paths (folders ending with "/"), the names of those git ignores. Outside a repo: none. */
 export function ignoredByGit(dir, paths) {
   if (!paths.length) return Promise.resolve(new Set());
   return new Promise(ok => {
-    const p = spawn('git', ['-C', dir, 'check-ignore', '-z', '--stdin'], { windowsHide: true });
+    const p = spawnGit(dir, ['check-ignore', '-z', '--stdin']);
     let out = '';
     p.stdout.on('data', d => { out += d; });
     p.on('error', () => ok(new Set()));
@@ -25,7 +27,7 @@ export function ignoredByGit(dir, paths) {
 
 /** Files modified since the last commit (staged or not, new ones included), with their lines added / removed. */
 export async function gitStatus(dir) {
-  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
+  const root = await topLevel(dir);
   const branch = (await git(dir, ['rev-parse', '--abbrev-ref', 'HEAD']).catch(() => '')).trim();
   const lines = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])).split('\0').filter(Boolean);
   const files = [];
@@ -117,7 +119,7 @@ async function statusOf(file) {
   // The file (or its whole folder) may have been deleted: git starts from the first folder that exists
   let dir = path.dirname(file);
   while (!fs.existsSync(dir) && path.dirname(dir) !== dir) dir = path.dirname(dir);
-  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
+  const root = await topLevel(dir);
   const rel = path.relative(root, file).split(path.sep).join('/');
   // Full status (a path filter would break rename detection)
   const lines = (await git(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all'])).split('\0').filter(Boolean);
@@ -131,7 +133,7 @@ async function statusOf(file) {
 
 /** Latest commits of the branch, marking those not pushed yet. */
 export async function gitCommits(dir, n = 20, skip = 0) {
-  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
+  const root = await topLevel(dir);
   const out = await git(root, ['log', `-n${n}`, `--skip=${skip}`, '--format=%H%x1f%h%x1f%s%x1f%an%x1f%aI%x1e']);
   const unpushed = new Set((await git(root, ['rev-list', '@{u}..HEAD']).catch(() => '')).split('\n').filter(Boolean));
   const commits = out.split('\x1e').map(l => l.trim()).filter(Boolean).map(l => {
@@ -144,7 +146,7 @@ export async function gitCommits(dir, n = 20, skip = 0) {
 /** One commit: full message and touched files (state, lines +/−). */
 export async function gitCommit(dir, hash) {
   if (!/^[0-9a-f]{4,40}$/i.test(hash)) throw new Error(t('server.git.invalidCommit'));
-  const root = (await git(dir, ['rev-parse', '--show-toplevel'])).trim();
+  const root = await topLevel(dir);
   const [header] = (await git(root, ['show', '-s', '--format=%H%x1f%s%x1f%b%x1f%an%x1f%aI', hash])).split('\n\x1e');
   const [full, subject, body, author, date] = header.split('\x1f');
   const states = new Map((await git(root, ['diff-tree', '--root', '--no-commit-id', '-r', '--name-status', hash])).split('\n').filter(Boolean)
@@ -167,12 +169,12 @@ export async function fileVersions(file, commit) {
   if (commit && !/^[0-9a-f]{4,40}$/i.test(commit)) throw new Error(t('server.git.invalidCommit'));
   const dir = fs.existsSync(file) && fs.statSync(file).isDirectory() ? file : path.dirname(file);
   let root = null;
-  try { root = (await git(fs.existsSync(dir) ? dir : path.dirname(dir), ['rev-parse', '--show-toplevel'])).trim(); } catch { /* outside git */ }
+  try { root = await topLevel(fs.existsSync(dir) ? dir : path.dirname(dir)); } catch { /* outside git */ }
   if (commit && !root) {
     // File deleted since: its folder may be gone, go up to a folder of the repo
     let d = path.dirname(file);
     while (!fs.existsSync(d) && path.dirname(d) !== d) d = path.dirname(d);
-    root = (await git(d, ['rev-parse', '--show-toplevel'])).trim();
+    root = await topLevel(d);
   }
   const rel = root ? path.relative(root, file).replace(/\\/g, '/') : null;
   const version = ref => git(root, ['show', `${ref}:${rel}`], { raw: true }).catch(() => null); // null: absent at this version

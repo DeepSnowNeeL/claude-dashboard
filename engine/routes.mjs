@@ -7,7 +7,7 @@ import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { feedFromHistory, agentFeedFromHistory, MODES, FILES_DIR, attachmentUrl } from '../driver.mjs';
-import { sendJson, readBody, readBinary, serveFile, applyLanguage, norm } from '../common.mjs';
+import { sendJson, readBody, readBinary, serveFile, applyLanguage, norm, logError } from '../common.mjs';
 import { t, LANGUAGES } from '../public/i18n/index.js';
 import * as trackers from '../trackers.mjs';
 import { sessions, drivers, resumable, newSession, resume, endSession, reloadSession, summarize, workInProgress } from './sessions.mjs';
@@ -71,7 +71,10 @@ async function create(req, res) {
   let body;
   try { body = JSON.parse(await readBody(req)); } catch (e) { return sendJson(res, 400, err('invalidJsonDetail', { message: e.message })); }
   let cwd = String(body.cwd || '').trim();
-  if (!cwd || !fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) return sendJson(res, 400, err('folderNotFound', { path: cwd }));
+  if (!cwd || !fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) {
+    logError('session', `folder not found: ${cwd}`);
+    return sendJson(res, 400, err('folderNotFound', { path: cwd }));
+  }
   // Existing branch checked out in the folder itself (git switch) rather than in a worktree
   if (body.branch && body.switch) {
     try { await switchBranch(cwd, body.branch, body.base ? String(body.base) : undefined); } catch (e) { return sendJson(res, 400, err('branchNotSwitched', { message: e.message })); }

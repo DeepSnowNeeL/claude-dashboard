@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DASH_DIR } from './common.mjs';
-import { execFileSync } from 'node:child_process';
+import { execGitSync, fromGit } from './git-exec.mjs';
 import { fileURLToPath } from 'node:url';
 import { pathKey } from './projects.mjs';
 import { language, LANGUAGES } from './public/i18n/index.js';
@@ -97,10 +97,12 @@ const gitCache = new Map(); // pathKey(folder) → { at, root, main }
 function gitInfo(dir) {
   const k = pathKey(dir), c = gitCache.get(k);
   if (c && Date.now() - c.at < 300_000) return c; // 5 min: the root and main worktree of a folder hardly ever move
-  const git = args => { try { return execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8', timeout: 4000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return ''; } };
-  const root = git(['rev-parse', '--show-toplevel']);
+  const git = args => { try { return execGitSync(dir, args, { encoding: 'utf8', timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return ''; } };
+  // Paths printed by git: a WSL repo's in Linux form (git-exec.mjs), translated
+  const fromGitOr = p => (p ? fromGit(dir, p) : '');
+  const root = fromGitOr(git(['rev-parse', '--show-toplevel']));
   // Main worktree = first of `git worktree list`: it identifies the project (projects.mjs)
-  const main = git(['worktree', 'list', '--porcelain']).match(/^worktree (.+)$/m)?.[1] || root || dir;
+  const main = fromGitOr(git(['worktree', 'list', '--porcelain']).match(/^worktree (.+)$/m)?.[1]) || root || dir;
   const r = { at: Date.now(), root: root ? path.normalize(root) : null, main: path.normalize(main) };
   gitCache.set(k, r);
   return r;

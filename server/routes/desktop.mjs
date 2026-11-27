@@ -7,7 +7,8 @@ import { spawn, execFile } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { sendJson, readBody, SERVER_MODE } from '../../common.mjs';
 import { isPathAllowed, isSensitive } from '../paths.mjs';
-import { git } from '../git.mjs';
+import { git, topLevel } from '../git.mjs';
+import { gitArg, fromGit } from '../../git-exec.mjs';
 import { pathKey, forgetWorktrees } from '../../projects.mjs';
 import { engine, engineHeaders, notifyChange, announceRestart } from '../engine-client.mjs';
 import { updateStatus } from '../updates.mjs';
@@ -73,7 +74,7 @@ async function openVsCode(req, res) {
   if (!(await isPathAllowed(file, req))) return sendJson(res, 403, { error: refusal(file, req) });
   const isDir = fs.statSync(file).isDirectory();
   let root = null;
-  try { root = path.normalize((await git(isDir ? file : path.dirname(file), ['rev-parse', '--show-toplevel'])).trim()); } catch { /* outside a repo */ }
+  try { root = path.normalize(await topLevel(isDir ? file : path.dirname(file))); } catch { /* outside a repo */ }
   const target = Number(body.line) > 0 ? `${file}:${Number(body.line)}` : file;
   const args = isDir ? [file] : root ? [root, '-g', target] : ['-g', target];
   if (process.platform === 'win32') {
@@ -121,7 +122,7 @@ async function removeWorktree(req, res) {
   try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, { error: t('server.errors.invalidJson') }); }
   const dir = path.resolve(String(body.path || ''));
   let list;
-  try { list = [...(await git(dir, ['worktree', 'list', '--porcelain'])).matchAll(/^worktree (.+)$/gm)].map(m => path.normalize(m[1])); }
+  try { list = [...(await git(dir, ['worktree', 'list', '--porcelain'])).matchAll(/^worktree (.+)$/gm)].map(m => path.normalize(fromGit(dir, m[1]))); }
   catch { return sendJson(res, 404, { error: t('server.worktree.notAWorktree', { path: dir }) }); }
   const main = list[0];
   if (!list.some(w => pathKey(w) === pathKey(dir))) return sendJson(res, 404, { error: t('server.worktree.notInThisRepo', { path: dir }) });
@@ -130,7 +131,7 @@ async function removeWorktree(req, res) {
   const inside = s => s.cwd && (pathKey(s.cwd) === pathKey(dir) || pathKey(s.cwd).startsWith(pathKey(dir) + '/'));
   const open = sessions.filter(s => inside(s) && s.status !== 'done');
   if (open.length) return sendJson(res, 409, { error: t('server.worktree.sessionsOpen', { n: open.length, names: open.map(s => s.title || s.slug).join(', ') }) });
-  try { await git(main, ['worktree', 'remove', ...(body.force ? ['--force'] : []), dir]); }
+  try { await git(main, ['worktree', 'remove', ...(body.force ? ['--force'] : []), gitArg(main, dir)]); }
   catch (e) {
     const msg = String(e.message || e);
     if (!body.force && /modified or untracked|contains modified|is dirty|untracked files/i.test(msg)) return sendJson(res, 409, { error: t('server.worktree.uncommitted'), dirty: true });

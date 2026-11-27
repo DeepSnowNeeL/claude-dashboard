@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFile } from 'node:child_process';
 import { git } from './git.mjs';
+import { spawnGit } from '../git-exec.mjs';
 import { t } from '../public/i18n/index.js';
 
 /**
@@ -94,10 +95,9 @@ export async function folderFiles(dir) {
 export function searchText(dir, q, { regex = false, matchCase = false, signal } = {}) {
   return new Promise(ok => {
     const rg = ripgrep();
-    const [prog, args] = rg
-      ? [rg, ['-n', '--no-heading', '--color', 'never', '--max-count', '50', '--max-columns', '300', '--max-columns-preview', ...(regex ? [] : ['-F']), ...(matchCase ? ['-s'] : ['-i']), '-e', q, '.']]
-      : ['git', ['-C', dir, 'grep', '-n', '-I', '--untracked', '--max-count', '50', ...(regex ? ['-E'] : ['-F']), ...(matchCase ? [] : ['-i']), '-e', q]];
-    const p = spawn(prog, args, { cwd: dir, windowsHide: true });
+    const p = rg
+      ? spawn(rg, ['-n', '--no-heading', '--color', 'never', '--max-count', '50', '--max-columns', '300', '--max-columns-preview', ...(regex ? [] : ['-F']), ...(matchCase ? ['-s'] : ['-i']), '-e', q, '.'], { cwd: dir, windowsHide: true })
+      : spawnGit(dir, ['grep', '-n', '-I', '--untracked', '--max-count', '50', ...(regex ? ['-E'] : ['-F']), ...(matchCase ? [] : ['-i']), '-e', q], { cwd: dir });
     const results = [];
     let rest = '', truncated = false;
     p.stdout.on('data', chunk => {

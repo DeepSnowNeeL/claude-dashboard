@@ -2,6 +2,14 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-27
+
+- Projects in WSL (opened as `\\wsl.localhost\<distro>\…`): their sessions now show under their project instead of
+  "Terminal sessions", whatever the case of the path. Git runs there with the distribution's own git: the worktrees
+  created from the terminal in WSL show with usable paths (opening a branch that has one no longer fails with
+  "folder not found"), and a worktree created from the dashboard works from both Windows and WSL.
+- A worktree or branch switch that fails is written with git's whole message to `~/.claude-dashboard/errors.log`.
+
 ## 2026-11-26
 
 - "New session" has a **Branch** choice in git folders: the folder as is (default), an existing branch (opened in
