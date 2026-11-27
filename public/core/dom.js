@@ -1,6 +1,7 @@
 // DOM and text utilities, with no state of their own (the session folder and the projects come from state.js).
 import { relativeDir, projects } from './state.js';
 import { t, locale } from '../i18n/index.js';
+import { pathKey } from './path-key.js';
 
 export const $ = s => document.querySelector(s);
 
@@ -164,8 +165,6 @@ export function timeAgo(iso) {
   return t('common.time.daysAgo', { n: Math.round(min / 1440) });
 }
 
-/** Same path key as the server (projects.mjs): unified separators, no trailing slash, case-insensitive on Windows. */
-const pathKey = p => { const n = String(p || '').replace(/\\/g, '/').replace(/\/+$/, ''); return /^[a-z]:/i.test(n) ? n.toLowerCase() : n; };
 
 /** URL usable in an href: http(s) only (never javascript:, data:…), otherwise null. */
 export const safeUrl = u => (/^https?:\/\/[^\s]/i.test(String(u || '').trim()) ? String(u).trim() : null);

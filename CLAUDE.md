@@ -313,7 +313,15 @@ and the design of what is about to be built in visual form, with all the availab
   the tool result (tail, 64 KB), with "Stop" (`stopTask`). A shell that finishes while the session is idle starts a
   turn, like a subagent (grouped wake-up). Counted in what `restart-engine` refuses to cut.
 - **Projects** (`projects.mjs`): deduced from the sessions' folders (`git worktree list`, 30 s cache) and from those
-  added by hand (`~/.claude-dashboard/projects.json`).
+  added by hand (`~/.claude-dashboard/projects.json`). Paths are compared through one key, `pathKey()` of
+  `public/core/path-key.js`, shared by the page and the servers (`projects.mjs` resolves the path first): a drive or
+  UNC path (`\\wsl.localhost\…`) is case-insensitive, a POSIX one is not.
+- **Git** goes through `git-exec.mjs` (`execGit`, `spawnGit`, `execGitSync`): a folder of a WSL distribution seen
+  from Windows (`\\wsl.localhost\<distro>\…`, `\\wsl$\…`) is handled by the distribution's git (`wsl.exe -d <distro>
+  --exec git -C /home/…`), not the Windows one (which wants each such folder in `safe.directory` and records
+  `//wsl.localhost/…` worktree paths the distribution's git cannot resolve). Paths given to git go through `gitArg()`,
+  paths it prints (`--show-toplevel`, `worktree list`) through `fromGit()`. Failed worktree creations and branch
+  switches are written with git's whole message to `~/.claude-dashboard/errors.log` (`logError` of `common.mjs`).
 - **Other sessions**: internal MCP tools `launch_session` (same folder by default, `folder` for another project;
   `worktree: { branch, base }` creates a git worktree next to the repo, e.g. `App-1234-export`), `list_sessions`
   (displayed title, step, status, project, branch, group), `message_session`, `end_session` (closes a worker session

@@ -1,7 +1,7 @@
 // "New session" page: folder choice, one-click start, folder history to resume.
 import { $, esc, skeleton, sessionSkeleton, modelLabel, timeAgo } from '../core/dom.js';
 import { create, resume, readAvailableModels } from '../services/sessions.js';
-import { readHistory, readFolders, readBranches } from '../services/projects.js';
+import { readHistory, readFolders, readBranches, pathKey } from '../services/projects.js';
 import { projects, sessions, relativeDir, serverMode } from '../core/state.js';
 import { readWorkspace } from '../services/options.js';
 import { modeOptions, MODE_KEYS } from '../core/modes.js';
@@ -83,7 +83,6 @@ function worktreeOf(dir) {
   const c = pathKey(dir);
   return projects().flatMap(p => p.worktrees).filter(w => c === pathKey(w.path) || c.startsWith(pathKey(w.path) + '/')).sort((a, b) => b.path.length - a.path.length)[0];
 }
-const pathKey = p => String(p || '').replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
 
 export function renderNewSession(initialCwd) {
   $('#right').classList.remove('mode-git');

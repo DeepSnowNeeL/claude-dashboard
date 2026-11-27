@@ -10,8 +10,8 @@ export async function loadList() {
   batch(() => { sessions.set(list); projects.set(pageProjects); groups.set(pageGroups); orders.set(pageOrders); if (pageCategories) categories.set(pageCategories); listLoaded.set(true); });
 }
 
-/** Same path key as the server (projects.mjs): unified separators, no trailing slash, case-insensitive on Windows. */
-export const pathKey = p => { const n = String(p || '').replace(/\\/g, '/').replace(/\/+$/, ''); return /^[a-z]:/i.test(n) ? n.toLowerCase() : n; };
+/** Same path key as the server (projects.mjs): see core/path-key.js. */
+export { pathKey } from '../core/path-key.js';
 
 /** Keeps the groups; throws the network error if any (up to the component to show it). */
 export async function saveGroups(newGroups) {

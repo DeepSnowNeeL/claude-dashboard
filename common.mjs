@@ -127,6 +127,14 @@ export function readBinary(req, max = 30 * 1024 * 1024) {
 export const norm = p => (WIN ? path.resolve(p).toLowerCase() : path.resolve(p));
 
 /**
+ * Error worth keeping for later (failed worktree creation…): the engine and the page run detached, without a console,
+ * so it goes to DASH_DIR/errors.log, one dated line (UTC) each.
+ */
+export function logError(where, message) {
+  fs.appendFile(path.join(DASH_DIR, 'errors.log'), `${new Date().toISOString()} [${where}] ${String(message).replace(/\r?\n/g, ' | ')}\n`, () => {});
+}
+
+/**
  * Policy of a file that does not belong to the dashboard (mockup, file of a project, attachment): an HTML page or an
  * SVG runs in a sandbox, with an origin of its own, so its scripts cannot call the API with the page's rights.
  */

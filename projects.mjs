@@ -3,19 +3,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { DASH_DIR } from './common.mjs';
-import { execFile } from 'node:child_process';
+import { DASH_DIR, logError } from './common.mjs';
+import { execGit, gitArg, fromGit } from './git-exec.mjs';
+import { pathKey as keyOf } from './public/core/path-key.js';
 import { listSessions } from '@anthropic-ai/claude-agent-sdk';
 import { t } from './public/i18n/index.js';
 
 const FILE = path.join(DASH_DIR, 'projects.json');
-const WIN = process.platform === 'win32';
 
-/** Comparison key of a path: unified separators, no trailing slash, case-insensitive on Windows. */
-export function pathKey(p) {
-  const n = path.resolve(p).replace(/\\/g, '/').replace(/\/+$/, '');
-  return WIN ? n.toLowerCase() : n;
-}
+/**
+ * Comparison key of a path, once resolved: the page's (public/core/path-key.js), so that a worktree id compares with a
+ * session folder there. On Windows a resolved path has a drive or is UNC, hence case-insensitive.
+ */
+export const pathKey = p => keyOf(path.resolve(p));
 
 /** Projects added by hand (without a session yet). */
 export function addedProjects() {
@@ -160,9 +160,13 @@ export async function folderHistory(dir, limit = 300) {
   }));
 }
 
-/** Runs git, resolves its trimmed output, rejects with its message. */
-const runGit = (args, timeout = 60_000) => new Promise((ok, ko) => execFile('git', args, { windowsHide: true, timeout, maxBuffer: 16 * 1024 * 1024 },
-  (err, stdout, stderr) => (err ? ko(new Error((stderr || err.message).trim())) : ok(stdout.trim()))));
+/** Runs git in `dir` (the distribution's git for a WSL folder: git-exec.mjs), resolves its trimmed output, rejects with its message. */
+const runGit = (dir, args, timeout = 60_000) => execGit(dir, args, { timeout }).then(out => out.trim());
+/** Same, the failure written to errors.log with git's whole message (the page only shows it once). */
+const runGitLogged = (where, dir, args, timeout) => runGit(dir, args, timeout).catch(e => {
+  logError(where, `git -C ${dir} ${args.join(' ')}: ${e.message}`);
+  throw e;
+});
 
 /** Branches that serve as a starting point: offered first when a session starts from a branch. */
 const MAIN_BRANCH = /^(main|master|develop|dev|trunk|(epic|release)\/.+)$/;
@@ -173,7 +177,7 @@ const MAIN_BRANCH = /^(main|master|develop|dev|trunk|(epic|release)\/.+)$/;
  * @returns {Promise<{ name, local, remote, date, worktree, main }[]>} `local`: name of the local branch to work on
  */
 export async function branches(dir) {
-  const out = await runGit(['-C', dir, 'for-each-ref', '--sort=-committerdate', '--format=%(refname)%09%(committerdate:unix)', 'refs/heads', 'refs/remotes'], 10_000);
+  const out = await runGit(dir, ['for-each-ref', '--sort=-committerdate', '--format=%(refname)%09%(committerdate:unix)', 'refs/heads', 'refs/remotes'], 10_000);
   const checkedOut = new Map((await worktrees(dir) || []).filter(w => w.branch).map(w => [w.branch, w.path]));
   const locals = [], remotes = [];
   for (const line of out.split(/\r?\n/).filter(Boolean)) {
@@ -200,16 +204,17 @@ export async function branches(dir) {
  * A `base` given for a branch that already exists is refused: the worktree would silently ignore it.
  */
 export async function createWorktree(dir, branch, base) {
-  const git = runGit;
   branch = String(branch || '').trim();
   if (!branch) throw new Error(t('server.worktree.emptyBranch'));
-  const list = await git(['-C', dir, 'worktree', 'list', '--porcelain']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
-  const main = path.normalize(list.match(/^worktree (.+)$/m)[1]);
+  const list = await runGitLogged('worktree', dir, ['worktree', 'list', '--porcelain']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
+  const main = path.normalize(fromGit(dir, list.match(/^worktree (.+)$/m)[1]));
   const target = path.join(path.dirname(main), `${path.basename(main)}-${branch.replace(/[\\/:*?"<>|\s]+/g, '-')}`);
   if (fs.existsSync(target)) throw new Error(t('server.worktree.folderExists', { path: target }));
-  const exists = await git(['-C', main, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
+  const exists = await runGit(main, ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
   if (exists && base) throw new Error(t('server.worktree.branchExists', { branch }));
-  await git(['-C', main, ...(exists ? ['worktree', 'add', target, branch] : ['worktree', 'add', '-b', branch, target, ...(base ? [base] : [])])]);
+  const to = gitArg(main, target);
+  // A large checkout (big repo, slow disk) takes time: 5 min before giving up
+  await runGitLogged('worktree', main, exists ? ['worktree', 'add', to, branch] : ['worktree', 'add', '-b', branch, to, ...(base ? [base] : [])], 300_000);
   forgetWorktrees();
   return target;
 }
@@ -222,10 +227,10 @@ export async function createWorktree(dir, branch, base) {
 export async function switchBranch(dir, branch, base) {
   branch = String(branch || '').trim();
   if (!branch) throw new Error(t('server.worktree.emptyBranch'));
-  const dirty = await runGit(['-C', dir, 'status', '--porcelain', '--untracked-files=no']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
+  const dirty = await runGitLogged('switch', dir, ['status', '--porcelain', '--untracked-files=no']).catch(() => { throw new Error(t('server.worktree.notInRepo', { path: dir })); });
   if (dirty) throw new Error(t('server.worktree.uncommittedSwitch', { path: dir }));
-  const exists = await runGit(['-C', dir, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
-  await runGit(['-C', dir, 'switch', ...(exists || !base ? [branch] : ['-c', branch, '--track', base])]);
+  const exists = await runGit(dir, ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
+  await runGitLogged('switch', dir, ['switch', ...(exists || !base ? [branch] : ['-c', branch, '--track', base])]);
   forgetWorktrees();
   return dir;
 }
@@ -239,7 +244,7 @@ function worktrees(dir) {
   const c = cache.get(k);
   if (c && Date.now() - c.at < 30_000) return Promise.resolve(c.worktrees);
   return new Promise(resolve => {
-    execFile('git', ['-C', dir, 'worktree', 'list', '--porcelain'], { windowsHide: true, timeout: 5000 }, (err, stdout) => {
+    execGit(dir, ['worktree', 'list', '--porcelain'], { timeout: 5000 }).then(out => [null, out], e => [e]).then(([err, stdout]) => {
       let l = null;
       if (!err) {
         l = [];
@@ -250,7 +255,8 @@ function worktrees(dir) {
           const branch = block.match(/^branch refs\/heads\/(.+)$/m)?.[1] || null;
           const detached = /^detached/m.test(block);
           const head = block.match(/^HEAD ([0-9a-f]+)$/m)?.[1]?.slice(0, 7) || null;
-          l.push({ path: path.normalize(wtPath), branch, detached, head });
+          // Linux form for a WSL repo (git-exec.mjs): the path as Windows sees it
+          l.push({ path: path.normalize(fromGit(dir, wtPath)), branch, detached, head });
         }
         if (!l.length) l = null;
       }
