@@ -22,6 +22,15 @@ export default {
     dark: 'Sombre',
     help: 'Gardé dans ce navigateur : le téléphone a le sien.',
   },
+  textSize: {
+    label: 'Taille du texte',
+    s90: 'Petite (90 %)',
+    s100: 'Normale',
+    s110: 'Grande (110 %)',
+    s125: 'Plus grande (125 %)',
+    s140: 'Très grande (140 %)',
+    help: 'La discussion suit la taille choisie, le reste de l\'interface grandit moitié moins (les boutons ne grossissent que par leur texte). Gardée dans ce navigateur.',
+  },
   language: {
     label: 'Langue',
     auto: 'Suivre l\'ordinateur',

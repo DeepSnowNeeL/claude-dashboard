@@ -333,7 +333,9 @@ and the design of what is about to be built in visual form, with all the availab
   `archiveAfterDays` in `~/.claude-dashboard/options.json`) removes it from the tree: its JSON goes to
   `sessions/archive/<slug>.json`, its mockups are copied there. "Resume" a conversation in the folder history (📋 if
   its panel is archived) brings it back with its panel.
-- **⚙ Options** (bottom of the list): General tab (theme follow the computer / light / dark, kept per browser in
+- **⚙ Options** (bottom of the list): General tab (**text size** 90 to 140%: the feed and the input follow it fully, the rest of the interface half as
+  much, only font sizes scale (`calc(Npx * var(--fs))`, `--text-scale` / `--ui-scale` of `base.css`), not paddings;
+  theme follow the computer / light / dark; both kept per browser in
   `localStorage` and set before display by `index.html`; PC only: **language** auto / Français / English, archiving and
   auto-compact: `autoCompact` `default` (Claude Code compacts around 967k on the 1M window), a number of tokens
   (env `CLAUDE_CODE_AUTO_COMPACT_WINDOW` of the query, threshold = window − 33k) or `off` (`DISABLE_AUTO_COMPACT`), read

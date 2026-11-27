@@ -22,6 +22,15 @@ export default {
     dark: 'Dark',
     help: 'Kept in this browser: the phone has its own.',
   },
+  textSize: {
+    label: 'Text size',
+    s90: 'Small (90%)',
+    s100: 'Normal',
+    s110: 'Large (110%)',
+    s125: 'Larger (125%)',
+    s140: 'Largest (140%)',
+    help: 'The chat follows the chosen size, the rest of the interface grows half as much (buttons only grow with their text). Kept in this browser.',
+  },
   language: {
     label: 'Language',
     auto: 'Follow the computer',

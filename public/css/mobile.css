@@ -10,8 +10,8 @@
   /* #right.mode-git (side.css) wins over .right: without this, the files tab shows below the conversation */
   body:not([data-mobile="tracker"]) #right { display: none; }
   .nav-mobile { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: var(--card); border-top: 1px solid var(--line); }
-  .nav-mobile button { flex: 1; font: inherit; font-size: 18px; background: none; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; }
-  .nav-mobile button span { font-size: 11px; }
+  .nav-mobile button { flex: 1; font: inherit; font-size: calc(18px * var(--fs)); background: none; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; }
+  .nav-mobile button span { font-size: calc(11px * var(--fs)); }
   .nav-mobile button.on { color: var(--accent); }
   .nav-mobile button .dot-nav { position: absolute; margin: -18px 0 0 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
   .mobile-only { display: inline-flex; }
@@ -20,20 +20,20 @@
 /* Mobile, last so it wins: header reduced to the title, the mode and End */
 @media (max-width: 900px) {
   .header .stats, .steps, .head-row .commands > .m { display: none !important; }
-  .head .title { font-size: 15px; }
+  .head .title { font-size: calc(15px * var(--fs)); }
   .commands { margin-top: 4px; gap: 8px; width: 100%; }
   /* Mode, End, Archive: big enough for a finger, on one line (16 px on the select: no automatic iOS zoom) */
-  .commands .btn, .commands select { min-height: 40px; padding: 8px 12px; font-size: 15px; border-radius: 8px; }
+  .commands .btn, .commands select { min-height: 40px; padding: 8px 12px; font-size: calc(15px * var(--fs)); border-radius: 8px; }
   .commands .btn { flex: none; white-space: nowrap; }
-  .commands select { flex: 1 1 0; min-width: 0; font-size: 16px; }
+  .commands select { flex: 1 1 0; min-width: 0; font-size: calc(16px * var(--fs)); }
   /* Adding a project (folder path) or a group: done on desktop, hidden in the mobile PWA */
   .insertions { display: none; }
   /* If an input dialog opens anyway: 16 px to avoid the automatic iOS zoom */
-  .modal input:not([type=color]), .modal select { font-size: 16px; }
+  .modal input:not([type=color]), .modal select { font-size: calc(16px * var(--fs)); }
 }
 
 /* First opening on the phone: offer of the notifications of the blocked sessions (components/push-banner.js) */
 .push-banner { position: fixed; left: 10px; right: 10px; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 60; padding: 12px; border: 1px solid var(--accent); background: var(--accent-bg); border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); }
 .push-banner b { display: block; margin-bottom: 4px; }
-.push-banner .m { color: var(--muted); font-size: 12.5px; }
+.push-banner .m { color: var(--muted); font-size: calc(12.5px * var(--fs)); }
 .push-banner-act { display: flex; gap: 8px; margin: 10px 0 6px; }

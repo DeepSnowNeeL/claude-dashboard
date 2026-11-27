@@ -2,6 +2,11 @@
 
 What changed for people who use the dashboard, newest first. The commit history has the technical detail.
 
+## 2026-11-27
+
+- ⚙ Options → General has a **Text size** setting (90% to 140%, kept in each browser): the conversation and the
+  text you type follow it fully, the rest of the page grows half as much, and buttons only grow with their text.
+
 ## 2026-11-26
 
 - "New session" has a **Branch** choice in git folders: the folder as is (default), an existing branch (opened in

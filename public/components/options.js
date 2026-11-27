@@ -3,7 +3,7 @@
 import { $, esc, toast, formatWhen, skeleton } from '../core/dom.js';
 import { readOptions, saveOptions, readTrackers, saveTracker } from '../services/options.js';
 import { loadList } from '../services/projects.js';
-import { readTheme, setTheme } from '../services/theme.js';
+import { readTheme, setTheme, TEXT_SIZES, readTextSize, setTextSize } from '../services/theme.js';
 import { accessState, readAccess, approveDevice, revokeDevice, logOut, saveAccess } from '../services/access.js';
 import { resetMermaid } from './mermaid.js';
 import { checkUpstream } from './upstream-update.js';
@@ -79,6 +79,9 @@ export async function openOptions(tab = 'general') {
     body.innerHTML = `<label>${t('options.theme.label')}
         <select id="opt-theme">${THEMES.map(k => `<option value="${k}" ${theme === k ? 'selected' : ''}>${t(`options.theme.${k}`)}</option>`).join('')}</select></label>
       <div class="m">${t('options.theme.help')}</div>
+      <label>${t('options.textSize.label')}
+        <select id="opt-text-size">${TEXT_SIZES.map(k => `<option value="${k}" ${readTextSize() === k ? 'selected' : ''}>${t(`options.textSize.s${k}`)}</option>`).join('')}</select></label>
+      <div class="m">${t('options.textSize.help')}</div>
       ${o ? `<label>${t('options.language.label')}
         <select id="opt-language">${LANGUAGES.map(k => `<option value="${k}" ${(o.language || 'auto') === k ? 'selected' : ''}>${t(`options.language.${k}`)}</option>`).join('')}</select></label>
       <div class="m">${t('options.language.help')}</div>
@@ -92,6 +95,7 @@ export async function openOptions(tab = 'general') {
         <select id="opt-upstream">${['on', 'off'].map(k => `<option value="${k}" ${(o.upstreamCheck !== false) === (k === 'on') ? 'selected' : ''}>${t(`options.upstreamCheck.${k}`)}</option>`).join('')}</select></label>
       <div class="m">${t('options.upstreamCheck.help')}</div>` : '<div id="opt-push"></div>'}`;
     body.querySelector('#opt-theme').onchange = e => applyTheme(e.target.value);
+    body.querySelector('#opt-text-size').onchange = e => setTextSize(e.target.value);
     if (body.querySelector('#opt-push')) renderPushOptions(body.querySelector('#opt-push'));
     // New language: the page reloads, simplest way to redraw everything in it
     if (body.querySelector('#opt-language')) body.querySelector('#opt-language').onchange = async e => {

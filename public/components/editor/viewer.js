@@ -5,7 +5,7 @@ import { read, write } from '../../core/storage.js';
 import { showInExplorer } from '../../services/desktop.js';
 import { explorerState, loadExplorer, ensureOpenLoaded, absolute } from '../../services/explorer.js';
 import { GIT_STATES, readDiff, readGitStatus } from '../../services/git.js';
-import { isDarkTheme } from '../../services/theme.js';
+import { isDarkTheme, uiScale } from '../../services/theme.js';
 import { filesHtml } from '../git-files.js';
 import { loadMonaco, languageOf } from './monaco.js';
 import { remarksOn } from './remark.js';
@@ -166,7 +166,7 @@ export async function openViewer(path, list = null, index = 0, options = {}) {
     if (d.binary) { body.innerHTML = `<p class="m">${t('editor.viewer.binaryBody')}</p>`; return; }
     body.innerHTML = '';
     const dark = isDarkTheme();
-    const common = { readOnly: true, automaticLayout: true, theme: dark ? 'vs-dark' : 'vs', minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 12.5 };
+    const common = { readOnly: true, automaticLayout: true, theme: dark ? 'vs-dark' : 'vs', minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 12.5 * uiScale() };
     const lang = languageOf(c);
     if (diff) {
       // Unchanged parts are folded: we land on the changes (a click unfolds them)

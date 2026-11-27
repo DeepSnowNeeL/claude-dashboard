@@ -6,6 +6,9 @@
   --blue-pill: #bfdbfe; --blue-txt: #1e3a8a; --yellow-pill: #fde68a; --yellow-txt: #78350f;
   --code-bg: #18181b; --code-txt: #e4e4e7; --chip: #f4f4f5;
   color-scheme: light;
+  /* Text size (⚙ Options, set on <html> by index.html): the chat follows it fully, the rest of the interface half as much.
+     Only font sizes use it (calc(Npx * var(--fs))), not paddings: a button grows with its text only. */
+  --text-scale: 1; --ui-scale: calc(1 + (var(--text-scale) - 1) / 2); --fs: var(--ui-scale);
 }
 /* Theme: the computer's, unless forced in ⚙ Options (data-theme on <html>, set before first paint) */
 @media (prefers-color-scheme: dark) {
@@ -30,10 +33,10 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--chip); padding: 0 4px; border-radius: 4px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: calc(14px * var(--fs))/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: calc(12px * var(--fs)); background: var(--chip); padding: 0 4px; border-radius: 4px; }
 a { color: var(--link); }
-.m { color: var(--muted); font-size: 12px; }
+.m { color: var(--muted); font-size: calc(12px * var(--fs)); }
 
 
 /* The chat comes first (up to 820 px); the right panel takes the rest, at least 30% of the width. */
@@ -60,10 +63,10 @@ body.resizing iframe, body.resizing .viewer { pointer-events: none; }
   .steps { display: none; }
   .feed { padding: 10px; }
   .input { padding: 8px 10px; }
-  .input textarea { font-size: 16px; } /* 16 px: no automatic zoom on input in iOS */
+  .input textarea { font-size: max(16px, calc(14px * var(--fs))); } /* at least 16 px: no automatic zoom on input in iOS */
   .input .bar { flex-wrap: wrap; }
   .input .actions { margin-left: auto; } /* wrapped to the next line, Send / Stop stay on the right */
-  .input .choices .btn[data-shortcut] { font-size: 12px; }
+  .input .choices .btn[data-shortcut] { font-size: calc(12px * var(--fs)); }
   .msg, .msg.peer { max-width: 100%; }
   .viewer { inset: 0; border-radius: 0; }
   .path-menu { max-width: calc(100vw - 16px); }
@@ -89,13 +92,13 @@ body.resizing iframe, body.resizing .viewer { pointer-events: none; }
 
 /* Mobile: waiting screen while the dashboard restarts (components/updating.js) */
 /* Engine or page behind the code on disk: card at the bottom right, above everything */
-.code-update { position: fixed; right: 16px; bottom: 16px; z-index: 900; display: flex; align-items: center; gap: 10px; max-width: min(440px, calc(100vw - 32px)); padding: 10px 12px 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); border: 1px solid var(--accent); color: var(--text); font-size: 13px; box-shadow: 0 6px 20px #0006; }
+.code-update { position: fixed; right: 16px; bottom: 16px; z-index: 900; display: flex; align-items: center; gap: 10px; max-width: min(440px, calc(100vw - 32px)); padding: 10px 12px 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); border: 1px solid var(--accent); color: var(--text); font-size: calc(13px * var(--fs)); box-shadow: 0 6px 20px #0006; }
 .code-update .btn { flex: none; }
 .updating { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--bg); }
 .updating-card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 28px 24px 22px; text-align: center; }
-.updating-icon { font-size: 40px; line-height: 1; margin-bottom: 12px; }
-.updating h1 { font-size: 18px; margin: 0 0 6px; }
-.updating p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+.updating-icon { font-size: calc(40px * var(--fs)); line-height: 1; margin-bottom: 12px; }
+.updating h1 { font-size: calc(18px * var(--fs)); margin: 0 0 6px; }
+.updating p { margin: 0 0 18px; color: var(--muted); font-size: calc(14px * var(--fs)); }
 .updating-spinner { width: 28px; height: 28px; margin: 0 auto; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: updating-spin 1s linear infinite; }
 @keyframes updating-spin { to { transform: rotate(360deg); } }
-.updating-status { margin-top: 12px; min-height: 1.5em; font-size: 13px; color: var(--muted); }
+.updating-status { margin-top: 12px; min-height: 1.5em; font-size: calc(13px * var(--fs)); color: var(--muted); }

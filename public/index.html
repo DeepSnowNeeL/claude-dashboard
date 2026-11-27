@@ -9,8 +9,8 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icon-512.png">
   <link rel="stylesheet" href="/style.css">
-  <!-- Forced theme (⚙ Options), set before the first display: no flash of light then dark -->
-  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}</script>
+  <!-- Forced theme and text size (⚙ Options), set before the first display: no flash of light then dark -->
+  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; const z = localStorage.getItem('text-size'); if (z) document.documentElement.style.setProperty('--text-scale', String(Number(z) / 100)); } catch {}</script>
 </head>
 <body>
   <div class="app">
