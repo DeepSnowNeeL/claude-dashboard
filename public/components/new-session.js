@@ -111,8 +111,8 @@ export function renderNewSession(initialCwd) {
           <label>${t('newSession.newName')}<input id="new-branch" placeholder="${esc(t('newSession.branchPlaceholder'))}" autocomplete="off" spellcheck="false"></label>
           <label>${t('newSession.newBase')}<span class="suggest"><input id="base-branch" placeholder="${esc(t('newSession.basePlaceholder'))}" autocomplete="off" spellcheck="false"><span class="branch-list" hidden></span></span></label>
         </div>
-        <span class="target" id="branch-target"></span>
-        <span class="target warn" id="branch-warn" hidden></span>
+        <span class="branch-target" id="branch-target"></span>
+        <span class="branch-target warn" id="branch-warn" hidden></span>
       </div>
       <label>${t('newSession.permissions')}
         <select id="new-session-mode">${modeOptions(lastMode())}</select></label>
